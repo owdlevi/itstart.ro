@@ -1,0 +1,3 @@
+# EU data residency for every processor
+
+ITStart serves Romanian users and stores their e-mail, profiles and projects, so every processor must keep data in the EU whenever an EU option exists. A US processor is allowed only when no EU option exists, recorded in `docs/DECISIONS.md` with the reason and legal basis. This is why the stack is Vercel `fra1`, Neon `eu-central-1`, Blob `fra1` and Vercel Workflow `fra1`, and why Trigger.dev and Inngest were turned down. The current exceptions (Resend's US storage and Workflow hook records in `iad1`) are listed in `DECISIONS.md`. A new vendor gets the same check before it's added.

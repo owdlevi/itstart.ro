@@ -8,3 +8,11 @@ Read `docs/README.md` inside that installed package first, then read the relevan
 
 This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": true` in the root `turbo.json` or `turbo.jsonc` to opt in; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
 <!-- END:turborepo-agent-rules -->
+
+# ITStart
+
+- `docs/HANDOVER.md`: the product brief. Read it before building any screen or feature.
+- `docs/ARCHITECTURE.md`: where code goes. Read it before adding a business rule, a table or migration, an API route or server action, a workflow, or a new package.
+- `GLOSSARY.md`: domain terms, English in code and Romanian in copy. Read it before naming anything in code or copy.
+- `docs/DECISIONS.md`: the locked stack, vendor exceptions and judgment calls. Read it before adding a dependency or vendor, or deciding something HANDOVER leaves open; record new judgment calls there.
+- `docs/adr/`: decisions that are hard to reverse. Read them before replacing a vendor or changing where data lives.
