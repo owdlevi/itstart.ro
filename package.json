@@ -12,6 +12,9 @@
     "db:migrate": "pnpm --filter @repo/db db:migrate"
   },
   "devDependencies": {
+    "pixelmatch": "8.0.0",
+    "playwright": "1.65.0",
+    "pngjs": "7.0.0",
     "prettier": "3.9.6",
     "turbo": "^2.11.11",
     "typescript": "7.0.2"
