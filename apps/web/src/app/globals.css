@@ -1,0 +1,108 @@
+@import "tailwindcss";
+@import "shadcn/tailwind.css";
+
+/* dark: utilities follow data-theme on <html> */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Only our tokens compile: Tailwind's default colours, radii and shadows are off. */
+@theme {
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+}
+
+:root {
+  --bg: #f4f6ef;
+  --surface: #ffffff;
+  --ink: #14201a;
+  --muted: #4d5a52;
+  --line: #d5dbd0;
+  --border: #4d5a52;
+  --primary: #0e7a43;
+  --primary-hover: #0b5e33;
+  --on-primary: #ffffff;
+  --accent: #ffd84d;
+  --on-accent: #14201a;
+  --tint: #dcebdd;
+  --band: #0e7a43;
+  --on-band: #ffffff;
+  --success-bg: #ddf3e4;
+  --success-ink: #0b5e33;
+  --warning-bg: #ffe9c2;
+  --warning-ink: #7a4100;
+  --shadow-card-v: 0 1px 2px rgba(20, 32, 26, 0.05);
+  --shadow-raised-v:
+    0 1px 2px rgba(20, 32, 26, 0.05), 0 12px 32px rgba(20, 32, 26, 0.07);
+}
+
+[data-theme="dark"] {
+  --bg: #0f1712;
+  --surface: #1a261e;
+  --ink: #eef3ec;
+  --muted: #a9b6ac;
+  --line: #2e3d33;
+  --border: #a9b6ac;
+  --primary: #5be38e;
+  --primary-hover: #8ff0b4;
+  --on-primary: #0f1712;
+  --accent: #ffd84d;
+  --on-accent: #14201a;
+  --tint: #22352a;
+  --band: #17361f;
+  --on-band: #eef3ec;
+  --success-bg: #17361f;
+  --success-ink: #7ce0a3;
+  --warning-bg: #3a2a0c;
+  --warning-ink: #ffc56b;
+  --shadow-card-v: none;
+  --shadow-raised-v: none;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-tint: var(--tint);
+  --color-band: var(--band);
+  --color-on-band: var(--on-band);
+  --color-success-bg: var(--success-bg);
+  --color-success-ink: var(--success-ink);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-ink: var(--warning-ink);
+
+  /* each family is two files, latin and latin-ext, split by unicode-range */
+  --font-display:
+    var(--font-bricolage), var(--font-bricolage-ext), "Trebuchet MS", sans-serif;
+  --font-sans:
+    var(--font-inter), var(--font-inter-ext), "Helvetica Neue", Arial,
+    sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --shadow-card: var(--shadow-card-v);
+  --shadow-raised: var(--shadow-raised-v);
+}
+
+@layer base {
+  :focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 3px;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+}
