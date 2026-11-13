@@ -29,7 +29,7 @@ Decided by the product owner. Final. Each line: what, why, and the alternative t
 | Database | Postgres on **Neon** `eu-central-1`, Drizzle ORM | EU region, branch per preview, free tier fits M1 | Docker Postgres in production |
 | DB driver | `pg` (node-postgres) on Neon's **pooled** URL, `attachDatabasePool` | Supports `db.transaction`, which `votes.toggle` needs | `drizzle-orm/neon-http`: type-checks but throws on transactions |
 | Migrations | `drizzle-kit migrate` in the Vercel build, over the unpooled URL | Schema and code ship together | Migrating by hand |
-| Auth | **Better Auth** 1.7.22: magic link, Google, GitHub; users in our Neon | Users stay in our EU database, Drizzle adapter, `testUtils` for dev login | Hosted auth (US data) |
+| Auth | **Better Auth** 1.7.x: magic link, Google, GitHub; users in our Neon | Users stay in our EU database, Drizzle adapter, `testUtils` for dev login | Hosted auth (US data) |
 | E-mail | **Resend Pro**, sending from `eu-west-1`, React Email templates | Developer experience and React Email (see the EU exception below) | AWS SES `eu-central-1`, Scaleway TEM, Brevo |
 | Files | **Vercel Blob** (public store, `fra1`) + **sharp** → webp | Same vendor; the browser uploads directly | Uploads through a server action (Vercel's 4.5 MB body cap) |
 | Background jobs | **Vercel Workflow** in `fra1`, inside `apps/web` | EU, no new vendor, durable `sleep` for reminders | Trigger.dev, Inngest (US data); see ADR 0002 |
@@ -94,23 +94,26 @@ Decided by the product owner. Final. Each line: what, why, and the alternative t
 
 ## 2026-11-13 · M1 install list
 
-Install this once the map is closed. Versions are the ones checked during research; packages without one take the current version at install.
+Installed on 2026-11-13; exact versions are in each `package.json`. Still to do, as part of building: the `packages/db` items below, `withWorkflow()` in `next.config`, the `.env.example` files, and adding `tabs` and `alert-dialog` from shadcn when those components are built. Run `pnpm exec playwright install chromium` once per machine for `capture.mjs`.
 
 **`apps/web`**
 - `@repo/core`, `@repo/db` (`workspace:*`): the composition root wires core with real adapters.
-- `better-auth@1.7.22`: sign-in, sessions, the `user` table.
+- `better-auth`: sign-in, sessions, the `user` table. Pinned to 1.7.21, because 1.7.22 (the version researched) was still inside pnpm's 24-hour release-age gate. Bump it in a normal update; don't add `minimumReleaseAgeExclude` entries to get a fresh release.
 - `pg`, plus `@types/pg` as a dev dependency: the app owns the pool so it can register it.
 - `@vercel/functions`: `attachDatabasePool` for the pool.
 - `workflow`: reminders and e-mail batching (`withWorkflow()` in `next.config`).
-- `resend`, `@react-email/components`: the mailer adapter and e-mail templates.
+- `resend`, `react-email`: the mailer adapter and e-mail templates. `react-email` 6 exports the components (`Html`, `Body`, …); `@react-email/components` is deprecated.
 - `@vercel/blob`: direct browser uploads and storage.
 - `sharp`: resizes screenshots to webp.
 - `next-intl`: copy from `messages/ro.json`.
 - `react-hook-form`, `@hookform/resolvers`, `zod`: forms, re-parsed on the server.
 - `lucide-react`: icons.
 - `@vercel/analytics`: Web Analytics.
+- `next-themes`: light/dark through `data-theme` on `<html>` (`docs/design/notes/nextjs-tailwind.md` §3).
 - `tailwindcss`, `@tailwindcss/postcss` (dev): styling.
-- `pnpm dlx shadcn@latest init -t next -b base`, then `add tabs alert-dialog`. It adds `@base-ui/react`, `clsx`, `tailwind-merge` and `class-variance-authority`. Remove `tw-animate-css` and replace the generated theme with our `globals.css`.
+- shadcn, initialised with `pnpm dlx shadcn@latest init -t next -b base`. It adds `@base-ui/react`, `class-variance-authority` and `cn` (shadcn's own replacement for `clsx` + `tailwind-merge`, used by `@/lib/utils`). `shadcn` is a dev dependency, kept only for `shadcn/tailwind.css` (the `data-open`-style variants). `tw-animate-css`, Geist and the generated Button were removed, and the theme was replaced with our `globals.css`, which also turns off Tailwind's default colours, radii and shadows.
+- Fonts: the brand woff2 files are copied to `src/app/fonts/` and loaded with `next/font/local`, one face per latin / latin-ext file, split by `unicode-range`.
+- Native build scripts for `@parcel/watcher`, `@swc/core` and `cbor-extract` are set to `false` in `pnpm-workspace.yaml`. All three ship prebuilt binaries.
 - Remove `@repo/ui`.
 
 **`packages/db`**
@@ -121,7 +124,7 @@ Install this once the map is closed. Versions are the ones checked during resear
 - No new dependencies.
 
 **Root (dev)**
-- `playwright`, `pixelmatch`, `pngjs`: for `docs/tools/capture.mjs`.
+- `playwright`, `pixelmatch`, `pngjs`: for `docs/tools/capture.mjs`. Self-test baseline (macOS arm64, Chromium headless shell 158): 52/52 `match`, largest diff 0.61%, from text antialiasing. HANDOVER expects 0%; anything near this baseline is the renderer, not the app.
 
 **Delete:** `apps/docs` and `packages/ui` (create-turbo demos).
 
