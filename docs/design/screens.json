@@ -1,0 +1,552 @@
+{
+ "capturedAt": "2026-11-11T07:35:00+02:00",
+ "note": "Clock frozen at this time: the countdown reads 19 zile, 16 ore, 24 minute.",
+ "screens": [
+  {
+   "id": "01",
+   "slug": "acasa",
+   "title": "Acasă",
+   "route": "/",
+   "viewer": null,
+   "milestone": "M1",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Home.html",
+     "png": "screens/01-acasa.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Home-mobil.html",
+     "png": "screens/01-acasa.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Home-dark.html",
+     "png": "screens/01-acasa.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Home-mobil-dark.html",
+     "png": "screens/01-acasa.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "02",
+   "slug": "provocare",
+   "title": "Provocarea lunii (vizitator)",
+   "route": "/provocari/frizerie",
+   "viewer": null,
+   "milestone": "M1",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Provocare.html",
+     "png": "screens/02-provocare.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Provocare-mobil.html",
+     "png": "screens/02-provocare.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Provocare-dark.html",
+     "png": "screens/02-provocare.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Provocare-mobil-dark.html",
+     "png": "screens/02-provocare.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "03",
+   "slug": "lansari",
+   "title": "Lansări",
+   "route": "/lansari",
+   "viewer": "andrei-popescu",
+   "milestone": "M1",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Lansari.html",
+     "png": "screens/03-lansari.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Lansari-mobil.html",
+     "png": "screens/03-lansari.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Lansari-dark.html",
+     "png": "screens/03-lansari.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Lansari-mobil-dark.html",
+     "png": "screens/03-lansari.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "04",
+   "slug": "proiect",
+   "title": "Proiect",
+   "route": "/proiecte/tuns-la-fix",
+   "viewer": "andrei-popescu",
+   "milestone": "M1",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Proiect.html",
+     "png": "screens/04-proiect.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Proiect-mobil.html",
+     "png": "screens/04-proiect.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Proiect-dark.html",
+     "png": "screens/04-proiect.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Proiect-mobil-dark.html",
+     "png": "screens/04-proiect.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "05",
+   "slug": "profil",
+   "title": "Profil",
+   "route": "/u/ioana-muresan",
+   "viewer": "andrei-popescu",
+   "milestone": "M1",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Profil.html",
+     "png": "screens/05-profil.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Profil-mobil.html",
+     "png": "screens/05-profil.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Profil-dark.html",
+     "png": "screens/05-profil.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Profil-mobil-dark.html",
+     "png": "screens/05-profil.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "06",
+   "slug": "intra",
+   "title": "Înscriere: cont",
+   "route": "/intra",
+   "viewer": null,
+   "milestone": "M1",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Autentificare.html",
+     "png": "screens/06-intra.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Autentificare-mobil.html",
+     "png": "screens/06-intra.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Autentificare-dark.html",
+     "png": "screens/06-intra.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Autentificare-mobil-dark.html",
+     "png": "screens/06-intra.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "07",
+   "slug": "bun-venit",
+   "title": "Înscriere: profil",
+   "route": "/bun-venit",
+   "viewer": "bianca-radu",
+   "milestone": "M1",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Bun-venit.html",
+     "png": "screens/07-bun-venit.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Bun-venit-mobil.html",
+     "png": "screens/07-bun-venit.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Bun-venit-dark.html",
+     "png": "screens/07-bun-venit.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Bun-venit-mobil-dark.html",
+     "png": "screens/07-bun-venit.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "08",
+   "slug": "provocare-inscris",
+   "title": "Provocarea lunii (înscris)",
+   "route": "/provocari/frizerie",
+   "viewer": "bianca-radu",
+   "milestone": "M1",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Provocare-inscris.html",
+     "png": "screens/08-provocare-inscris.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Provocare-inscris-mobil.html",
+     "png": "screens/08-provocare-inscris.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Provocare-inscris-dark.html",
+     "png": "screens/08-provocare-inscris.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Provocare-inscris-mobil-dark.html",
+     "png": "screens/08-provocare-inscris.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "09",
+   "slug": "lanseaza",
+   "title": "Lansează un proiect",
+   "route": "/lanseaza",
+   "viewer": "ioana-muresan",
+   "milestone": "M1",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Lanseaza.html",
+     "png": "screens/09-lanseaza.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Lanseaza-mobil.html",
+     "png": "screens/09-lanseaza.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Lanseaza-dark.html",
+     "png": "screens/09-lanseaza.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Lanseaza-mobil-dark.html",
+     "png": "screens/09-lanseaza.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "10",
+   "slug": "lansat",
+   "title": "Proiect lansat",
+   "route": "/proiecte/tuns-la-fix/lansat",
+   "viewer": "ioana-muresan",
+   "milestone": "M1",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Lansat.html",
+     "png": "screens/10-lansat.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Lansat-mobil.html",
+     "png": "screens/10-lansat.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Lansat-dark.html",
+     "png": "screens/10-lansat.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Lansat-mobil-dark.html",
+     "png": "screens/10-lansat.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "11",
+   "slug": "provocare-incheiata",
+   "title": "Provocare încheiată",
+   "route": "/provocari/cafenea",
+   "viewer": "andrei-popescu",
+   "milestone": "M2",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Provocare-incheiata.html",
+     "png": "screens/11-provocare-incheiata.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Provocare-incheiata-mobil.html",
+     "png": "screens/11-provocare-incheiata.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Provocare-incheiata-dark.html",
+     "png": "screens/11-provocare-incheiata.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Provocare-incheiata-mobil-dark.html",
+     "png": "screens/11-provocare-incheiata.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "12",
+   "slug": "provocari",
+   "title": "Toate provocările",
+   "route": "/provocari",
+   "viewer": "andrei-popescu",
+   "milestone": "M2",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Provocari.html",
+     "png": "screens/12-provocari.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Provocari-mobil.html",
+     "png": "screens/12-provocari.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Provocari-dark.html",
+     "png": "screens/12-provocari.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Provocari-mobil-dark.html",
+     "png": "screens/12-provocari.mobile.dark.png"
+    }
+   ]
+  },
+  {
+   "id": "13",
+   "slug": "mesaj",
+   "title": "Mesaj către constructor",
+   "route": "/u/ioana-muresan/mesaj",
+   "viewer": null,
+   "milestone": "M3",
+   "variants": [
+    {
+     "device": "desktop",
+     "theme": "light",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Mesaj.html",
+     "png": "screens/13-mesaj.desktop.light.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "light",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Mesaj-mobil.html",
+     "png": "screens/13-mesaj.mobile.light.png"
+    },
+    {
+     "device": "desktop",
+     "theme": "dark",
+     "width": 1280,
+     "deviceScaleFactor": 1,
+     "reference": "reference/Mesaj-dark.html",
+     "png": "screens/13-mesaj.desktop.dark.png"
+    },
+    {
+     "device": "mobile",
+     "theme": "dark",
+     "width": 390,
+     "deviceScaleFactor": 2,
+     "reference": "reference/Mesaj-mobil-dark.html",
+     "png": "screens/13-mesaj.mobile.dark.png"
+    }
+   ]
+  }
+ ]
+}
