@@ -1,23 +1,30 @@
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { fontVariables } from "./fonts";
 import { Providers } from "./providers";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "ITStart · Construiește ceva real.",
-  description:
-    "Comunitatea în care construiești proiecte reale cu AI și le lansezi public.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
+  return { title: t("title"), description: t("description") };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const t = await getTranslations("shell");
   return (
     <html lang="ro" className={fontVariables} suppressHydrationWarning>
       <body className="bg-bg font-sans text-ink antialiased">
-        <Providers>{children}</Providers>
+        <a href="#continut" className="skip-link">
+          {t("skipLink")}
+        </a>
+        <NextIntlClientProvider>
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
