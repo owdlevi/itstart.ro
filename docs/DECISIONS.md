@@ -177,6 +177,25 @@ Judgment calls made while setting up the database, Better Auth and the compositi
 - **Participations in the seed:** every owner of a project in a challenge, plus the agents in its agent panel, joined at the challenge's start. Bianca hasn't joined `frizerie`, because screen 08 shows her joining (her "În lucru" project is still seeded).
 - **Past challenges' start:** the fixtures have none for #1 and #2, so the seed uses the 1st of the deadline's month.
 
+## 2026-11-14 · Screen 01 build
+
+- **"Cele mai votate săptămâna asta" (HANDOVER §13.1) is flagged, not changed.** The section shows the top 3 by votes in the running challenge (the §13.1 default), but the heading still says "săptămâna asta", word for word from the reference. The owner decides whether it becomes "Cele mai votate luna asta".
+- **Vote refusals have new copy** (no reference design): "Poți vota după prima zi în comunitate." (account under 24 h), "Ai votat de multe ori în ultimele minute. Mai încearcă puțin mai târziu." (rate limit), "Votul pentru această provocare s-a încheiat." (closed), "Votul nu a mers. Mai încearcă o dată." (anything else). The vote goes back to its previous state, and the message appears in a small panel under the button (`role="status"`). The owner should review the wording.
+- **Empty states on Home** (none are in the PNGs):
+  - With no running challenge, the hero keeps only "Vezi lansările", as the primary button, and the challenge card, the top 3 and the green band are hidden.
+  - The band is also hidden when the challenge has no `builtFor`.
+  - The top-3 section is hidden until the challenge has a launched project.
+- **Links to screens that don't exist yet:**
+  - Join (hero and band): signed out, `/intra?provocare=<slug>` (screen 06 reads it and joins after sign-in, HANDOVER §6 06); signed in, `/provocari/<slug>`.
+  - Vote while signed out: `/intra?next=<path>` (rule 12).
+  - Tags: `/lansari?eticheta=<tool>` (screen 03 honours it).
+  - Header avatar: `/u/<handle>`, or `/bun-venit` while the user has no handle.
+  - Footer: `/despre`, `/reguli` and `/contact`, which wait for the owner's content (§13.8).
+- **Countdown:** the first frame uses the server's clock (frozen in fixtures mode), so there's no hydration jump. After that it advances by the time that has passed in the browser, so a fixtures-mode page stays at the reference moment.
+- **Skip link** "Sari la conținut" (§10, not in the PNGs): the first focusable element, hidden until focused.
+- **Icons are Lucide.** The reference's clock and message icons are drawn slightly differently. The difference is within `capture.mjs`'s threshold.
+- **Visual check (`capture.mjs --only 01`, against `pnpm dev`):** mobile light and dark `match` (0.8%). Desktop light and dark report `check` (4.0% and 3.4%), and all of that difference is the thumbnails: placeholder art in the reference against flat `tint` in the app (§9.4, "Thumbnails and screenshots"). Outside the thumbnail strip the difference is 0.51%, under the tool's self-test baseline of 0.61% (text antialiasing).
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.

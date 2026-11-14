@@ -33,12 +33,19 @@ src/
     admin/           role = admin, functional styling (no reference design)
     dev/login-as/[handle]/   404 unless DESIGN_FIXTURES=1
     api/             Better Auth handler (auth/[...all]), Blob upload-token route, unsubscribe endpoint
-  components/        the spec components; shadcn files in components/ui/
+    actions/         server actions, one file per area (votes.ts: toggleVote)
+  components/        the spec components, one file each (button, avatar, vote-button, project-card,
+                     launch-row, countdown, …) and the shell (site-header, site-footer); shadcn files in components/ui/
+  i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
+  lib/auth-client.ts Better Auth's browser client (sign-in calls), magic-link plugin ready
   server/
     auth.ts          createAuth(deps): the Better Auth config. No server-only, so the CLI can load it
-    core.ts          composition root (server-only): pg Pool + attachDatabasePool, clock, mailer,
-                     createCore(), and the `auth` instance. Import `db`, `core` and `auth` from here
+    core.ts          composition root (server-only): pg Pool + attachDatabasePool, clock (`now`),
+                     `designFixtures`, mailer, createCore(), and the `auth` instance. Import `db`, `core`,
+                     `auth` and `now` from here
+    session.ts       getSession(): the session in server components, cached per request
+    challenge.ts     getRunningChallenge(): core.challenges.running(), cached per request
   workflows/         Vercel Workflow: sleep, ask core.notifications, send
   emails/            React Email templates
   flags.ts           milestone flags
@@ -72,8 +79,8 @@ M1 modules:
 | Module | Covers |
 |---|---|
 | `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
-| `challenges` | running challenge, deadline and status, join/leave (rules 1–3), admin create/edit |
-| `projects` | create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), updates |
+| `challenges` | `running()` with its counts and `challengeStatus()` are done (rule 1). To come: join/leave (rules 2–3), admin create/edit |
+| `projects` | `mostVoted()` is done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), updates |
 | `votes` | done (rules 10–14) |
 | `reviews` | reviews, replies and counts; assignment picking (rules 15–17) |
 | `profiles` | onboarding, handle generation, consent flags (rule 22) |
@@ -95,6 +102,7 @@ M1 modules:
   | `linkChecker` | `fetch` with a short timeout | canned answers |
 
   Pass `db` straight in. Drizzle is already the query interface, so there's no repository layer over it.
+- **Counts** (votes, reviews, participants, launches) are computed from rows with `withExtra()` (`src/counts.ts`), which adds the design fixtures' `fixture_count_extras`. That table is empty outside fixtures mode. Every new count shown in the UI goes through it, so the references' numbers hold (DECISIONS, "Fixture counts").
 - **Wiring** happens once in `createCore()` (`packages/core/src/index.ts`). `apps/web/src/server/core.ts` calls it with real adapters.
 
 ## Environments
@@ -116,6 +124,7 @@ M1 modules:
 ## Tests
 
 - Test each module through its interface, against real Postgres via `createTestDb()` (PGlite, in-memory, every migration applied, one instance per test). Leave Drizzle unmocked.
+- `src/test-data.ts` makes rows with every required column (`makeUser`, `makeChallenge`, `makeProject`, `join`, `vote`, `review`, `addExtra`); override only what the test is about.
 - One test per HANDOVER §5 rule, named with the rule number, e.g. `"refuses a vote on your own project (rule 11)"`.
 - `pnpm test` runs every package's `test` task through turbo.
 
@@ -129,4 +138,9 @@ M1 modules:
 - Put `import "server-only"` in `apps/web`'s composition root, not in `db` or `core`: in packages it breaks Vitest. Keep it out of `auth.ts` too, because the Better Auth CLI refuses to load a config that imports it.
 - The Better Auth CLI is the `auth` package (`pnpm dlx auth@<better-auth version>`). `@better-auth/cli` is deprecated and stops at 1.4.
 - Better Auth's generated tables use `timestamp` without time zone (our own tables use `timestamptz`). Drizzle reads and writes them as UTC, and `defaultNow()` relies on the session time zone being UTC, which it is on Neon and in the container. Don't set a session time zone.
+- `cn` (the `cn` package, like tailwind-merge) drops `leading-*` when a font-size class comes after it, and `text-xl` and friends carry their own line height. Put `leading-*` last, or use arbitrary sizes (`text-[20px]`).
+- Tailwind's preflight is on, so headings have no weight: set `font-bold` on every h1–h3. Plain links are `primary` and underlined (globals.css), as in the references; components that look like buttons or tags add `no-underline` and their own colour.
+- Message keys are typed (`src/i18n/next-intl.d.ts`): a missing key fails `check-types`. Plurals use ICU with Romanian's `one`/`few`/`other` ("19 zile", "24 de minute").
+- Opening `pnpm dev` from another host (e.g. the LAN IP while port 3000 on localhost is taken): Next 16 blocks cross-origin dev resources, so the page renders but never hydrates (buttons do nothing). Use `localhost`, or test interaction on `next build && next start`.
+- In a production build, Link prefetches of routes that don't exist yet stay pending, so Playwright's `networkidle` (which `capture.mjs` waits for) never arrives. Until those screens exist, run `capture.mjs` against `pnpm dev`.
 - `next build` with `withWorkflow()` generates `src/app/.well-known/workflow/`. It's gitignored and skipped by ESLint.
