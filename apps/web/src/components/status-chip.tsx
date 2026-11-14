@@ -1,6 +1,10 @@
 import { cn } from "@/lib/utils";
 
-/** A status in a word; warning is for time running out. */
+/**
+ * A status in a word; warning is for time running out. It never wraps (spec),
+ * so like Tag it's capped at its row and cut with an ellipsis rather than
+ * pushing the page sideways (a long Hungarian label on a phone).
+ */
 export function StatusChip({
   tone = "success",
   icon,
@@ -13,14 +17,14 @@ export function StatusChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-2.5 py-1 text-[13px] font-bold leading-5",
+        "inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-sm px-2.5 py-1 text-[13px] font-bold leading-5",
         tone === "success"
           ? "bg-success-bg text-success-ink"
           : "bg-warning-bg text-warning-ink",
       )}
     >
       {icon}
-      {children}
+      <span className="truncate">{children}</span>
     </span>
   );
 }
