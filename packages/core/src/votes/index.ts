@@ -111,14 +111,12 @@ export function createVotes(deps: {
             .values({ userId, projectId, createdAt: at })
             .onConflictDoNothing();
         }
-        await tx
-          .insert(voteEvents)
-          .values({
-            userId,
-            projectId,
-            action: voted ? "cast" : "retract",
-            at,
-          });
+        await tx.insert(voteEvents).values({
+          userId,
+          projectId,
+          action: voted ? "cast" : "retract",
+          at,
+        });
 
         const [total] = await tx
           .select({ n: count() })

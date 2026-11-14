@@ -1,8 +1,10 @@
+import type { Mailer, SignIn } from "@repo/core";
+import type { Db } from "@repo/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { magicLink, testUtils } from "better-auth/plugins";
-import type { Db } from "@repo/db";
 
 // Product fields live on `users`. Every one is `input: false`, so no client can
 // set them through Better Auth's endpoints; our own server code writes them.
@@ -10,6 +12,8 @@ const productField = <T>(field: T) => ({ ...field, input: false as const });
 
 export type AuthDeps = {
   db: Db;
+  signIn: SignIn;
+  mailer: Mailer;
   /** Adds Better Auth's testUtils plugin, for /dev/login-as. */
   designFixtures: boolean;
 };
@@ -18,7 +22,7 @@ export type AuthDeps = {
  * The Better Auth instance. `core.ts` builds the real one; `scripts/auth-generate.ts`
  * builds one for the CLI, which can't load `server-only`.
  */
-export function createAuth({ db, designFixtures }: AuthDeps) {
+export function createAuth({ db, signIn, mailer, designFixtures }: AuthDeps) {
   return betterAuth({
     database: drizzleAdapter(db, { provider: "pg", usePlural: true }),
     advanced: { database: { generateId: "uuid" } },
@@ -84,11 +88,25 @@ export function createAuth({ db, designFixtures }: AuthDeps) {
         expiresIn: 900,
         storeToken: "hashed",
         sendMagicLink: async ({ email, url }) => {
+          const allowed = await signIn.requestLink(email);
+          if (!allowed.ok) {
+            // The /intra form maps `code` to copy; retryAfter drives its timer.
+            throw allowed.reason === "undeliverable"
+              ? new APIError("BAD_REQUEST", { code: "UNDELIVERABLE" })
+              : new APIError("TOO_MANY_REQUESTS", {
+                  code: allowed.reason.toUpperCase(),
+                  retryAfter: allowed.retryAfter,
+                });
+          }
           // The e-mail links to our confirm page, which verifies on a button
           // press, so link scanners that pre-fetch URLs can't use the token up.
           const link = new URL(url);
           const confirm = new URL(`/intra/confirma${link.search}`, link.origin);
-          console.info(`Sign-in link for ${email}: ${confirm}`);
+          await mailer.send({
+            kind: "sign_in_link",
+            to: email,
+            url: `${confirm}`,
+          });
         },
       }),
       ...(designFixtures ? [testUtils()] : []),

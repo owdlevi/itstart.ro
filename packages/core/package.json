@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./sign-in": "./src/sign-in/index.ts",
     "./votes": "./src/votes/index.ts"
   },
   "scripts": {
