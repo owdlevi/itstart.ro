@@ -23,6 +23,7 @@ async function setup(config?: VotesConfig) {
       .insert(users)
       .values({
         name: "u",
+        email: `${crypto.randomUUID()}@test.invalid`,
         createdAt: new Date(now.getTime() - 3 * DAY),
         ...fields,
       })

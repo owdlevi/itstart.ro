@@ -8,7 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { challenges } from "./challenges";
 import { createdAt } from "./columns";
-import { users } from "./users";
+import { users } from "./auth";
 
 export const projectStage = pgEnum("project_stage", [
   "in_progress",

@@ -8,7 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createdAt } from "./columns";
 import { projects } from "./projects";
-import { users } from "./users";
+import { users } from "./auth";
 
 export const votes = pgTable(
   "votes",
