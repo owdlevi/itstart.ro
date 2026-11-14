@@ -15,6 +15,7 @@
     "signInShort": "Intră",
     "launchProject": "Lansează un proiect",
     "profileLabel": "Profilul tău, {name}",
+    "finishProfile": "Termină-ți profilul",
     "footer": {
       "tagline": "Construiești. Lansezi. Rămâi cu ceva real.",
       "navLabel": "Subsol",
@@ -339,6 +340,31 @@
       },
       "people": "{count, plural, one {# om construiește} few {# oameni construiesc} other {# de oameni construiesc}} deja.",
       "peopleBuilding": "{count, plural, one {# om construiește} few {# oameni construiesc} other {# de oameni construiesc}} deja {what}."
+    }
+  },
+  "onboarding": {
+    "metaTitle": "Profilul tău",
+    "step": "Pasul 2 din 2",
+    "title": "Cum te cheamă?",
+    "lead": "Așa apari pe panoul de lansări și pe profilul tău. Poți schimba oricând.",
+    "optional": "(opțional)",
+    "name": {
+      "label": "Numele tău"
+    },
+    "city": {
+      "label": "Orașul"
+    },
+    "tools": {
+      "label": "Cu ce vrei să construiești?",
+      "hint": "Alege oricâte. Nu te leagă de nimic.",
+      "unsure": "Încă nu știu"
+    },
+    "reminders": "Vreau două e-mailuri de reamintire: cu o săptămână și cu o zi înainte de termen.",
+    "submit": "{context, select, challenge {Gata, intru în provocare} other {Gata, intru în comunitate}}",
+    "errors": {
+      "nameEmpty": "Scrie-ți numele.",
+      "tooLong": "Cel mult {max} de caractere.",
+      "other": "Nu a mers. Mai încearcă o dată."
     }
   }
 }

@@ -42,9 +42,15 @@ export async function SiteHeader() {
         {t("launchProject")}
       </Button>
       <Link
-        // No handle until onboarding finishes.
-        href={user.handle ? `/u/${user.handle}` : "/bun-venit"}
-        aria-label={t("profileLabel", { name: user.name })}
+        // Until onboarding is done there's no profile, and maybe no name yet.
+        href={
+          user.onboardedAt && user.handle ? `/u/${user.handle}` : "/bun-venit"
+        }
+        aria-label={
+          user.onboardedAt
+            ? t("profileLabel", { name: user.name })
+            : t("finishProfile")
+        }
         className="inline-flex size-11 items-center justify-center rounded-full no-underline"
       >
         <Avatar
