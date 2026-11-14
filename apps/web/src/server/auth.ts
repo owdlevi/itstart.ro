@@ -27,6 +27,10 @@ export function createAuth({ db, signIn, mailer, designFixtures }: AuthDeps) {
     database: drizzleAdapter(db, { provider: "pg", usePlural: true }),
     advanced: { database: { generateId: "uuid" } },
     rateLimit: { storage: "database" },
+    // The sign-in method for now: magic link needs Resend and the providers
+    // need OAuth apps, and neither exists yet. No e-mail verification and no
+    // password reset until there's a mailer (DECISIONS, "Email and password for now").
+    emailAndPassword: { enabled: true },
     user: {
       fields: { image: "avatarUrl" },
       additionalFields: {
