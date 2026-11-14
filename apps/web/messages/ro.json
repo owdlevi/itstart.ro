@@ -263,5 +263,28 @@
       "challenge": "Provocarea #{number} · {title}",
       "launched": "Lansat {date}"
     }
+  },
+  "profile": {
+    "metaTitle": "ITStart · {name}",
+    "place": "{city} · în comunitate din {month}",
+    "joined": "În comunitate din {month}",
+    "edit": "Editează profilul",
+    "stats": {
+      "launched": "{n, plural, one {proiect lansat} few {proiecte lansate} other {proiecte lansate}}",
+      "monthsInARow": "{n, plural, one {lună la rând} few {luni la rând} other {luni la rând}}",
+      "votes": "{n, plural, one {vot primit} few {voturi primite} other {voturi primite}}"
+    },
+    "projects": {
+      "title": "Proiecte lansate",
+      "empty": "Niciun proiect lansat încă.",
+      "challenge": "Provocarea #{number} · {month}",
+      "own": "Proiect propriu"
+    },
+    "challenges": {
+      "title": "Provocări terminate",
+      "number": "Provocarea #{number}",
+      "line": "{month} · {n, plural, one {proiect} other {proiecte}}: {names}",
+      "finished": "Terminată"
+    }
   }
 }

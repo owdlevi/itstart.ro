@@ -34,8 +34,8 @@ export function Avatar({
   className,
 }: {
   person: AvatarPerson;
-  // 40: the participant list on the challenge page.
-  size?: 22 | 36 | 40 | 52 | 96;
+  // 40: the participant list on the challenge page. 72: a profile on phones.
+  size?: 22 | 36 | 40 | 52 | 72 | 96;
   className?: string;
 }) {
   const box = { width: size, height: size };

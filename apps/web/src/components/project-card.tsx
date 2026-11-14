@@ -16,9 +16,12 @@ export const listTools = (project: ProjectSummary) =>
 /** A project as a card in grids (Home on desktop, profiles, results). */
 export async function ProjectCard({
   project,
+  meta,
   vote,
 }: {
   project: ProjectSummary;
+  /** Shown instead of the builder, on their own profile ("Provocarea #4 · noiembrie"). */
+  meta?: string;
   vote: React.ReactNode;
 }) {
   const t = await getTranslations("project");
@@ -47,15 +50,19 @@ export async function ProjectCard({
           ))}
         </div>
         <div className="mt-auto flex items-center justify-between gap-3">
-          <span className="inline-flex min-w-0 items-center gap-2.5">
-            <Avatar person={project.owner} />
-            <span className="text-sm font-semibold text-ink">
-              {project.owner.name}
+          {meta ? (
+            <span className="min-w-0 text-sm leading-5 text-muted">{meta}</span>
+          ) : (
+            <span className="inline-flex min-w-0 items-center gap-2.5">
+              <Avatar person={project.owner} />
+              <span className="text-sm font-semibold text-ink">
+                {project.owner.name}
+              </span>
+              {project.owner.isAgent && (
+                <AgentBadge>{t("agentBadge")}</AgentBadge>
+              )}
             </span>
-            {project.owner.isAgent && (
-              <AgentBadge>{t("agentBadge")}</AgentBadge>
-            )}
-          </span>
+          )}
           {vote}
         </div>
       </div>
