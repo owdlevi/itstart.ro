@@ -33,13 +33,15 @@ src/
     admin/           role = admin, functional styling (no reference design)
       (site)/lansari/board-params.ts   the board's URL parameters: parse, and build a query without the defaults
     dev/login-as/[handle]/   404 unless DESIGN_FIXTURES=1
+    dev/captura/[name]/      the fixtures' screenshots (transparent SVGs); 404 unless DESIGN_FIXTURES=1
     api/             Better Auth handler (auth/[...all]), Blob upload-token route, unsubscribe endpoint
-    actions/         server actions, one file per area (votes.ts: toggleVote)
+    actions/         server actions, one file per area (votes.ts: toggleVote, reviews.ts: postReview)
   components/        the spec components, one file each (button, avatar, vote-button, project-card,
                      launch-row, countdown, filter-chip, …), the shell (site-header, site-footer), and
                      link-tabs (URL tabs on Base UI); shadcn files, rewritten onto our tokens, in components/ui/ (tabs)
   i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
+  lib/schemas/       zod schemas shared by a form and its server action (review.ts)
   lib/auth-client.ts Better Auth's browser client (sign-in calls), magic-link plugin ready
   server/
     auth.ts          createAuth(deps): the Better Auth config. No server-only, so the CLI can load it
@@ -50,7 +52,8 @@ src/
     challenge.ts     getRunningChallenge(): core.challenges.running(), cached per request
   workflows/         Vercel Workflow: sleep, ask core.notifications, send
   emails/            React Email templates
-  lib/dates.ts       daysAgo() ("ieri", "acum 3 zile") and weekOf()/weeksAgo()/weekDays() (Monday–Sunday weeks), in Bucharest
+  lib/dates.ts       daysAgo() ("ieri", "acum 3 zile"), timeAgo() and afterLaunch() (review times), and
+                     weekOf()/weeksAgo()/weekDays() (Monday–Sunday weeks), in Bucharest
   flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number; M1 screens must look right with them off
 messages/ro.json     all copy, keys grouped by screen or component; e-mail copy under "emails"
 scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:generate`
@@ -83,9 +86,9 @@ M1 modules:
 |---|---|
 | `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
 | `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `started()` (the board's chips), `participants()` (rule 2) and `challengeStatus()` are done. To come: join/leave (rule 2), admin create/edit |
-| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`) are done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), adding updates |
+| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`) and `bySlug()` (the project page) are done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), adding updates |
 | `votes` | done (rules 10–14) |
-| `reviews` | reviews, replies and counts; assignment picking (rules 15–17) |
+| `reviews` | `thread()` (automated first, replies, counts: rules 17–18) and `post()` (reviews, the owner's replies, 10 per hour, fulfils an assignment: rules 15–16) are done. To come: assignment picking on launch (rule 16), hiding (admin) |
 | `profiles` | onboarding, handle generation, consent flags (rule 22) |
 | `notifications` | who gets which e-mail when (§11) |
 
@@ -152,4 +155,6 @@ M1 modules:
 - Base UI gives a tab panel its own tab stop. When the panel starts with focusable controls, pass `tabIndex={-1}` (`LinkTabs`).
 - `pkill -f "next start"` misses the production server, whose process is named `next-server`. A leftover one holds the port, and the next `next start` fails with `EADDRINUSE`.
 - next/font puts a metric-matched fallback face (local Arial, no `unicode-range`) right after each family. With latin and latin-ext as separate families, that fallback catches every diacritic before latin-ext is tried. `fonts.ts` turns it off on the latin faces (`adjustFontFallback: false`); keep it that way when adding a font.
+- Drizzle leaves column names unqualified in a select from one table, even inside a raw `sql` subquery. `${reviews.projectId} = ${projects.id}` then renders as `"project_id" = "id"`, and both resolve to the subquery's own table, so the count is silently wrong. Compare with a value (`= ${projectId}`), or select from a join, where names are qualified (`projects.select`).
+- Tailwind's preflight sets `line-height: 1.5` on `html`, a ratio, while the references use a fixed 24px. Text at 15px or 13px that inherits it gets 22.5px or 19.5px lines, so rows come out shorter than the reference. Set `leading-6` (or the reference's value) wherever smaller text sits in a row.
 - `next build` with `withWorkflow()` generates `src/app/.well-known/workflow/`. It's gitignored and skipped by ESLint.

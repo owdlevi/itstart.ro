@@ -2,18 +2,20 @@
 
 Things only the product owner can do: accounts, secrets, settings and decisions. Agents: read this to know what isn't set up yet, and don't work around a missing item. Tick items off here (or delete them) as they're done, and record any decision in `DECISIONS.md`.
 
-State on 2026-11-14 (screens 02 and 03 built locally on `screen-02-provocare`): `main` on GitHub (`owdlevi/itstart.ro`) has the M1 foundation: database, Better Auth, composition root and local environment. Sign-in is email and password for now (DECISIONS, "Email and password for now"), so local work needs no outside accounts.
+State on 2026-11-14 (screens 02 and 03 built locally on `screen-02-provocare`, screen 04 on `screen-04-proiect`, branched from it): `main` on GitHub (`owdlevi/itstart.ro`) has the M1 foundation: database, Better Auth, composition root and local environment. Sign-in is email and password for now (DECISIONS, "Email and password for now"), so local work needs no outside accounts.
 
 ## Now
 
 - [ ] **Decide: "Un minut. Fără parolă."** under the join button on screen 02 (and 08). It's the reference copy, but it isn't true while sign-in is email and password. Keep it, or change it until magic link is back?
-- [ ] **Free port 3000 for `pnpm dev`.** An SSH tunnel on this Mac listens on `localhost:3000`, so the dev server is only reachable on the LAN IP while it runs. Better Auth expects `http://localhost:3000` (`BETTER_AUTH_URL`). On the LAN IP, Next 16 also blocks its dev resources, so pages render but never hydrate: buttons (voting, later the forms) do nothing under `pnpm dev`. Agents worked around it with `next build && next start`.
 - [ ] **Let `gh` push workflow files:** run `gh auth refresh -h github.com -s workflow`. Without the `workflow` scope GitHub rejects any push that touches `.github/workflows/`, so the `screen-01-groundwork` branch (which adds CI) can't be pushed yet. The owner is pushing it by hand; `screen-02-provocare` is branched from it and goes up after it.
 - [ ] **Let plain `git push` work:** run `gh auth setup-git` once. HTTPS has no credential helper yet, and SSH fails GitHub's host-key check.
 - [ ] **GitHub:** once the CI workflow (`.github/workflows/ci.yml`, on the `screen-01-groundwork` branch) is on `main`, protect `main`: require PRs and require the `check` job.
 - [ ] **Decide: Home's "Cele mai votate săptămâna asta"** (HANDOVER §13.1). It shows the top 3 of the running challenge. Keep the heading, or change it to "Cele mai votate luna asta"?
 - [ ] **Review the vote refusal copy** in DECISIONS, "Screen 01 build" (it has no reference design).
 - [ ] **Review new copy from screens 02 and 03** (none of it has a reference design): an ended challenge's sidebar ("64 de oameni au construit", "40 au lansat."), the upcoming chip ("Începe pe 1 decembrie"), and the board's older week headings ("26 octombrie – 1 noiembrie" with "4 lansări" beside them). DECISIONS, "Screen 02 build" and "Screen 03 build".
+- [ ] **Review new copy from screen 04** (no reference design): the review form's messages and errors, "Intră ca să scrii o părere", the owner's "Răspunde" and reply form, "Am copiat linkul.", the wide "În lucru" box. The list is in DECISIONS, "Screen 04 build".
+- [ ] **Decide: the November challenge's title.** Screens 01, 02 and 08 say "Pagină de programări pentru o frizerie de cartier", screens 04, 05, 09 and 12 drop "de cartier". The app shows the stored title everywhere. Keep "de cartier", or drop it? DECISIONS, "Screen 04 build".
+- [ ] **Confirm two review rules** (DECISIONS, "Screen 04 data"): only the project's owner replies to reviews, and the owner can't review their own project. Also the 2000-character limit on a review.
 - [ ] **Confirm the board's tag chips:** a fixed list from the reference (Claude, Cursor, v0, Lovable, Next.js, Supabase). Keep it fixed, or should an admin be able to edit it? DECISIONS, "Screen 03 build".
 
 ## Before the first deploy
