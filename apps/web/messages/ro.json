@@ -143,7 +143,7 @@
       "title": "Timp rămas",
       "deadline": "Termen: {date}, ora {time}. Poți lansa și după, dar în afara clasamentului.",
       "join": "Intră în provocare",
-      "joinNote": "Un minut. Fără parolă."
+      "joinNote": "Durează un minut."
     },
     "people": {
       "title": "{n, plural, one {# om construiește} few {# oameni construiesc} other {# de oameni construiesc}}",

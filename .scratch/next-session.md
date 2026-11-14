@@ -1,6 +1,6 @@
 # Next session: screen 06 (Înscriere: cont)
 
-Paste everything below the line into a fresh session. It needs the owner's copy for the password form first (NEXT-ACTIONS); fill it in under "Screen 06" before pasting.
+Paste everything below the line into a fresh session.
 
 ---
 
@@ -27,7 +27,7 @@ Branches, all local:
 
 ## Screen 06
 
-- The owner's copy for the password form: _(fill in before starting: field labels and hints, sign-up vs sign-in, errors, and what replaces "Continuă cu Google/GitHub" and "Trimite-mi linkul" for now)_.
+- The copy and behaviour of the password form are decided: DECISIONS, "Screen 06 copy: password sign-in" (two modes on one panel, Google/GitHub hidden, no reset link, show-password button, every string and error). Build to it word for word.
 - `?next=<path>` returns to that page after sign-in (rule 12: votes, reviews). `?provocare=<slug>` should join that challenge after sign-in (HANDOVER §6 06), but joining is screen 08's: decide and record whether 06 only carries the slug on for now.
 - A first sign-in (no handle yet) goes to `/bun-venit` (screen 07), which doesn't exist yet.
 - Then the rest of §14: manual pass at 390/768/1024/1280 in both themes with the Hungarian sample; keyboard order; errors announced; signed in already (redirect away).

@@ -217,7 +217,7 @@ Judgment calls made while setting up the database, Better Auth and the compositi
 - **Join button:** `/intra?provocare=<slug>` for everyone until screen 08 adds joining.
 - **Statuses other than running** (no reference until screen 11): an ended challenge shows the outlined "Încheiată" badge and no time-left panel, and its vote counts are plain counts (rule 3). An upcoming one shows a warning chip "Începe pe {date}" (new copy).
 - **Links into screen 03:** "Vezi toate" goes to `/lansari?provocare=<slug>` (launched) and `/lansari?provocare=<slug>&stadiu=in-lucru` (in progress). Screen 03 must honour `provocare` and `stadiu`, as well as `eticheta`.
-- **"Un minut. Fără parolă."** under the join button is the reference copy, but it's untrue while sign-in is email and password. Kept word for word; the owner decides (NEXT-ACTIONS).
+- **"Un minut. Fără parolă."** under the join button is the reference copy, but it's untrue while sign-in is email and password. _Since changed to "Durează un minut." (see "Screen 06 copy: password sign-in")._ Kept word for word; the owner decides (NEXT-ACTIONS).
 - **Avatar** gains a 40px size, for the participant list.
 - **The viewer is "Tu"** in the participant sentence when they're in it ("Tu, Ioana, Réka și încă 83."), as on screen 08.
 - **The header row keeps its height while "Toate provocările" (M2) is hidden.** The link has a 44px tap target and shares a line with the status chip, so the chip sits in a 44px-tall box. On desktop (one line) and mobile (the chip wraps to a second line) the header then lines up with the reference to the pixel.
@@ -337,6 +337,43 @@ Judgment calls made while setting up the database, Better Auth and the compositi
 
   Comparing element positions in the reference HTML and the app with Playwright at 1280 and 390px, every element matches to the pixel apart from the 56px shift (headings' boxes are narrower, at the same position and height). Aligned regions, thumbnails and the closed vote boxes left out: desktop 0.17–0.27%, mobile 0.06–0.07%, under the 0.61% baseline.
 - **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, with and without the Hungarian sample on every text, for Ioana as Andrei, signed out, Andrei's own profile, an agent (`agent-claude`), a profile with no launches (`bianca-radu`) and an unknown handle (404): no horizontal scroll and nothing clipped. Keyboard order follows the layout (links, then each card's title, tags and vote), with the 3px outline on every stop.
+
+## 2026-11-14 · Screen 06 copy: password sign-in
+
+The owner asked for a draft and left the choices to the agent. Everything here holds until magic link and OAuth come back (DECISIONS, "Email and password for now"); then the reference's copy returns.
+
+- **One panel, two modes:** "Intră" (sign in) and "Cont nou" (sign up), switched by a text link under the button and kept in the URL (`?cont=nou`). It opens on "Cont nou" when the visitor comes to join a challenge (`?provocare=`), and on "Intră" otherwise. One form that guessed between signing in and signing up was turned down: with no password reset, a mistyped e-mail or password would silently create an account nobody can get back into.
+- **Google, GitHub and the "sau" divider are hidden,** not shown disabled: buttons that do nothing are noise, and they come back with the OAuth apps.
+- **No password reset link:** there's no reset yet (a known gap, DECISIONS above), and a link to nowhere is worse than none.
+- **Show password:** a text button in the field, "Arată parola" / "Ascunde parola" (`aria-pressed`), instead of a second "repeat the password" field.
+- **"Un minut. Fără parolă."** under the join button (screens 02 and 08) becomes "Durează un minut." while sign-in uses passwords. The reference's line returns with magic link.
+
+| Where | Copy |
+|---|---|
+| Eyebrow, H1 (from a challenge) | "Provocarea #4 · noiembrie", "Intră în provocare" (reference) |
+| H1 (from the header) | "Intră în comunitate" (the header button's words); no eyebrow |
+| Line under the H1 | "Un cont și ești înăuntru." (the reference's line without "Fără parolă de ținut minte.") |
+| E-mail field | "Adresa ta de e-mail" (reference); hint "Nu o arătăm nimănui." |
+| Password field | "Parola"; hint in "Cont nou": "Cel puțin 8 caractere." |
+| Show password | "Arată parola" / "Ascunde parola" |
+| Primary button | "Intră" / "Creează contul" |
+| Switch link | "Prima dată aici? Fă-ți cont" / "Ai deja cont? Intră" |
+| Rules sentence | "Prin înscriere accepți regulile comunității." (reference) |
+| "Ce urmează" panel | unchanged (reference) |
+
+Errors, replacing the field's hint (Field spec), or under the button for the last four:
+
+| Case | Copy |
+|---|---|
+| E-mail empty | "Scrie adresa ta de e-mail." |
+| E-mail malformed | "Adresa nu pare corectă. Verific-o o dată." |
+| Password empty | "Scrie parola." |
+| Password under 8 | "Parola are nevoie de cel puțin 8 caractere." |
+| Password over 128 | "Cel mult 128 de caractere." |
+| Wrong e-mail or password | "E-mailul sau parola nu se potrivesc." |
+| Account exists (sign-up) | "Există deja un cont cu adresa asta. Intră cu parola ta." (with the switch link) |
+| Too many attempts (429) | "Prea multe încercări. Mai încearcă peste un minut." |
+| Anything else | "Nu a mers. Mai încearcă o dată." |
 
 ## Verify during M1 setup
 

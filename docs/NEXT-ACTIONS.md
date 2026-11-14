@@ -6,8 +6,6 @@ State on 2026-11-14 (screens 02 and 03 built locally on `screen-02-provocare`, s
 
 ## Now
 
-- [ ] **Write the copy for screen 06's password form** (it blocks screen 06): labels and hints for e-mail and password, sign-up versus sign-in on one form or two, the error messages, and what stands in for "Continuă cu Google/GitHub" and "Trimite-mi linkul" until those come back. The reference has no password form (DECISIONS, "Email and password for now").
-- [ ] **Decide: "Un minut. Fără parolă."** under the join button on screen 02 (and 08). It's the reference copy, but it isn't true while sign-in is email and password. Keep it, or change it until magic link is back?
 - [ ] **Let `gh` push workflow files:** run `gh auth refresh -h github.com -s workflow`. Without the `workflow` scope GitHub rejects any push that touches `.github/workflows/`, so the `screen-01-groundwork` branch (which adds CI) can't be pushed yet. The owner is pushing it by hand; `screen-02-provocare` is branched from it and goes up after it.
 - [ ] **Let plain `git push` work:** run `gh auth setup-git` once. HTTPS has no credential helper yet, and SSH fails GitHub's host-key check.
 - [ ] **GitHub:** once the CI workflow (`.github/workflows/ci.yml`, on the `screen-01-groundwork` branch) is on `main`, protect `main`: require PRs and require the `check` job.
@@ -15,6 +13,7 @@ State on 2026-11-14 (screens 02 and 03 built locally on `screen-02-provocare`, s
 - [ ] **Review the vote refusal copy** in DECISIONS, "Screen 01 build" (it has no reference design).
 - [ ] **Review new copy from screens 02 and 03** (none of it has a reference design): an ended challenge's sidebar ("64 de oameni au construit", "40 au lansat."), the upcoming chip ("Începe pe 1 decembrie"), and the board's older week headings ("26 octombrie – 1 noiembrie" with "4 lansări" beside them). DECISIONS, "Screen 02 build" and "Screen 03 build".
 - [ ] **Review new copy from screen 04** (no reference design): the review form's messages and errors, "Intră ca să scrii o părere", the owner's "Răspunde" and reply form, "Am copiat linkul.", the wide "În lucru" box. The list is in DECISIONS, "Screen 04 build".
+- [ ] **Review the password sign-in copy for screen 06** (drafted at your request, already decided; change anything you don't like): DECISIONS, "Screen 06 copy: password sign-in". It also changes "Un minut. Fără parolă." on screens 02 and 08 to "Durează un minut." until magic link is back.
 - [ ] **Review new copy from screen 05** (no reference design): "Niciun proiect lansat încă.", "Proiect propriu" on a card outside any challenge, "În comunitate din …" without a city, "proiecte: A, B" when someone launched twice in one challenge. DECISIONS, "Screen 05 build".
 - [ ] **Decide: the November challenge's title.** Screens 01, 02 and 08 say "Pagină de programări pentru o frizerie de cartier", screens 04, 05 ("Provocări terminate"), 09 and 12 drop "de cartier". The app shows the stored title everywhere. Keep "de cartier", or drop it? DECISIONS, "Screen 04 build".
 - [ ] **Confirm two review rules** (DECISIONS, "Screen 04 data"): only the project's owner replies to reviews, and the owner can't review their own project. Also the 2000-character limit on a review.
