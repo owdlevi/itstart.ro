@@ -146,8 +146,11 @@
     "people": {
       "title": "{n, plural, one {# om construiește} few {# oameni construiesc} other {# de oameni construiesc}}",
       "avatarsLabel": "Câțiva dintre participanți",
+      "you": "Tu",
       "more": "încă {n}",
-      "launchers": "{n, plural, =0 {Nimeni n-a lansat încă.} one {# a lansat deja.} other {# au lansat deja.}}"
+      "launchers": "{n, plural, =0 {Nimeni n-a lansat încă.} one {# a lansat deja.} other {# au lansat deja.}}",
+      "titleEnded": "{n, plural, one {# om a construit} few {# oameni au construit} other {# de oameni au construit}}",
+      "launchersEnded": "{n, plural, =0 {Nimeni n-a lansat.} one {# a lansat.} other {# au lansat.}}"
     },
     "recognitions": {
       "title": "Trei recunoașteri la final",

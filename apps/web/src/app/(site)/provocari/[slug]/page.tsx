@@ -97,12 +97,18 @@ export default async function ChallengePage({
         )}
       </div>
 
-      {/* The sidebar comes first in the DOM, so phones get the countdown and
-          the join button above the brief; from 768px it moves to the right. */}
+      {/* The sidebar comes first in the DOM, so a single column gets the
+          countdown and the join button above the brief. It moves right only
+          once both columns fit side by side: 560 + 40 + 320 + 2 × 32 = 984px.
+          Below that (768px tablets included) the flex row wraps to one column. */}
       <div className="flex flex-wrap items-start gap-6 pb-10 md:gap-10 md:pb-[72px]">
-        <aside className="flex min-w-0 flex-[1_1_320px] flex-col gap-4 md:order-last">
+        <aside className="flex min-w-0 flex-[1_1_320px] flex-col gap-4 min-[984px]:order-last">
           {challenge.status !== "ended" && <TimeLeft challenge={challenge} />}
-          <People challenge={challenge} participants={participants} />
+          <People
+            challenge={challenge}
+            participants={participants}
+            viewerId={viewerId}
+          />
           <Recognitions />
           {/* M3 (flags.builderAgents): the "Și 4 agenți AI" panel goes here. */}
         </aside>
@@ -224,6 +230,16 @@ async function Brief({ challenge }: { challenge: Challenge }) {
     ["stretch", challenge.stretch, "text-muted"],
     ["launchCriteria", challenge.launchCriteria, "text-primary"],
   ] as const;
+  // An empty panel would be a heading over nothing (past challenges in the
+  // fixtures have no brief; an admin may not have written one yet).
+  if (
+    !challenge.scenario &&
+    !challenge.scenarioNote &&
+    !challenge.materialsUrl &&
+    lists.every(([, items]) => items.length === 0)
+  ) {
+    return null;
+  }
 
   return (
     <section className={cn(panel, "p-5 md:p-7")}>
@@ -315,21 +331,29 @@ async function TimeLeft({ challenge }: { challenge: Challenge }) {
 async function People({
   challenge,
   participants,
+  viewerId,
 }: {
   challenge: Challenge;
   participants: Participant[];
+  viewerId: string | null;
 }) {
   const [t, format] = await Promise.all([
     getTranslations("challenge.people"),
     getFormatter(),
   ]);
   const { participants: total, launchers } = challenge.counts;
-  const named = participants.slice(0, NAMED).map((p) => p.givenName);
+  // The viewer, when they're in, comes first and is "Tu" (screen 08).
+  const named = participants
+    .slice(0, NAMED)
+    .map((p) => (p.id === viewerId ? t("you") : p.givenName));
   const rest = total - named.length;
+  const ended = challenge.status === "ended";
 
   return (
     <section className={cn(panel, "p-5")}>
-      <h2 className={sideH2}>{t("title", { n: total })}</h2>
+      <h2 className={sideH2}>
+        {t(ended ? "titleEnded" : "title", { n: total })}
+      </h2>
       {participants.length > 0 && (
         <>
           <div
@@ -343,7 +367,7 @@ async function People({
           </div>
           <p className={small}>
             {format.list(rest > 0 ? [...named, t("more", { n: rest })] : named)}
-            . {t("launchers", { n: launchers })}
+            . {t(ended ? "launchersEnded" : "launchers", { n: launchers })}
           </p>
         </>
       )}

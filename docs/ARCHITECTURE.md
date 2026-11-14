@@ -146,4 +146,5 @@ M1 modules:
 - In a production build, Link prefetches of routes that don't exist yet stay pending, so Playwright's `networkidle` (which `capture.mjs` waits for) never arrives. Until those screens exist, run `capture.mjs` against `pnpm dev`.
 - `capture.mjs` needs design-fixtures mode, and `apps/web/.env.local` doesn't turn it on. Start the server with `DESIGN_FIXTURES=1 pnpm dev`, or the countdown and relative dates follow the real clock.
 - Postgres can't `order by` a constant (`order by false` is a syntax error). Build an optional sort key conditionally, as `challenges.participants()` does.
+- next/font puts a metric-matched fallback face (local Arial, no `unicode-range`) right after each family. With latin and latin-ext as separate families, that fallback catches every diacritic before latin-ext is tried. `fonts.ts` turns it off on the latin faces (`adjustFontFallback: false`); keep it that way when adding a font.
 - `next build` with `withWorkflow()` generates `src/app/.well-known/workflow/`. It's gitignored and skipped by ESLint.
