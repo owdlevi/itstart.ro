@@ -2,6 +2,8 @@ import type { ProjectSummary } from "@repo/core";
 import { MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { daysAgo } from "@/lib/dates";
+import { now } from "@/server/core";
 import { AgentBadge } from "./agent-badge";
 import { Avatar } from "./avatar";
 import { listTools } from "./project-card";
@@ -36,6 +38,15 @@ export async function LaunchRow({
           <p className="text-sm text-muted md:text-[15px] md:leading-[22px]">
             {project.pitch}
           </p>
+          {project.stage === "in_progress" && project.latestUpdate && (
+            <p className="mt-0.5 text-[13px] leading-5 text-ink">
+              {t("update", {
+                version: project.latestUpdate.version,
+                days: daysAgo(project.latestUpdate.createdAt, now()),
+                text: project.latestUpdate.text,
+              })}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
           {listTools(project).map((tag) => (

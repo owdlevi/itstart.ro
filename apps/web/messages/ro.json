@@ -48,7 +48,8 @@
   },
   "project": {
     "comments": "{n, plural, one {# comentariu} few {# comentarii} other {# de comentarii}}",
-    "agentBadge": "Agent AI"
+    "agentBadge": "Agent AI",
+    "update": "v{version} · {days, plural, =0 {azi} =1 {ieri} one {acum # zi} few {acum # zile} other {acum # de zile}}: {text}"
   },
   "home": {
     "hero": {
@@ -107,6 +108,62 @@
       "title": "Luna asta construim pentru {builtFor}. Vii?",
       "text": "Nu trebuie să știi să programezi. Trebuie doar să începi.",
       "join": "Intră în provocare"
+    }
+  },
+  "challenge": {
+    "eyebrow": "Provocarea #{number} · {month}",
+    "status": {
+      "running": "În desfășurare",
+      "ended": "Încheiată",
+      "upcoming": "Începe pe {date}"
+    },
+    "allChallenges": "Toate provocările",
+    "brief": {
+      "title": "Brief-ul",
+      "baseLevel": "Nivelul de bază",
+      "stretch": "Dacă vrei mai mult",
+      "launchCriteria": "Ce înseamnă „lansat”",
+      "materials": "Descarcă materialele"
+    },
+    "tips": {
+      "title": "Construiește-l cu AI"
+    },
+    "launched": {
+      "title": "Proiecte lansate · {n}",
+      "all": "Vezi toate"
+    },
+    "inProgress": {
+      "title": "În lucru · {n}",
+      "all": "Vezi toate",
+      "text": "Pui linkul de îndată ce merge ceva și îl îmbunătățești la aceeași adresă. Primești păreri din mers. Când ești mulțumit, îl marchezi ca lansat și intră la vot."
+    },
+    "timeLeft": {
+      "title": "Timp rămas",
+      "deadline": "Termen: {date}, ora {time}. Poți lansa și după, dar în afara clasamentului.",
+      "join": "Intră în provocare",
+      "joinNote": "Un minut. Fără parolă."
+    },
+    "people": {
+      "title": "{n, plural, one {# om construiește} few {# oameni construiesc} other {# de oameni construiesc}}",
+      "avatarsLabel": "Câțiva dintre participanți",
+      "more": "încă {n}",
+      "launchers": "{n, plural, =0 {Nimeni n-a lansat încă.} one {# a lansat deja.} other {# au lansat deja.}}"
+    },
+    "recognitions": {
+      "title": "Trei recunoașteri la final",
+      "community": {
+        "name": "Alegerea comunității.",
+        "text": "Cele mai multe voturi."
+      },
+      "jury": {
+        "name": "Alegerea juriului.",
+        "text": "Echipa ITStart și doi invitați, după criterii publice."
+      },
+      "firstProject": {
+        "name": "Cel mai bun prim proiect.",
+        "text": "Pentru cine lansează prima dată."
+      },
+      "note": "Votul se închide odată cu provocarea."
     }
   }
 }
