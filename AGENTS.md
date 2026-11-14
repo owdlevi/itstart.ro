@@ -15,4 +15,5 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 - `docs/ARCHITECTURE.md`: where code goes. Read it before adding a business rule, a table or migration, an API route or server action, a workflow, or a new package.
 - `GLOSSARY.md`: domain terms, English in code and Romanian in copy. Read it before naming anything in code or copy.
 - `docs/DECISIONS.md`: the locked stack, vendor exceptions and judgment calls. Read it before adding a dependency or vendor, or deciding something HANDOVER leaves open; record new judgment calls there.
+- `docs/NEXT-ACTIONS.md`: what's waiting on the owner (accounts, secrets, open decisions). Read it before relying on anything deployed or external.
 - `docs/adr/`: decisions that are hard to reverse. Read them before replacing a vendor or changing where data lives.

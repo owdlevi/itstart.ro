@@ -87,7 +87,7 @@ Decided by the product owner. Final. Each line: what, why, and the alternative t
 ## 2026-11-13 · Environments, CI and deploys
 
 - **Env vars:** each workspace that needs them has a gitignored `.env.local` and a committed `.env.example` that lists every key, with no values. Vercel's project env holds the Production and Preview values. Neon's Vercel integration injects `DATABASE_URL` and `DATABASE_URL_UNPOOLED` for each preview branch, with branch auto-delete, plus `neondatabase/delete-branch-action` on PR close.
-- **Remote:** GitHub. Vercel's Git integration deploys: a preview for every PR, and `main` to production. GitHub holds no Vercel token and no app secrets.
+- **Remote:** GitHub, `owdlevi/itstart.ro` (added 2026-11-14). Vercel's Git integration deploys: a preview for every PR, and `main` to production. GitHub holds no Vercel token and no app secrets.
 - **Checks:** a GitHub Actions workflow runs `pnpm lint`, `pnpm check-types` and `pnpm test` on every PR, and they're required for merging.
 - **`capture.mjs`:** runs locally only, before a PR.
 - **Neon free plan risk:** 100 CU-hours/month are shared by every branch, and running out suspends production too.
