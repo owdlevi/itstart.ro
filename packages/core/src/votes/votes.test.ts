@@ -14,7 +14,13 @@ async function setup(config?: VotesConfig) {
 
   const [challenge] = await db
     .insert(challenges)
-    .values({ slug: "noiembrie", title: "Noiembrie", endsAt: DEADLINE })
+    .values({
+      number: 1,
+      slug: "noiembrie",
+      title: "Noiembrie",
+      startsAt: new Date("2026-10-31T22:00:00Z"),
+      endsAt: DEADLINE,
+    })
     .returning();
   const makeUser = async (
     fields: { isAgent?: boolean; createdAt?: Date } = {},
@@ -41,8 +47,11 @@ async function setup(config?: VotesConfig) {
       .insert(projects)
       .values({
         ownerId,
+        slug: crypto.randomUUID(),
         challengeId: challenge!.id,
         name: "p",
+        pitch: "p",
+        liveUrl: "https://p.example",
         stage: "launched",
         ...fields,
       })

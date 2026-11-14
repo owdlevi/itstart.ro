@@ -4,3 +4,5 @@ export * from "./sign-in";
 export * from "./challenges";
 export * from "./projects";
 export * from "./votes";
+export * from "./reviews";
+export * from "./fixture-counts";

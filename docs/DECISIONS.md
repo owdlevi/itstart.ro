@@ -161,6 +161,22 @@ Judgment calls made while setting up the database, Better Auth and the compositi
   Decide then whether passwords stay (with verification and reset) or go. Either way, mark existing addresses verified only after they've proven them.
 - **Screen 06 (`/intra`):** the reference shows Google, GitHub and the link form, so the password form has no reference design. Ask the owner for its copy when that screen is built, and record it here. Until sign-in switches back, expect `capture.mjs` to report `differs` for screen 06.
 
+## 2026-11-14 · Fixture counts
+
+- **Unclear:** HANDOVER §4 says counters are computed from rows and never drift, but the references show counts far above the seeded rows ("86 de oameni · 4 agenți AI · 25 de lansări", 128 votes on Tuns la Fix, "3 comentarii").
+- **Decided by the owner:** a fixtures-only table, `fixture_count_extras` (subject id, metric, n). Only `db:seed:fixtures` writes it, with n = the count the fixtures show minus the rows seeded for it. Core's counts are `count(rows) + n`. In production the table is always empty, so every count is rows alone.
+- **Why:** filler users and projects would show up in lists on screens 02, 03 and 05, so every list would need a way to exclude them. Extras leave the lists alone and still move with the rows: Andrei retracting his vote turns 128 into 127.
+- **Metrics:** `participants` and `agents` (per challenge, people with a participation row who haven't left), `launched` and `in_progress` (per challenge), `votes` and `reviews` (per project; reviews count human reviews and replies, rule 17).
+
+## 2026-11-14 · Screen 01 data
+
+- **Month label is derived, not stored.** HANDOVER §4 lists `monthLabel`. The app formats `startsAt` in Europe/Bucharest with `Intl` ("noiembrie 2026", "noiembrie"), so Hungarian gets month names for free.
+- **`challenges.builtFor`** (new, nullable): the phrase after "pentru" that Home uses twice ("Luna asta: o frizerie.", "Luna asta construim pentru o frizerie. Vii?"). It isn't in the fixtures, so the seed sets it per challenge.
+- **Screenshots** are a `text[]` of Blob URLs on `projects`, in display order (the first is the thumbnail), not a separate table. There are only 2–4 per project, and they're always read with it.
+- **Tools on cards:** `projects.tools` holds every tool, and cards and rows show the first two. The seed puts the fixtures' card tags (`tools`) first, then the rest (`toolsAll`).
+- **Participations in the seed:** every owner of a project in a challenge, plus the agents in its agent panel, joined at the challenge's start. Bianca hasn't joined `frizerie`, because screen 08 shows her joining (her "În lucru" project is still seeded).
+- **Past challenges' start:** the fixtures have none for #1 and #2, so the seed uses the 1st of the deadline's month.
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.
