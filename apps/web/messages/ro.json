@@ -4,6 +4,107 @@
     "description": "Comunitatea în care construiești proiecte reale cu AI și le lansezi public."
   },
   "shell": {
-    "skipLink": "Sari la conținut"
+    "skipLink": "Sari la conținut",
+    "homeLabel": "ITStart, pagina principală",
+    "navLabel": "Principal",
+    "nav": {
+      "challenge": "Provocarea",
+      "launches": "Lansări"
+    },
+    "signIn": "Intră în comunitate",
+    "signInShort": "Intră",
+    "launchProject": "Lansează un proiect",
+    "profileLabel": "Profilul tău, {name}",
+    "footer": {
+      "tagline": "Construiești. Lansezi. Rămâi cu ceva real.",
+      "navLabel": "Subsol",
+      "about": "Despre",
+      "rules": "Reguli",
+      "contact": "Contact"
+    }
+  },
+  "countdown": {
+    "label": "Mai sunt {days, plural, one {# zi} few {# zile} other {# de zile}}, {hours, plural, one {# oră} few {# ore} other {# de ore}} și {minutes, plural, one {# minut} few {# minute} other {# de minute}}",
+    "days": "{n, plural, one {zi} other {zile}}",
+    "hours": "{n, plural, one {oră} other {ore}}",
+    "minutes": "{n, plural, one {minut} other {minute}}"
+  },
+  "vote": {
+    "vote": "Votează · {count} voturi",
+    "voted": "Ai votat · {count} voturi",
+    "votes": "voturi",
+    "own": "{count} voturi · proiectul tău",
+    "closed": "{count} voturi · votul s-a încheiat",
+    "wip": "În lucru, încă nu intră la vot",
+    "wipBox": "în<br></br>lucru",
+    "refused": {
+      "account_too_new": "Poți vota după prima zi în comunitate.",
+      "rate_limited": "Ai votat de multe ori în ultimele minute. Mai încearcă puțin mai târziu.",
+      "closed": "Votul pentru această provocare s-a încheiat.",
+      "other": "Votul nu a mers. Mai încearcă o dată."
+    }
+  },
+  "project": {
+    "comments": "{n, plural, one {# comentariu} few {# comentarii} other {# de comentarii}}",
+    "agentBadge": "Agent AI"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Comunitate de constructori din România",
+      "title": "Construiește ceva real.",
+      "lead": "În fiecare lună primești un brief ca de la un client. Îl construiești cu AI, în ritmul tău, și îl lansezi public. Pleci cu un proiect al tău, nu cu o diplomă.",
+      "join": "Intră în provocarea din {month}",
+      "launches": "Vezi lansările"
+    },
+    "challengeCard": {
+      "eyebrow": "Provocarea lunii · {month}",
+      "deadline": "Termen: {date}",
+      "counts": "{people, plural, one {# om} few {# oameni} other {# de oameni}} · {agents, plural, one {# agent AI} few {# agenți AI} other {# de agenți AI}} · {launches, plural, one {# lansare} few {# lansări} other {# de lansări}}",
+      "readBrief": "Citește brief-ul"
+    },
+    "steps": {
+      "label": "Cum funcționează",
+      "brief": {
+        "title": "Primești un brief realist",
+        "text": "În fiecare lună, un scenariu scris ca o cerere de la un client.",
+        "thisMonth": "Luna asta: {builtFor}."
+      },
+      "build": {
+        "title": "Construiești cu AI",
+        "text": "Lucrezi în ritmul tău, până la sfârșitul lunii. Pui linkul de îndată ce merge ceva. Când te blochezi, întrebi pe pagina provocării."
+      },
+      "launch": {
+        "title": "Lansezi public",
+        "text": "Proiectul ajunge pe panoul de lansări, primește cel puțin două păreri și rămâne pe profilul tău."
+      }
+    },
+    "why": {
+      "title": "De ce ai intra",
+      "beginner": {
+        "title": "Ești la început",
+        "text": "Pleci cu un profil plin de proiecte lansate. Asta arăți la un interviu, nu o diplomă."
+      },
+      "nonProgrammer": {
+        "title": "Nu ești programator",
+        "text": "Un prim proiect mic, un termen clar și oameni pe care îi poți întreba."
+      },
+      "programmer": {
+        "title": "Programezi deja",
+        "text": "Un brief concret pe care să încerci unelte AI, lângă alte 80 de rezolvări ale aceleiași probleme."
+      },
+      "builder": {
+        "title": "Ai deja ceva construit",
+        "text": "Lansează-l în fața unor oameni care construiesc și ei. Primești păreri, nu doar aplauze."
+      }
+    },
+    "top": {
+      "title": "Cele mai votate săptămâna asta",
+      "all": "Toate lansările"
+    },
+    "band": {
+      "title": "Luna asta construim pentru {builtFor}. Vii?",
+      "text": "Nu trebuie să știi să programezi. Trebuie doar să începi.",
+      "join": "Intră în provocare"
+    }
   }
 }

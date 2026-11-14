@@ -99,6 +99,14 @@
     outline: 3px solid var(--primary);
     outline-offset: 3px;
   }
+  /* Plain links, as in the references; components set their own colours. */
+  a {
+    color: var(--primary);
+    text-decoration-line: underline;
+  }
+  a:hover {
+    color: var(--primary-hover);
+  }
   h1,
   h2,
   h3 {
@@ -122,5 +130,9 @@
   }
   .skip-link:focus-visible {
     top: 16px;
+  }
+  /* On the green band the focus ring is on-band (HANDOVER §8). */
+  .on-band:focus-visible {
+    outline-color: var(--on-band);
   }
 }
