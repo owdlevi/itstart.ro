@@ -7,7 +7,7 @@ import { createAuth } from "./auth";
 
 // Design-fixtures mode: the clock stops at the moment the reference PNGs show,
 // and /dev/login-as works. Never in production, whatever the env says.
-const designFixtures =
+export const designFixtures =
   process.env.DESIGN_FIXTURES === "1" &&
   process.env.VERCEL_ENV !== "production";
 const FIXTURES_NOW = new Date("2026-11-11T07:35:00+02:00");
