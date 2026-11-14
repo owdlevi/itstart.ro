@@ -76,7 +76,9 @@ export function VoteButton({
 
   const { count, voted } = state;
   return (
-    <span className="relative shrink-0">
+    // Wide, it may take a row of its own on a phone; capped there so a longer
+    // (Hungarian) label wraps instead of widening the page.
+    <span className={cn("relative shrink-0", wide && "max-w-full")}>
       <button
         type="button"
         aria-pressed={voted}
@@ -102,7 +104,9 @@ export function VoteButton({
       <span
         role="status"
         className={cn(
-          "absolute right-0 top-full z-10 mt-2 w-60 rounded-md border border-line bg-surface p-3 text-sm text-ink shadow-raised",
+          // Wide starts its row on phones, so there its message opens rightwards.
+          wide ? "left-0 md:left-auto md:right-0" : "right-0",
+          "absolute top-full z-10 mt-2 w-60 max-w-[calc(100vw-32px)] rounded-md border border-line bg-surface p-3 text-sm text-ink shadow-raised",
           !message && "sr-only",
         )}
       >
