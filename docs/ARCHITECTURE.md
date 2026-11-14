@@ -48,7 +48,8 @@ src/
     challenge.ts     getRunningChallenge(): core.challenges.running(), cached per request
   workflows/         Vercel Workflow: sleep, ask core.notifications, send
   emails/            React Email templates
-  flags.ts           milestone flags
+  lib/dates.ts       daysAgo(): calendar days in Bucharest, for "ieri" / "acum 3 zile"
+  flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number; M1 screens must look right with them off
 messages/ro.json     all copy, keys grouped by screen or component; e-mail copy under "emails"
 scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:generate`
 ```
@@ -79,8 +80,8 @@ M1 modules:
 | Module | Covers |
 |---|---|
 | `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
-| `challenges` | `running()` with its counts and `challengeStatus()` are done (rule 1). To come: join/leave (rules 2–3), admin create/edit |
-| `projects` | `mostVoted()` is done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), updates |
+| `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `participants()` (rule 2) and `challengeStatus()` are done. To come: join/leave (rule 2), admin create/edit |
+| `projects` | `mostVoted()` and `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) are done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), adding updates |
 | `votes` | done (rules 10–14) |
 | `reviews` | reviews, replies and counts; assignment picking (rules 15–17) |
 | `profiles` | onboarding, handle generation, consent flags (rule 22) |
@@ -143,4 +144,6 @@ M1 modules:
 - Message keys are typed (`src/i18n/next-intl.d.ts`): a missing key fails `check-types`. Plurals use ICU with Romanian's `one`/`few`/`other` ("19 zile", "24 de minute").
 - Opening `pnpm dev` from another host (e.g. the LAN IP while port 3000 on localhost is taken): Next 16 blocks cross-origin dev resources, so the page renders but never hydrates (buttons do nothing). Use `localhost`, or test interaction on `next build && next start`.
 - In a production build, Link prefetches of routes that don't exist yet stay pending, so Playwright's `networkidle` (which `capture.mjs` waits for) never arrives. Until those screens exist, run `capture.mjs` against `pnpm dev`.
+- `capture.mjs` needs design-fixtures mode, and `apps/web/.env.local` doesn't turn it on. Start the server with `DESIGN_FIXTURES=1 pnpm dev`, or the countdown and relative dates follow the real clock.
+- Postgres can't `order by` a constant (`order by false` is a syntax error). Build an optional sort key conditionally, as `challenges.participants()` does.
 - `next build` with `withWorkflow()` generates `src/app/.well-known/workflow/`. It's gitignored and skipped by ESLint.

@@ -6,8 +6,9 @@ State on 2026-11-14: `main` on GitHub (`owdlevi/itstart.ro`) has the M1 foundati
 
 ## Now
 
+- [ ] **Decide: "Un minut. Fără parolă."** under the join button on screen 02 (and 08). It's the reference copy, but it isn't true while sign-in is email and password. Keep it, or change it until magic link is back?
 - [ ] **Free port 3000 for `pnpm dev`.** An SSH tunnel on this Mac listens on `localhost:3000`, so the dev server is only reachable on the LAN IP while it runs. Better Auth expects `http://localhost:3000` (`BETTER_AUTH_URL`). On the LAN IP, Next 16 also blocks its dev resources, so pages render but never hydrate: buttons (voting, later the forms) do nothing under `pnpm dev`. Agents worked around it with `next build && next start`.
-- [ ] **Let `gh` push workflow files:** run `gh auth refresh -h github.com -s workflow`. Without the `workflow` scope GitHub rejects any push that touches `.github/workflows/`, so the `screen-01-groundwork` branch (which adds CI) can't be pushed yet.
+- [ ] **Let `gh` push workflow files:** run `gh auth refresh -h github.com -s workflow`. Without the `workflow` scope GitHub rejects any push that touches `.github/workflows/`, so the `screen-01-groundwork` branch (which adds CI) can't be pushed yet. The owner is pushing it by hand; `screen-02-provocare` is branched from it and goes up after it.
 - [ ] **Let plain `git push` work:** run `gh auth setup-git` once. HTTPS has no credential helper yet, and SSH fails GitHub's host-key check.
 - [ ] **GitHub:** once the CI workflow (`.github/workflows/ci.yml`, on the `screen-01-groundwork` branch) is on `main`, protect `main`: require PRs and require the `check` job.
 - [ ] **Decide: Home's "Cele mai votate săptămâna asta"** (HANDOVER §13.1). It shows the top 3 of the running challenge. Keep the heading, or change it to "Cele mai votate luna asta"?

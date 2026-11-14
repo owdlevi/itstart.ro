@@ -206,6 +206,20 @@ Judgment calls made while setting up the database, Better Auth and the compositi
 - **Participants are listed earliest-joined first.** The seed spaces the joins a minute apart in fixture order, so the sidebar reads "Ioana, Andrei, Réka…".
 - **"23 au lansat deja"** counts people with a launched project in the challenge, a new extras metric, `launchers`. The seed takes the fixtures' 25 launches minus the agents' two (one launch per person).
 
+## 2026-11-14 · Screen 02 build
+
+- **Milestone flags** are plain constants in `apps/web/src/flags.ts`, derived from one `MILESTONE` number (1 for now): `questions` (M2), `challengeArchive` (M2), `builderAgents` (M3). No flags vendor.
+- **Agent-built projects are hidden in M1** (HANDOVER §3, "agent-built projects", M3). Lists on 02 pass `agents: flags.builderAgents` to core. Counts still include them ("Proiecte lansate · 25"). In production M1 there are no agent-built projects, so lists and counts agree; only the fixtures show the gap.
+- **Launched rows are the four with the most votes** (ties: latest launch first). The reference's order (Tuns la Fix, Scaunul 3, Frizerie Simplă, Brici) puts the agent's 38 votes above Brici's 81, which no rule produces. Screen 03's reference shuffles agent rows the same way. With agents hidden, 02 shows Tuns la Fix, Scaunul 3, Brici, La Fix.
+- **"În lucru" rows** are the four most recently updated (or created, before the first update). The update line reads "v2 · ieri: …" in Bucharest calendar days ("azi", "ieri", "acum 3 zile").
+- **Participant list:** at most 8 avatars (40px), earliest-joined first, with the viewer first when they're in it (screen 08: "Tu, Ioana…"). The sentence names the first three and says "și încă N", where N is the participant count minus the names shown. The reference shows Bianca's avatar, but the seed has her not joined (screen 08 shows her joining), so 02 shows 7 avatars. That's an expected difference.
+- **The sidebar comes first in the DOM,** so phones get the countdown and join button above the brief (§6 02). From 768px it moves right with `order`. On desktop, keyboard focus therefore reaches the sidebar before the brief. A single DOM can't match both references' order, and phones come first (§2.5).
+- **Join button:** `/intra?provocare=<slug>` for everyone until screen 08 adds joining.
+- **Statuses other than running** (no reference until screen 11): an ended challenge shows the outlined "Încheiată" badge and no time-left panel, and its vote counts are plain counts (rule 3). An upcoming one shows a warning chip "Începe pe {date}" (new copy).
+- **Links into screen 03:** "Vezi toate" goes to `/lansari?provocare=<slug>` (launched) and `/lansari?provocare=<slug>&stadiu=in-lucru` (in progress). Screen 03 must honour `provocare` and `stadiu`, as well as `eticheta`.
+- **"Un minut. Fără parolă."** under the join button is the reference copy, but it's untrue while sign-in is email and password. Kept word for word; the owner decides (NEXT-ACTIONS).
+- **Avatar** gains a 40px size, for the participant list.
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.
