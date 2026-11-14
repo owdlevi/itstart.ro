@@ -24,23 +24,40 @@ export function safeNext(raw: string | null | undefined): string | null {
 }
 
 /**
+ * The query flag a join adds to the challenge's URL: the page shows its
+ * "Ești în provocare" banner once, then drops the flag (screen 08).
+ */
+export const JOINED_PARAM = "inscris";
+/** Its counterpart after "Renunță la provocare": a status line, shown once. */
+export const LEFT_PARAM = "renuntat";
+
+/** The challenge page right after joining it, with the banner. */
+export function joinedHref(slug: string): string {
+  return `/provocari/${encodeURIComponent(slug)}?${JOINED_PARAM}=1`;
+}
+
+/**
  * Where someone goes once they're signed in (screen 06):
  * - someone who hasn't finished onboarding goes to /bun-venit (screen 07), carrying
  *   `provocare` and `next` on;
  * - otherwise back to `next` (rule 12: a vote, a review);
- * - otherwise to the challenge they came to join;
+ * - otherwise to the challenge they came to join, with the joined banner if
+ *   signing in joined it (screen 08);
  * - otherwise Home.
  */
 export function signInDestination({
   onboarded,
   next,
   challengeSlug,
+  joined = false,
 }: {
   /** `onboardedAt` is set: they've been through /bun-venit. */
   onboarded: boolean;
   next: string | null | undefined;
   /** A challenge that can still be joined, already checked by the caller. */
   challengeSlug: string | null | undefined;
+  /** Signing in (or onboarding) has just joined `challengeSlug`. */
+  joined?: boolean;
 }): string {
   const back = safeNext(next);
   if (!onboarded) {
@@ -51,6 +68,10 @@ export function signInDestination({
     return search ? `/bun-venit?${search}` : "/bun-venit";
   }
   if (back) return back;
-  if (challengeSlug) return `/provocari/${encodeURIComponent(challengeSlug)}`;
+  if (challengeSlug) {
+    return joined
+      ? joinedHref(challengeSlug)
+      : `/provocari/${encodeURIComponent(challengeSlug)}`;
+  }
   return "/";
 }

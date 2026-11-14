@@ -55,6 +55,26 @@ describe("signInDestination", () => {
     ).toBe("/proiecte/brici#pareri");
   });
 
+  it("shows the joined banner when signing in joined the challenge (screen 08)", () => {
+    expect(
+      signInDestination({
+        onboarded: true,
+        next: null,
+        challengeSlug: "frizerie",
+        joined: true,
+      }),
+    ).toBe("/provocari/frizerie?inscris=1");
+    // `next` still wins: the page they came from has no banner.
+    expect(
+      signInDestination({
+        onboarded: true,
+        next: "/lansari",
+        challengeSlug: "frizerie",
+        joined: true,
+      }),
+    ).toBe("/lansari");
+  });
+
   it("goes to the challenge the visitor came to join", () => {
     expect(
       signInDestination({

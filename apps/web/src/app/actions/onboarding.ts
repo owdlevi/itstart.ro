@@ -14,7 +14,8 @@ export type CompleteOnboardingResult =
 
 /**
  * Saves /bun-venit (screen 07) and sends them on, like a sign-in: to `next`,
- * the challenge, or Home. Screen 08 joins `challengeSlug` here too.
+ * the challenge, or Home. A challenge they came from is joined here, now that
+ * they have a name to be listed by (screen 08).
  */
 export async function completeOnboarding(
   input: unknown,
@@ -28,11 +29,15 @@ export async function completeOnboarding(
   // A second tab that already finished: on to the same place.
   if (!result.ok && result.reason !== "already_onboarded") return result;
   const challenge = await getJoinableChallenge(challengeSlug);
+  const joined = challenge
+    ? (await core.challenges.join(session.user.id, challenge.slug)).ok
+    : false;
   redirect(
     signInDestination({
       onboarded: true,
       next,
       challengeSlug: challenge?.slug,
+      joined,
     }),
     RedirectType.replace,
   );

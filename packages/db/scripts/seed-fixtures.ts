@@ -21,6 +21,8 @@ import {
 import { withDb } from "./connect";
 
 type Fixtures = {
+  /** The reference moment, which fixtures mode freezes the clock at. */
+  now: string;
   users: {
     handle: string;
     name: string;
@@ -175,8 +177,16 @@ const BUILD_DURATION: Record<
 // transparent images, so the `tint` placeholder behind each shows (HANDOVER §9.1).
 const SCREENSHOTS: Record<string, number> = { "tuns-la-fix": 3 };
 // Joined the running challenge before the reference moment. Bianca isn't:
-// screen 08 shows her joining.
+// screen 08 shows her right after joining, so she joins a minute before the
+// frozen clock, on top of the counts the references show ("87 de oameni";
+// DECISIONS, "Screen 08 data").
 const NOT_JOINED = new Set(["bianca-radu"]);
+const JUST_JOINED = { handle: "bianca-radu", challenge: "frizerie" };
+// Votes the references show beyond fixtures.votes: screen 08 has Bianca's on
+// Tuns la Fix ("Ai votat · 128").
+const EXTRA_VOTES: Record<string, string[]> = {
+  "bianca-radu": ["tuns-la-fix"],
+};
 
 if (process.env.VERCEL_ENV === "production") {
   console.error("Refusing to seed design fixtures into production.");
@@ -334,7 +344,10 @@ await withDb((db) =>
       await tx.insert(projectUpdates).values(updateRows);
     }
 
-    const voteRows = Object.entries(fixtures.votes).flatMap(([handle, slugs]) =>
+    const voteRows = [
+      ...Object.entries(fixtures.votes),
+      ...Object.entries(EXTRA_VOTES),
+    ].flatMap(([handle, slugs]) =>
       slugs.map((slug) => ({
         userId: userId.get(handle)!,
         projectId: projectId.get(slug)!,
@@ -493,8 +506,15 @@ await withDb((db) =>
     }
     if (extras.length > 0) await tx.insert(fixtureCountExtras).values(extras);
 
+    // After the extras, so her join adds one to what the references show.
+    await tx.insert(participations).values({
+      userId: userId.get(JUST_JOINED.handle)!,
+      challengeId: challengeId.get(JUST_JOINED.challenge)!,
+      joinedAt: new Date(new Date(fixtures.now).getTime() - 60_000),
+    });
+
     console.log(
-      `Seeded ${userRows.length} users (admin: ${ADMIN.handle}), ${challengeRows.length} challenges, ${participationRows.length} participations, ${projectRows.length} projects, ${updateRows.length} project updates, ${voteRows.length} votes, ${reviewCount} reviews, ${assignmentRows.length} review assignments, ${extras.length} fixture count extras.`,
+      `Seeded ${userRows.length} users (admin: ${ADMIN.handle}), ${challengeRows.length} challenges, ${participationRows.length + 1} participations, ${projectRows.length} projects, ${updateRows.length} project updates, ${voteRows.length} votes, ${reviewCount} reviews, ${assignmentRows.length} review assignments, ${extras.length} fixture count extras.`,
     );
   }),
 );

@@ -8,14 +8,18 @@ import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/button";
 import { Container } from "@/components/container";
 import { Countdown } from "@/components/countdown";
+import { FlashBanner } from "@/components/flash-banner";
+import { JoinButton } from "@/components/join-button";
 import { LaunchRow } from "@/components/launch-row";
+import { LeaveChallenge } from "@/components/leave-challenge";
 import { ProjectVote } from "@/components/project-vote";
 import { SectionHeading } from "@/components/section-heading";
 import { StatusChip } from "@/components/status-chip";
 import { flags } from "@/flags";
+import { JOINED_PARAM, LEFT_PARAM } from "@/lib/sign-in-destination";
 import { cn } from "@/lib/utils";
-import { core, now } from "@/server/core";
-import { getSession } from "@/server/session";
+import { core, designFixtures, now } from "@/server/core";
+import { getSession, type Session } from "@/server/session";
 
 const h2 =
   "text-2xl font-bold leading-[1.12] tracking-[-0.02em] md:text-[28px]";
@@ -27,12 +31,21 @@ const small = "text-sm text-muted";
 const LIST_LIMIT = 4;
 const AVATARS = 8;
 const NAMED = 3;
+const DAY = 86_400_000;
+// Design fixtures only: a join this recent counts as "right after joining",
+// so screen 08's capture (no query flag) shows the banner. The clock is
+// frozen there; Bianca's seeded join is a minute old (DECISIONS, "Screen 08 data").
+const FIXTURES_JUST_JOINED = 10 * 60_000;
 
-/** Screen 02 · Provocare (HANDOVER §6). Screen 08 adds the joined state. */
+/**
+ * Screen 02 · Provocare (HANDOVER §6), and screen 08 for a participant: the
+ * joined banner (once, after joining), the chip, "Pașii tăi" and leaving.
+ */
 export default async function ChallengePage({
   params,
+  searchParams,
 }: PageProps<"/provocari/[slug]">) {
-  const { slug } = await params;
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
   const [challenge, session] = await Promise.all([
     core.challenges.bySlug(slug),
     getSession(),
@@ -46,21 +59,57 @@ export default async function ChallengePage({
     viewerId,
     agents: flags.builderAgents,
   };
-  const [t, format, launched, inProgress, participants] = await Promise.all([
-    getTranslations("challenge"),
-    getFormatter(),
-    core.projects.mostVoted(list),
-    core.projects.inProgress(list),
-    core.challenges.participants({
-      challengeId: challenge.id,
-      limit: AVATARS,
-      viewerId,
-    }),
-  ]);
+  const [t, format, launched, inProgress, participants, participation] =
+    await Promise.all([
+      getTranslations("challenge"),
+      getFormatter(),
+      core.projects.mostVoted(list),
+      core.projects.inProgress(list),
+      core.challenges.participants({
+        challengeId: challenge.id,
+        limit: AVATARS,
+        viewerId,
+      }),
+      viewerId ? core.challenges.participation(challenge.id, viewerId) : null,
+    ]);
   const boardHref = `/lansari?provocare=${challenge.slug}`;
+  const ended = challenge.status === "ended";
+  const joined = !!participation && !ended;
+  const justJoined =
+    joined &&
+    (query[JOINED_PARAM] === "1" ||
+      (designFixtures &&
+        now().getTime() - participation.joinedAt.getTime() <
+          FIXTURES_JUST_JOINED));
+  const justLeft = !participation && !!session && query[LEFT_PARAM] === "1";
+  const viewer = participants.find((p) => p.id === viewerId);
 
   return (
     <Container>
+      {justJoined && (
+        <FlashBanner param={JOINED_PARAM}>
+          {viewer?.givenName
+            ? t("participation.joined.greeting", { name: viewer.givenName })
+            : t("participation.joined.greetingNoName")}{" "}
+          {challenge.status === "upcoming"
+            ? t("participation.joined.startsOn", {
+                date: format.dateTime(challenge.startsAt, {
+                  day: "numeric",
+                  month: "long",
+                }),
+              })
+            : t("participation.joined.daysLeft", {
+                n: Math.floor(
+                  (challenge.endsAt.getTime() - now().getTime()) / DAY,
+                ),
+              })}
+        </FlashBanner>
+      )}
+      {justLeft && (
+        <FlashBanner param={LEFT_PARAM} tone="quiet">
+          {t("participation.left")}
+        </FlashBanner>
+      )}
       <div className="flex flex-col gap-3 pb-6 pt-7 md:gap-4 md:pb-10 md:pt-12">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <p className="text-[13px] font-bold uppercase leading-[18px] tracking-[0.06em] text-primary">
@@ -75,8 +124,22 @@ export default async function ChallengePage({
           {/* The chip shares a line with the M2 link (44px tap target), so it
               holds that height and the header keeps the reference's rhythm
               while the link is hidden, on one line or two. */}
-          <span className="inline-flex min-h-11 items-center">
+          <span className="inline-flex min-h-11 items-center gap-x-3">
             <ChallengeStatusChip challenge={challenge} />
+            {joined && (
+              <StatusChip
+                icon={
+                  <Check
+                    size={15}
+                    strokeWidth={2.2}
+                    aria-hidden
+                    className="flex-none"
+                  />
+                }
+              >
+                {t("participation.chip")}
+              </StatusChip>
+            )}
           </span>
           {flags.challengeArchive && (
             <Link
@@ -103,7 +166,13 @@ export default async function ChallengePage({
           Below that (768px tablets included) the flex row wraps to one column. */}
       <div className="flex flex-wrap items-start gap-6 pb-10 md:gap-10 md:pb-[72px]">
         <aside className="flex min-w-0 flex-[1_1_320px] flex-col gap-4 min-[984px]:order-last">
-          {challenge.status !== "ended" && <TimeLeft challenge={challenge} />}
+          {!ended && (
+            <TimeLeft
+              challenge={challenge}
+              session={session}
+              joined={joined}
+            />
+          )}
           <People
             challenge={challenge}
             participants={participants}
@@ -292,7 +361,15 @@ async function Brief({ challenge }: { challenge: Challenge }) {
   );
 }
 
-async function TimeLeft({ challenge }: { challenge: Challenge }) {
+async function TimeLeft({
+  challenge,
+  session,
+  joined,
+}: {
+  challenge: Challenge;
+  session: Session | null;
+  joined: boolean;
+}) {
   const [t, format] = await Promise.all([
     getTranslations("challenge.timeLeft"),
     getFormatter(),
@@ -317,14 +394,94 @@ async function TimeLeft({ challenge }: { challenge: Challenge }) {
           }),
         })}
       </p>
-      {/* Joining happens on sign-in (screen 06); screen 08 adds the joined state. */}
-      <div className="flex flex-col gap-2.5">
-        <Button href={`/intra?provocare=${challenge.slug}`} full>
-          {t("join")}
-        </Button>
-      </div>
-      <p className={small}>{t("joinNote")}</p>
+      {joined ? (
+        <>
+          <Steps challenge={challenge} userId={session!.user.id} />
+          <div className="flex flex-col gap-2.5">
+            <Button href="/lanseaza" full>
+              {t("addProject")}
+            </Button>
+            <LeaveChallenge slug={challenge.slug} />
+          </div>
+        </>
+      ) : session?.user.onboardedAt ? (
+        // One action (rule 2): nothing to sign in to, so no note.
+        <JoinButton slug={challenge.slug} />
+      ) : (
+        // Signed out: sign-in joins it (screen 06). Signed in without a name
+        // yet: /bun-venit joins it once they have one (screen 07).
+        <>
+          <div className="flex flex-col gap-2.5">
+            <Button
+              href={`${session ? "/bun-venit" : "/intra"}?provocare=${challenge.slug}`}
+              full
+            >
+              {t("join")}
+            </Button>
+          </div>
+          <p className={small}>{t("joinNote")}</p>
+        </>
+      )}
     </section>
+  );
+}
+
+/** "Pașii tăi": done / not done, from their projects in the challenge. */
+async function Steps({
+  challenge,
+  userId,
+}: {
+  challenge: Challenge;
+  userId: string;
+}) {
+  const [t, format, steps] = await Promise.all([
+    getTranslations("challenge.steps"),
+    getFormatter(),
+    core.challenges.steps(challenge.id, userId),
+  ]);
+  const items = [
+    { done: true, label: t("joined") },
+    { done: steps.posted, label: t("posted") },
+    {
+      done: steps.launched,
+      label: t("launched", {
+        date: format.dateTime(challenge.endsAt, {
+          day: "numeric",
+          month: "long",
+        }),
+      }),
+    },
+  ];
+  return (
+    <>
+      <h2 className={cn(sideH2, "mt-1")}>{t("title")}</h2>
+      <ul className="flex flex-col gap-2.5">
+        {items.map(({ done, label }) => (
+          <li
+            key={label}
+            className={cn(
+              "flex items-center gap-2.5 text-[15px] leading-[22px]",
+              done ? "text-muted" : "text-ink",
+            )}
+          >
+            <span
+              aria-hidden
+              className={cn(
+                "inline-flex size-[22px] flex-none items-center justify-center rounded-full",
+                done
+                  ? "bg-primary text-on-primary"
+                  : "border-2 border-border",
+              )}
+            >
+              {done && (
+                <Check size={14} strokeWidth={3} className="flex-none" />
+              )}
+            </span>
+            <span>{done ? t("done", { step: label }) : label}</span>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 
@@ -342,10 +499,16 @@ async function People({
     getFormatter(),
   ]);
   const { participants: total, launchers } = challenge.counts;
-  // The viewer, when they're in, comes first and is "Tu" (screen 08).
-  const named = participants
-    .slice(0, NAMED)
-    .map((p) => (p.id === viewerId ? t("you") : p.givenName));
+  // The viewer, when they're in, is named first, as "Tu" (screen 08); the
+  // avatars stay in join order, as in the reference.
+  const you = participants.some((p) => p.id === viewerId);
+  const named = [
+    ...(you ? [t("you")] : []),
+    ...participants
+      .filter((p) => p.id !== viewerId)
+      .slice(0, you ? NAMED - 1 : NAMED)
+      .map((p) => p.givenName),
+  ];
   const rest = total - named.length;
   const ended = challenge.status === "ended";
 

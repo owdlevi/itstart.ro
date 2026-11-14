@@ -144,7 +144,38 @@
       "title": "Timp rămas",
       "deadline": "Termen: {date}, ora {time}. Poți lansa și după, dar în afara clasamentului.",
       "join": "Intră în provocare",
-      "joinNote": "Durează un minut."
+      "joinNote": "Durează un minut.",
+      "addProject": "Adaugă proiectul"
+    },
+    "steps": {
+      "title": "Pașii tăi",
+      "joined": "Te-ai înscris",
+      "posted": "Pune linkul când merge ceva",
+      "launched": "Marchează-l ca lansat până pe {date}",
+      "done": "{step} · făcut"
+    },
+    "participation": {
+      "chip": "Ești înscris/ă",
+      "joined": {
+        "greeting": "Ești în provocare, {name}.",
+        "greetingNoName": "Ești în provocare.",
+        "daysLeft": "{n, plural, =0 {Ai mai puțin de o zi să construiești și să lansezi.} one {Ai o zi să construiești și să lansezi.} few {Ai # zile să construiești și să lansezi.} other {Ai # de zile să construiești și să lansezi.}}",
+        "startsOn": "Începe pe {date}. Până atunci, citește brief-ul."
+      },
+      "left": "Ai ieșit din provocare. Proiectele tale rămân publice.",
+      "refused": {
+        "ended": "Provocarea s-a încheiat între timp.",
+        "other": "Nu a mers. Mai încearcă o dată."
+      },
+      "leave": {
+        "button": "Renunță la provocare",
+        "title": "Renunți la provocare?",
+        "text": "Ieși din lista participanților. Proiectele tale rămân publice, iar până la termen poți intra din nou oricând.",
+        "stay": "Rămân",
+        "confirm": "Da, renunț",
+        "ended": "Provocarea s-a încheiat între timp.",
+        "failed": "Nu a mers. Mai încearcă o dată."
+      }
     },
     "people": {
       "title": "{n, plural, one {# om construiește} few {# oameni construiesc} other {# de oameni construiesc}}",
