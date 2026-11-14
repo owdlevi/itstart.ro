@@ -2,7 +2,7 @@
 
 import { ArrowUp, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toggleVote } from "@/app/actions/votes";
 import { cn } from "@/lib/utils";
@@ -29,7 +29,6 @@ export function VoteButton({
 }: VoteButtonProps) {
   const t = useTranslations("vote");
   const router = useRouter();
-  const pathname = usePathname();
   const [state, setState] = useState({
     count: initialCount,
     voted: signedIn && initialVoted,
@@ -37,9 +36,15 @@ export function VoteButton({
   const [message, setMessage] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
+  // Back to this exact page after sign-in, query included (a filtered board).
+  const signIn = () =>
+    router.push(
+      `/intra?next=${encodeURIComponent(location.pathname + location.search)}`,
+    );
+
   const onClick = () => {
     if (!signedIn) {
-      router.push(`/intra?next=${encodeURIComponent(pathname)}`);
+      signIn();
       return;
     }
     const before = state;
@@ -56,7 +61,7 @@ export function VoteButton({
       }
       setState(before);
       if (result.reason === "signed_out") {
-        router.push(`/intra?next=${encodeURIComponent(pathname)}`);
+        signIn();
         return;
       }
       setMessage(

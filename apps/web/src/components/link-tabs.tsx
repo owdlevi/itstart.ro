@@ -33,7 +33,11 @@ export function LinkTabs({
           </TabsTrigger>
         ))}
       </TabsList>
-      <TabsContent value={value}>{children}</TabsContent>
+      {/* The panel always starts with filter chips, so it needs no tab stop
+          of its own (Base UI gives panels one by default). */}
+      <TabsContent value={value} tabIndex={-1}>
+        {children}
+      </TabsContent>
     </Tabs>
   );
 }

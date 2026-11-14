@@ -27,13 +27,7 @@ import {
 // added at the end, selected.
 const TOOLS = ["Claude", "Cursor", "v0", "Lovable", "Next.js", "Supabase"];
 
-const PARAM = {
-  challenge: "provocare",
-  tool: "eticheta",
-  stage: "stadiu",
-  sort: "sortare",
-} as const;
-type Field = keyof typeof PARAM;
+type Field = "challenge" | "tool" | "stage" | "sort";
 
 /** Screen 03 · Lansări (HANDOVER §6). */
 export default async function BoardPage({
@@ -62,7 +56,8 @@ export default async function BoardPage({
           ? { challengeId: challenge.id }
           : "challenges",
     stage: params.stage,
-    sort: params.sort,
+    // Projects in progress have no votes to sort by (rule 5).
+    sort: params.stage === "in_progress" ? "newest" : params.sort,
     tool: params.tool,
     viewerId,
     agents: flags.builderAgents,
@@ -272,8 +267,9 @@ async function WeekGroup({
 }
 
 /**
- * One filter row: a GET form whose chips each submit their own value, with
- * the rest of the board's state in hidden inputs. Works before hydration;
+ * One filter row. Each chip is its own GET form whose hidden inputs hold the
+ * whole query it leads to: next/form builds the URL from the form's fields
+ * and leaves out the button that submitted it. Works before hydration;
  * next/form makes it a client-side navigation after.
  */
 function ChipRow<F extends Field>({
@@ -292,15 +288,8 @@ function ChipRow<F extends Field>({
   /** Label beside the chips at every width (the sort row). */
   inline?: boolean;
 }) {
-  const name = PARAM[field];
-  const rest = Object.entries(boardQuery(params, runningSlug)).filter(
-    ([key]) => key !== name,
-  );
-
   return (
-    <Form
-      action="/lansari"
-      scroll={false}
+    <div
       role="group"
       aria-label={label}
       className={cn(
@@ -318,9 +307,6 @@ function ChipRow<F extends Field>({
       >
         {label}
       </span>
-      {rest.map(([key, value]) => (
-        <input key={key} type="hidden" name={key} value={value} />
-      ))}
       <div
         className={cn(
           "flex min-w-0 gap-2",
@@ -330,24 +316,24 @@ function ChipRow<F extends Field>({
               "flex-nowrap overflow-x-auto px-0.5 pb-1.5 pt-0.5 md:flex-wrap md:overflow-visible md:p-0",
         )}
       >
-        {options.map((option) => {
-          // The value this chip puts in the URL; none when it's the default.
-          const value = boardQuery(
-            { ...params, [field]: option.value },
-            runningSlug,
-          )[name];
-          return (
-            <FilterChip
-              key={option.label}
-              selected={params[field] === option.value}
-              name={value ? name : undefined}
-              value={value}
-            >
+        {options.map((option) => (
+          <Form
+            key={option.label}
+            action="/lansari"
+            scroll={false}
+            className="contents"
+          >
+            {Object.entries(
+              boardQuery({ ...params, [field]: option.value }, runningSlug),
+            ).map(([name, value]) => (
+              <input key={name} type="hidden" name={name} value={value} />
+            ))}
+            <FilterChip selected={params[field] === option.value}>
               {option.label}
             </FilterChip>
-          );
-        })}
+          </Form>
+        ))}
       </div>
-    </Form>
+    </div>
   );
 }
