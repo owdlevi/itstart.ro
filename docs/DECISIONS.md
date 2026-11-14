@@ -159,7 +159,7 @@ Judgment calls made while setting up the database, Better Auth and the compositi
   - A magic-link sign-in to one of them deletes their `accounts` rows (the password included) and their sessions (`revokeUnprovenAccountAccess`).
   
   Decide then whether passwords stay (with verification and reset) or go. Either way, mark existing addresses verified only after they've proven them.
-- **Screen 06 (`/intra`):** the reference shows Google, GitHub and the link form, so the password form has no reference design. Ask the owner for its copy when that screen is built, and record it here. Until sign-in switches back, expect `capture.mjs` to report `differs` for screen 06.
+- **Screen 06 (`/intra`):** the reference shows Google, GitHub and the link form, so the password form has no reference design. Its copy is in "Screen 06 copy: password sign-in", and the build in "Screen 06 build". Until sign-in switches back, `capture.mjs` reports `differs` for screen 06.
 
 ## 2026-11-14 · Fixture counts
 
@@ -374,6 +374,39 @@ Errors, replacing the field's hint (Field spec), or under the button for the las
 | Account exists (sign-up) | "Există deja un cont cu adresa asta. Intră cu parola ta." (with the switch link) |
 | Too many attempts (429) | "Prea multe încercări. Mai încearcă peste un minut." |
 | Anything else | "Nu a mers. Mai încearcă o dată." |
+
+## 2026-11-14 · Screen 06 data
+
+- **`challenges.buildingPhrase`** (new, nullable): what everyone is building, after "construiesc deja" ("86 de oameni construiesc deja pagina frizeriei."). The genitive can't be derived from the title or `builtFor`. The seed sets it for all four fixture challenges; only the running or joinable one is ever shown. When it's null the line reads "86 de oameni construiesc deja." (new copy). Migration `0006_screen_06`.
+- The count is the challenge's `participants` (people, agents left out, with the fixture extras), the same number as Home's "86 de oameni".
+
+## 2026-11-14 · Screen 06 build
+
+- **`?provocare=<slug>` is carried on, not joined, for now** (joining is screen 08's). Only a challenge that can still be joined counts (running or upcoming); an ended or unknown slug is ignored, and the page shows the header version. After sign-in:
+  - a first sign-in (no handle) goes to `/bun-venit?provocare=<slug>&next=<path>`, so screen 07 must carry both on;
+  - anyone else goes back to `next` if there is one, otherwise to `/provocari/<slug>`, otherwise to Home.
+  
+  `finishSignIn` (`app/actions/sign-in.ts`) is where screen 08 adds the join, so signing in from a challenge joins it (HANDOVER §6 06). It runs after Better Auth has set the cookie: the form calls `authClient` (the HTTP endpoint, so the per-IP limit applies), then the action, which redirects. The rules are in `lib/sign-in-destination.ts`.
+- **`next` wins over `provocare`** when both are present. In practice they never are: joins link with `provocare`, votes and reviews with `next`.
+- **`next` must be a path on this site** (`safeNext`): it starts with one `/`, isn't `//…` or `/\…`, and isn't `/intra` itself; it keeps its query and hash (rule 12). Anything else goes Home.
+- **Signed in already:** `/intra` redirects to the same place a sign-in would (without joining).
+- **Mode in the URL:** `?cont=nou` or `?cont=intra`. Without it, the page opens on "Cont nou" from a challenge and on "Intră" otherwise (DECISIONS, "Screen 06 copy"). The switch link keeps `provocare` and `next`, replaces the history entry, and keeps what was typed.
+- **Checks per mode:** "Cont nou" checks the e-mail and Better Auth's 8–128 characters in the browser. "Intră" checks only that a password was typed: a wrong length gets the same "E-mailul sau parola nu se potrivesc." as a wrong password, so length isn't a hint. Errors show on submit, the first invalid field gets the focus, and the server's answer is mapped by `code` (`INVALID_EMAIL_OR_PASSWORD`, `USER_ALREADY_EXISTS*`, 429). A network failure shows "Nu a mers. Mai încearcă o dată."
+- **Sign-up sends an empty name:** Better Auth requires the field, and the name comes on `/bun-venit`. Until screen 07 is done, a user who leaves onboarding has an empty name (header avatar: no initials, the label reads "Profilul tău, "). Screen 07 should decide whether the shell sends un-onboarded users back to `/bun-venit`.
+- **"Ce urmează"** describes the challenge from `?provocare=`, or the running one (from the header too: it's what the community does now). With no running challenge, the step "Construiești până pe …" and the people line are left out, and the steps renumber to 1–2 (new layout).
+- **The header version** (from the header button, no `provocare`): no eyebrow, H1 "Intră în comunitate", as decided. The header's button links to plain `/intra`, so it returns Home.
+- **Show password** is a text button inside the field's edge (the field and button look like one control; the focus ring goes around both). It has `aria-pressed` and the changing label, as decided. Screen-reader users hear "Ascunde parola, apăsat"; if the owner wants it cleaner, keep "Arată parola" fixed with `aria-pressed`, or drop `aria-pressed`. A long (Hungarian) label wraps inside the field, and the input keeps at least half the width.
+- **Field** (`components/field.tsx`) exists now: label, hint, and an error that replaces the hint, in a live region, with `noteId()` for `aria-describedby`. Screens 07 and 09 use it. The review form predates it and keeps its own markup.
+- **The panel is sized like the reference's content box.** The reference's `max-width: 460px` and `flex-basis: 380px` apply to the content box (inline styles, no `box-sizing`), so the panel is 526px wide on desktop. Our classes add the padding and border back.
+- **Tests in `apps/web`:** vitest (the version core uses) runs `lib/sign-in-destination.test.ts`. Pure helpers in the web app are tested there; rules stay in core.
+- **Better Auth's limiter is off outside production** (`rateLimit.enabled` defaults to `NODE_ENV === "production"`); in production it's 3 sign-in or sign-up requests per 10 s per IP. The 429 copy was checked with an intercepted response.
+- **Visual check (`capture.mjs --only 06`, against `pnpm dev`):** desktop light and dark `differs` 5.6% and 5.8%, mobile light and dark `differs` 18.0% and 18.1% (the page is 66px shorter on phones). All of it is the password form:
+  - Google, GitHub and "sau" are hidden, and the form has a password field and the switch link;
+  - `capture.mjs` opens plain `/intra`, which is the header version (no eyebrow, "Intră în comunitate", "Intră");
+  - the lead is shorter ("…Fără parolă de ținut minte." is gone), one line less on phones.
+  
+  At `/intra?provocare=frizerie`, comparing element positions in the reference HTML and the app with Playwright at 1280 and 390px, the header, the panel's box, the eyebrow, H1, lead and e-mail field's top, "Ce urmează" (heading, each step, the people line) and the footer match to the pixel; heights below the lead follow the form. Aligned regions: header 0.01%, the panel's top 0.02–0.35%, "Ce urmează" 0.06–0.59% (1.74% in desktop dark, all of it glyph edges of light-on-dark text, nothing moved), the footer 0.04–0.46%.
+- **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, both versions, with errors showing and the Hungarian sample on every text: no horizontal scroll, nothing clipped. Keyboard order: skip link, wordmark, e-mail, password, show password, the button, the switch link, the rules link, footer; every stop has the 3px outline. Tried on `pnpm dev`: empty and malformed submits (errors, focus on the e-mail), sign-up from a challenge (→ `/bun-venit?provocare=frizerie`), an existing address on sign-up, a wrong password, switching modes with the address kept, a password sign-in with a handle back to `/proiecte/brici#pareri`, a first sign-in carrying `next` to `/bun-venit`, signed in already (→ `/provocari/frizerie`), 429 and a network failure (intercepted), an ended challenge's slug, and no running challenge (deadline moved in the local database).
 
 ## Verify during M1 setup
 

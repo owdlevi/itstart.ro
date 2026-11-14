@@ -35,13 +35,16 @@ src/
     dev/login-as/[handle]/   404 unless DESIGN_FIXTURES=1
     dev/captura/[name]/      the fixtures' screenshots (transparent SVGs); 404 unless DESIGN_FIXTURES=1
     api/             Better Auth handler (auth/[...all]), Blob upload-token route, unsubscribe endpoint
-    actions/         server actions, one file per area (votes.ts: toggleVote, reviews.ts: postReview)
+    actions/         server actions, one file per area (votes.ts: toggleVote, reviews.ts: postReview,
+                     sign-in.ts: finishSignIn, which sends someone on after Better Auth signs them in)
   components/        the spec components, one file each (button, avatar, vote-button, project-card,
-                     launch-row, countdown, filter-chip, …), the shell (site-header, site-footer), and
+                     launch-row, countdown, filter-chip, field, …), the shell (site-header with BareHeader,
+                     site-footer), sign-in-form (screen 06), and
                      link-tabs (URL tabs on Base UI); shadcn files, rewritten onto our tokens, in components/ui/ (tabs)
   i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
-  lib/schemas/       zod schemas shared by a form and its server action (review.ts)
+  lib/schemas/       zod schemas shared by a form and its server action (review.ts, sign-in.ts)
+  lib/sign-in-destination.ts   where a sign-in goes next (/bun-venit, `next`, the challenge) and safeNext()
   lib/auth-client.ts Better Auth's browser client (sign-in calls), magic-link plugin ready
   server/
     auth.ts          createAuth(deps): the Better Auth config. No server-only, so the CLI can load it
@@ -50,6 +53,7 @@ src/
                      `auth` and `now` from here
     session.ts       getSession(): the session in server components, cached per request
     challenge.ts     getRunningChallenge(): core.challenges.running(), cached per request
+    joinable.ts      getJoinableChallenge(slug): `?provocare=` if it isn't over, cached per request
   workflows/         Vercel Workflow: sleep, ask core.notifications, send
   emails/            React Email templates
   lib/dates.ts       daysAgo() ("ieri", "acum 3 zile"), timeAgo() and afterLaunch() (review times), and
@@ -65,7 +69,7 @@ scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:gener
 - **Forms** use react-hook-form + zod on the client. The server action re-parses with the same schema before calling core.
 - **Uploads** go from the browser straight to Blob through the token route (png/jpg/webp ≤ 5 MB, session checked). Server actions receive only blob paths. Vercel caps a request body at 4.5 MB.
 - **Admin checks** read `role` from the database on each request, in the `admin` layout and in every admin server action, never from Better Auth's cookie cache.
-- **Sign-in, for now,** is email and password (`authClient.signUp.email` / `authClient.signIn.email`); see DECISIONS "Email and password for now". Like every sign-in, it goes through Better Auth's HTTP endpoint, not `auth.api` in a server action, so the per-IP rate limit applies.
+- **Sign-in, for now,** is email and password (`authClient.signUp.email` / `authClient.signIn.email`); see DECISIONS "Email and password for now". Like every sign-in, it goes through Better Auth's HTTP endpoint, not `auth.api` in a server action, so the per-IP rate limit applies. Once it succeeds, the `/intra` form calls `finishSignIn({ next, challengeSlug })`, which reads the new session and redirects (`signInDestination`): a first sign-in to `/bun-venit`, carrying `provocare` and `next`. Joining on sign-in (screen 08) goes in that action. `/intra` itself redirects a signed-in visitor the same way.
 - **Magic link** (configured, not in the UI yet) uses `authClient.signIn.magicLink`. `sendMagicLink` asks `core.signIn.requestLink(email)` first. A refusal comes back as HTTP 429 with `code` `TOO_SOON` or `TOO_MANY` and `retryAfter` in seconds, or 400 `UNDELIVERABLE` for `.invalid` addresses. The `/intra` form maps the code to copy. The e-mail links to `/intra/confirma` with the same query string as Better Auth's verify URL (`token`, `callbackURL`, …).
 - **Better Auth schema:** after changing anything in `createAuth` that affects tables (fields, plugins), run `pnpm --filter web auth:generate`, then `pnpm db:generate`. Never edit `packages/db/src/schema/auth.ts` by hand.
 
@@ -132,7 +136,7 @@ M1 modules:
 - Test each module through its interface, against real Postgres via `createTestDb()` (PGlite, in-memory, every migration applied, one instance per test). Leave Drizzle unmocked.
 - `src/test-data.ts` makes rows with every required column (`makeUser`, `makeChallenge`, `makeProject`, `join`, `vote`, `review`, `addExtra`); override only what the test is about.
 - One test per HANDOVER §5 rule, named with the rule number, e.g. `"refuses a vote on your own project (rule 11)"`.
-- `pnpm test` runs every package's `test` task through turbo.
+- `pnpm test` runs every package's `test` task through turbo. `apps/web` has vitest too, for pure helpers next to their file (`lib/sign-in-destination.test.ts`); rules and their tests stay in core.
 
 ## Gotchas
 
@@ -158,3 +162,4 @@ M1 modules:
 - Drizzle leaves column names unqualified in a select from one table, even inside a raw `sql` subquery. `${reviews.projectId} = ${projects.id}` then renders as `"project_id" = "id"`, and both resolve to the subquery's own table, so the count is silently wrong. Compare with a value (`= ${projectId}`), or select from a join, where names are qualified (`projects.select`).
 - Tailwind's preflight sets `line-height: 1.5` on `html`, a ratio, while the references use a fixed 24px. Text at 15px or 13px that inherits it gets 22.5px or 19.5px lines, so rows come out shorter than the reference. Set `leading-6` (or the reference's value) wherever smaller text sits in a row.
 - `next build` with `withWorkflow()` generates `src/app/.well-known/workflow/`. It's gitignored and skipped by ESLint.
+- Better Auth's rate limiter is off unless `NODE_ENV` is `production` (`rateLimit.enabled` defaults to that), so `pnpm dev` never answers 429. To see it, use `next build && next start`, or intercept the request in Playwright.
