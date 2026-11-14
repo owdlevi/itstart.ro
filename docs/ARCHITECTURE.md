@@ -23,6 +23,10 @@ Everything lives under `src/`, imported with the `@/*` alias.
 ```
 src/
   app/
+    layout.tsx       html/body, font variables, Providers
+    providers.tsx    next-themes (data-theme on <html>)
+    fonts.ts, fonts/ Bricolage Grotesque + Inter via next/font/local
+    globals.css      design tokens; the only colours, radii and shadows Tailwind knows
     (site)/          full shell (header + footer): /, /provocari/[slug], /lansari, /proiecte/[slug],
                      /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /lanseaza
     (onboarding)/    bare header: /intra, /intra/confirma, /bun-venit
@@ -40,6 +44,8 @@ src/
 messages/ro.json     all copy, keys grouped by screen or component; e-mail copy under "emails"
 ```
 
+- **Styling** uses only our tokens (`bg-surface`, `text-muted`, `rounded-lg`, `shadow-card`…), which come from `docs/design/tokens.json` via `globals.css`. Tailwind's default palette, radii and shadows are switched off, so `bg-red-500` or `rounded-2xl` don't compile. Pixel values from the reference HTML go in as arbitrary values (`text-[15px]`) rather than rounded to the scale. Components need no `dark:` classes, because every colour is a variable.
+- **shadcn components** (only Tabs and the leave-challenge confirm) are added with `pnpm dlx shadcn@latest add <name>` in `apps/web` and then rewritten onto our token names. shadcn's `muted`, `accent` and `border` mean different things from ours, so an unedited file compiles with the wrong colours. Everything else is hand-built from the specs in `docs/design/components/`.
 - **Copy** comes from `messages/ro.json` through next-intl (no locale in URLs, fixed `ro`). Put no Romanian strings in components.
 - **Forms** use react-hook-form + zod on the client. The server action re-parses with the same schema before calling core.
 - **Uploads** go from the browser straight to Blob through the token route (png/jpg/webp ≤ 5 MB, session checked). Server actions receive only blob paths. Vercel caps a request body at 4.5 MB.
