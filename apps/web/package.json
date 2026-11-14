@@ -18,7 +18,7 @@
     "@vercel/analytics": "2.0.1",
     "@vercel/blob": "2.9.0",
     "@vercel/functions": "3.11.1",
-    "better-auth": "1.7.21",
+    "better-auth": "1.7.22",
     "class-variance-authority": "0.7.1",
     "cn": "0.5.2",
     "lucide-react": "1.72.0",
