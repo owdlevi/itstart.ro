@@ -94,14 +94,15 @@ Decided by the product owner. Final. Each line: what, why, and the alternative t
 
 ## 2026-11-13 · M1 install list
 
-Installed on 2026-11-13; exact versions are in each `package.json`. Still to do, as part of building: the `packages/db` items below, `withWorkflow()` in `next.config`, the `.env.example` files, and adding `tabs` and `alert-dialog` from shadcn when those components are built. Run `pnpm exec playwright install chromium` once per machine for `capture.mjs`.
+Installed on 2026-11-13, with the M1 foundation finished on 2026-11-14; exact versions are in each `package.json`. Still to do, as part of building: adding `tabs` and `alert-dialog` from shadcn when those components are built. Run `pnpm exec playwright install chromium` once per machine for `capture.mjs`.
 
 **`apps/web`**
 - `@repo/core`, `@repo/db` (`workspace:*`): the composition root wires core with real adapters.
-- `better-auth`: sign-in, sessions, the `user` table. Pinned to 1.7.21, because 1.7.22 (the version researched) was still inside pnpm's 24-hour release-age gate. Bump it in a normal update; don't add `minimumReleaseAgeExclude` entries to get a fresh release.
+- `better-auth` 1.7.22: sign-in, sessions, the `users` table. Don't add `minimumReleaseAgeExclude` entries to get a fresh release. Its CLI is the `auth` package at the same version, run through `pnpm --filter web auth:generate` (`@better-auth/cli` is deprecated and stops at 1.4).
+- `server-only`: guards the composition root (`src/server/core.ts`).
 - `pg`, plus `@types/pg` as a dev dependency: the app owns the pool so it can register it.
 - `@vercel/functions`: `attachDatabasePool` for the pool.
-- `workflow`: reminders and e-mail batching (`withWorkflow()` in `next.config`).
+- `workflow`: reminders and e-mail batching. `next.config.js` is wrapped in `withWorkflow()`.
 - `resend`, `react-email`: the mailer adapter and e-mail templates. `react-email` 6 exports the components (`Html`, `Body`, …); `@react-email/components` is deprecated.
 - `@vercel/blob`: direct browser uploads and storage.
 - `sharp`: resizes screenshots to webp.
@@ -117,8 +118,9 @@ Installed on 2026-11-13; exact versions are in each `package.json`. Still to do,
 - Remove `@repo/ui`.
 
 **`packages/db`**
-- No new dependencies. Generate the Better Auth tables with `pnpm dlx @better-auth/cli@1.7.22 generate` into `src/schema/auth.ts`.
-- New scripts: `db:seed:fixtures` (loads `docs/design/fixtures.json`) and `admin:set`.
+- `tsx` (dev): runs `scripts/admin-set.ts` and `scripts/seed-fixtures.ts`. Plain `node` can't resolve the package's extensionless imports.
+- Better Auth's tables are generated into `src/schema/auth.ts` (see `apps/web` above).
+- Scripts: `db:seed:fixtures` (loads `docs/design/fixtures.json`) and `admin:set`.
 
 **`packages/core`**
 - No new dependencies.
@@ -127,6 +129,19 @@ Installed on 2026-11-13; exact versions are in each `package.json`. Still to do,
 - `playwright`, `pixelmatch`, `pngjs`: for `docs/tools/capture.mjs`. Self-test baseline (macOS arm64, Chromium headless shell 158): 52/52 `match`, largest diff 0.61%, from text antialiasing. HANDOVER expects 0%; anything near this baseline is the renderer, not the app.
 
 **Delete:** `apps/docs` and `packages/ui` (create-turbo demos).
+
+## 2026-11-14 · M1 foundation
+
+Judgment calls made while setting up the database, Better Auth and the composition root.
+
+- **Sign-in link limit lives in a new `signIn` core module.** The job is "who may get a sign-in link, and how often", a rule about the sign-in action that counts the action's own rows (`sign_in_link_sends`). `notifications` decides which product e-mails go to members and when, based on consent and activity. A sign-in link is a requested, transactional message, and its limit is anti-abuse. `signIn.requestLink(email)` checks and records in one transaction, under a per-address advisory lock so a double submit can't send two links. It also refuses `.invalid` addresses (agents' placeholders). The mailer seam (`Mailer`, `createMemoryMailer`) lives in core too, because `notifications` will use it.
+- **`createAuth(deps)` instead of a module-level instance in `auth.ts`.** The Better Auth CLI refuses any config that imports `server-only`, even transitively, and neither a tsconfig path nor a resolve hook gets past its loader. `auth.ts` holds the config, `core.ts` builds the real instance, and `scripts/auth-generate.ts` builds one with the same options for the CLI, so the generated schema can't drift.
+- **User fields:** `handle` is nullable until onboarding (magic-link users arrive with no name), and `onboardedAt` marks a finished `/bun-venit`. `avatarFill` is nullable: the fixtures pin specific fills, and the UI can derive one from the id when it's null. `image` is renamed to `avatarUrl`. Every product field is `input: false`.
+- **Generated auth tables keep `timestamp` without time zone**, exactly as the CLI writes them, so `auth.ts` stays regenerable. This also turned `users.created_at` from `timestamptz` into `timestamp`. It's safe while sessions run in UTC (Neon and the container do); see the ARCHITECTURE gotcha.
+- **Design-fixtures mode is ignored in production** (`VERCEL_ENV=production`) even if `DESIGN_FIXTURES=1` is set, and the seed refuses to run there.
+- **Seed:** the admin is an extra user, `echipa-itstart`, kept out of `fixtures.json` so no reference screen changes. Fixture e-mails are `<handle>@fixtures.itstart.invalid`, and agents use `<handle>@agents.itstart.invalid`. `bianca-radu` isn't onboarded, because screen 07 shows her first sign-in. Past challenges' launched projects have no launch time in the fixtures, so the seed uses their challenge deadline. The seed loads only tables that exist so far (users, challenges, projects, votes); extend it as screens add tables.
+- **Local Postgres:** user, password and database are all `itstart`, on port 5432.
+- **Mailer:** the in-memory mailer is wired in for now and logs each link to the server console. The Resend adapter waits for the sign-in e-mail template and a verified domain.
 
 ## Verify during M1 setup
 

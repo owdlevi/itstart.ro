@@ -10,7 +10,7 @@ How code is split across the monorepo, and where new code goes. Vocabulary (deep
 
 | Package | Holds |
 |---|---|
-| `packages/db` | Drizzle schema (`src/schema/`, with Better Auth's tables generated into `src/schema/auth.ts`), migrations, `createDb(client)`, the `Db` type, `createTestDb()` from `@repo/db/testing`, and the `db:seed:fixtures` and `admin:set` scripts |
+| `packages/db` | Drizzle schema (`src/schema/`, one file per area; Better Auth's tables, `users` included, are generated into `src/schema/auth.ts`), migrations, `createDb(client)`, the `Db` type, `createTestDb()` from `@repo/db/testing`, and the `db:seed:fixtures` and `admin:set` scripts in `scripts/` |
 | `packages/core` | The product's business rules (HANDOVER §5), one **deep module** per capability |
 | `apps/web` | Everything UI, plus thin **adapters**: auth, parse input, call `core`, map the result to HTTP or UI |
 
@@ -32,16 +32,18 @@ src/
     (onboarding)/    bare header: /intra, /intra/confirma, /bun-venit
     admin/           role = admin, functional styling (no reference design)
     dev/login-as/[handle]/   404 unless DESIGN_FIXTURES=1
-    api/             Better Auth handler, Blob upload-token route, unsubscribe endpoint
+    api/             Better Auth handler (auth/[...all]), Blob upload-token route, unsubscribe endpoint
   components/        the spec components; shadcn files in components/ui/
   lib/utils.ts       cn
   server/
-    auth.ts          the Better Auth instance
-    core.ts          composition root (server-only): pg Pool + attachDatabasePool, real adapters into createCore()
+    auth.ts          createAuth(deps): the Better Auth config. No server-only, so the CLI can load it
+    core.ts          composition root (server-only): pg Pool + attachDatabasePool, clock, mailer,
+                     createCore(), and the `auth` instance. Import `db`, `core` and `auth` from here
   workflows/         Vercel Workflow: sleep, ask core.notifications, send
   emails/            React Email templates
   flags.ts           milestone flags
 messages/ro.json     all copy, keys grouped by screen or component; e-mail copy under "emails"
+scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:generate`
 ```
 
 - **Styling** uses only our tokens (`bg-surface`, `text-muted`, `rounded-lg`, `shadow-card`…), which come from `docs/design/tokens.json` via `globals.css`. Tailwind's default palette, radii and shadows are switched off, so `bg-red-500` or `rounded-2xl` don't compile. Pixel values from the reference HTML go in as arbitrary values (`text-[15px]`) rather than rounded to the scale. Components need no `dark:` classes, because every colour is a variable.
@@ -50,7 +52,8 @@ messages/ro.json     all copy, keys grouped by screen or component; e-mail copy 
 - **Forms** use react-hook-form + zod on the client. The server action re-parses with the same schema before calling core.
 - **Uploads** go from the browser straight to Blob through the token route (png/jpg/webp ≤ 5 MB, session checked). Server actions receive only blob paths. Vercel caps a request body at 4.5 MB.
 - **Admin checks** read `role` from the database on each request, in the `admin` layout and in every admin server action, never from Better Auth's cookie cache.
-- **Sign-in** goes through Better Auth's HTTP endpoint (`authClient.signIn.magicLink`), not `auth.api` in a server action, so its per-IP rate limit applies.
+- **Sign-in** goes through Better Auth's HTTP endpoint (`authClient.signIn.magicLink`), not `auth.api` in a server action, so its per-IP rate limit applies. `sendMagicLink` asks `core.signIn.requestLink(email)` first. A refusal comes back as HTTP 429 with `code` `TOO_SOON` or `TOO_MANY` and `retryAfter` in seconds, or 400 `UNDELIVERABLE` for `.invalid` addresses. The `/intra` form maps the code to copy. The e-mail links to `/intra/confirma` with the same query string as Better Auth's verify URL (`token`, `callbackURL`, …).
+- **Better Auth schema:** after changing anything in `createAuth` that affects tables (fields, plugins), run `pnpm --filter web auth:generate`, then `pnpm db:generate`. Never edit `packages/db/src/schema/auth.ts` by hand.
 
 ## Where new code goes
 
@@ -67,6 +70,7 @@ M1 modules:
 
 | Module | Covers |
 |---|---|
+| `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
 | `challenges` | running challenge, deadline and status, join/leave (rules 1–3), admin create/edit |
 | `projects` | create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), updates |
 | `votes` | done (rules 10–14) |
@@ -85,7 +89,7 @@ M1 modules:
   | Seam | Real | Fake |
   |---|---|---|
   | `clock` | system time | frozen (design fixtures, tests) |
-  | `mailer` | Resend + React Email | in-memory |
+  | `mailer` | Resend + React Email (not built yet: `core.ts` uses the in-memory one and logs each link) | in-memory (`createMemoryMailer()`) |
   | `storage` | Vercel Blob + sharp | in-memory |
   | `linkChecker` | `fetch` with a short timeout | canned answers |
 
@@ -94,10 +98,13 @@ M1 modules:
 
 ## Environments
 
-- **Local:** each workspace has a gitignored `.env.local` and a committed `.env.example` that lists every key. `drizzle-kit migrate` and `studio` read `packages/db/.env.local`; the Next app reads `apps/web/.env.local`.
+- **Local:** each workspace has a gitignored `.env.local` and a committed `.env.example` that lists every key. `drizzle-kit migrate` and `studio` read `packages/db/.env.local`; the Next app reads `apps/web/.env.local`. Postgres 17 runs in the `pg-itstart` container (`postgres://itstart:itstart@localhost:5432/itstart`), created with:
+  ```
+  docker run -d --name pg-itstart --restart unless-stopped -e POSTGRES_USER=itstart -e POSTGRES_PASSWORD=itstart -e POSTGRES_DB=itstart -p 5432:5432 -v pg-itstart-data:/var/lib/postgresql/data postgres:17
+  ```
 - **Deployed:** Vercel's project env holds the Production and Preview values. Neon's Vercel integration gives every preview its own database branch and injects `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED`.
 - **Migrations** run in the Vercel build command over the unpooled URL, outside turbo's cache.
-- **Design fixtures:** `DESIGN_FIXTURES=1` freezes the clock at `2026-11-11T07:35:00+02:00` and turns on `/dev/login-as`. `pnpm db:seed:fixtures` loads `docs/design/fixtures.json`, admin user included. All of it is off in production builds.
+- **Design fixtures:** `DESIGN_FIXTURES=1` freezes core's clock at `2026-11-11T07:35:00+02:00` and turns on `/dev/login-as` (Better Auth's `testUtils`). Better Auth itself keeps real time. `pnpm db:seed:fixtures` loads `docs/design/fixtures.json` plus the admin `echipa-itstart`. It refuses a database that already has users unless you pass `--reset`, which empties it. Fixture users have `.invalid` e-mails, so they sign in only through `/dev/login-as`. `core.ts` ignores the flag when `VERCEL_ENV=production`, and the seed refuses to run there.
 
 ## CI and deploys
 
@@ -118,4 +125,7 @@ M1 modules:
 - Use the `pg` driver with Neon's pooled URL. `drizzle-orm/neon-http` type-checks against `Db` but throws on `db.transaction`, and PGlite tests won't catch it.
 - `createDb` takes a URL or a `Pool`, so `apps/web` owns the pool and registers it with `attachDatabasePool`. `@vercel/functions` stays out of `packages/db`.
 - Better Auth's adapter addresses tables by their export key, so set `usePlural: true` to match `users`, `sessions`, and so on. Every NOT NULL column it doesn't write needs a default, or startup throws `SchemaMismatchError`.
-- Put `import "server-only"` in `apps/web`'s composition root, not in `db` or `core`: in packages it breaks Vitest.
+- Put `import "server-only"` in `apps/web`'s composition root, not in `db` or `core`: in packages it breaks Vitest. Keep it out of `auth.ts` too, because the Better Auth CLI refuses to load a config that imports it.
+- The Better Auth CLI is the `auth` package (`pnpm dlx auth@<better-auth version>`). `@better-auth/cli` is deprecated and stops at 1.4.
+- Better Auth's generated tables use `timestamp` without time zone (our own tables use `timestamptz`). Drizzle reads and writes them as UTC, and `defaultNow()` relies on the session time zone being UTC, which it is on Neon and in the container. Don't set a session time zone.
+- `next build` with `withWorkflow()` generates `src/app/.well-known/workflow/`. It's gitignored and skipped by ESLint.
