@@ -86,3 +86,23 @@ export async function SiteHeader() {
     </header>
   );
 }
+
+/** The wordmark alone, for sign-in and onboarding (screens 06 and 07). */
+export async function BareHeader() {
+  const t = await getTranslations("shell");
+  return (
+    <header className="border-b border-line bg-surface">
+      <Container>
+        <div className="flex min-h-14 items-center md:min-h-[72px]">
+          <Link
+            href="/"
+            aria-label={t("homeLabel")}
+            className="inline-flex min-h-11 items-center no-underline"
+          >
+            <Wordmark className="text-[24px] md:text-[26px]" />
+          </Link>
+        </div>
+      </Container>
+    </header>
+  );
+}

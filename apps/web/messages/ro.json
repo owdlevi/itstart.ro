@@ -286,5 +286,59 @@
       "line": "{month} · {n, plural, one {proiect} other {proiecte}}: {names}",
       "finished": "Terminată"
     }
+  },
+  "signIn": {
+    "metaTitle": "{context, select, challenge {Intră în provocare} other {Intră în comunitate}}",
+    "eyebrow": "Provocarea #{number} · {month}",
+    "title": "{context, select, challenge {Intră în provocare} other {Intră în comunitate}}",
+    "lead": "Un cont și ești înăuntru.",
+    "email": {
+      "label": "Adresa ta de e-mail",
+      "placeholder": "nume@exemplu.ro",
+      "hint": "Nu o arătăm nimănui."
+    },
+    "password": {
+      "label": "Parola",
+      "hint": "Cel puțin {min} caractere.",
+      "show": "Arată parola",
+      "hide": "Ascunde parola"
+    },
+    "submit": {
+      "signIn": "Intră",
+      "signUp": "Creează contul"
+    },
+    "switch": {
+      "toSignUp": "Prima dată aici? <link>Fă-ți cont</link>",
+      "toSignIn": "Ai deja cont? <link>Intră</link>"
+    },
+    "rules": "Prin înscriere accepți <link>regulile comunității</link>.",
+    "errors": {
+      "emailEmpty": "Scrie adresa ta de e-mail.",
+      "emailInvalid": "Adresa nu pare corectă. Verific-o o dată.",
+      "passwordEmpty": "Scrie parola.",
+      "passwordShort": "Parola are nevoie de cel puțin {min} caractere.",
+      "passwordLong": "Cel mult {max} de caractere.",
+      "wrong": "E-mailul sau parola nu se potrivesc.",
+      "exists": "Există deja un cont cu adresa asta. Intră cu parola ta.",
+      "tooMany": "Prea multe încercări. Mai încearcă peste un minut.",
+      "other": "Nu a mers. Mai încearcă o dată."
+    },
+    "next": {
+      "title": "Ce urmează",
+      "profile": {
+        "title": "Îți faci profilul",
+        "text": "Un minut. Doar numele tău."
+      },
+      "build": {
+        "title": "Construiești până pe {date}",
+        "text": "Cu ce unelte vrei, în ritmul tău."
+      },
+      "launch": {
+        "title": "Lansezi și primești păreri",
+        "text": "Proiectul rămâne pe profilul tău."
+      },
+      "people": "{count, plural, one {# om construiește} few {# oameni construiesc} other {# de oameni construiesc}} deja.",
+      "peopleBuilding": "{count, plural, one {# om construiește} few {# oameni construiesc} other {# de oameni construiesc}} deja {what}."
+    }
   }
 }
