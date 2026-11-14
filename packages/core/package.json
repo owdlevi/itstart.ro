@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./challenges": "./src/challenges/index.ts",
+    "./projects": "./src/projects/index.ts",
     "./sign-in": "./src/sign-in/index.ts",
     "./votes": "./src/votes/index.ts"
   },

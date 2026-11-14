@@ -1,4 +1,4 @@
-import { and, count, eq, gte } from "drizzle-orm";
+import { and, count, eq, gte, sql } from "drizzle-orm";
 import {
   challenges,
   projects,
@@ -7,6 +7,7 @@ import {
   votes,
   type Db,
 } from "@repo/db";
+import { withExtra } from "../counts";
 
 export type VoteRefusal =
   | "not_found"
@@ -119,9 +120,15 @@ export function createVotes(deps: {
         });
 
         const [total] = await tx
-          .select({ n: count() })
-          .from(votes)
-          .where(eq(votes.projectId, projectId));
+          .select({
+            n: withExtra(
+              sql`select count(*) from ${votes} where ${votes.projectId} = ${projects.id}`,
+              projects.id,
+              "votes",
+            ),
+          })
+          .from(projects)
+          .where(eq(projects.id, projectId));
         return { ok: true, voted, count: total?.n ?? 0 };
       }),
   };

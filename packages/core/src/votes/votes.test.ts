@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { challenges, projects, users } from "@repo/db";
 import { createTestDb } from "@repo/db/testing";
+import { addExtra } from "../test-data";
 import { createVotes, type VotesConfig } from "./index";
 
 const DAY = 86_400_000;
@@ -64,6 +65,7 @@ async function setup(config?: VotesConfig) {
   const project = await makeProject(owner.id);
 
   return {
+    db,
     votes,
     owner,
     voter,
@@ -100,6 +102,18 @@ describe("votes.toggle", () => {
       ok: true,
       voted: true,
       count: 2,
+    });
+  });
+
+  test("count includes the design fixtures' extra votes", async () => {
+    const { db, votes, voter, project } = await setup();
+    await addExtra(db, project.id, "votes", 127);
+
+    expect(await votes.toggle(voter.id, project.id)).toMatchObject({
+      count: 128,
+    });
+    expect(await votes.toggle(voter.id, project.id)).toMatchObject({
+      count: 127,
     });
   });
 
