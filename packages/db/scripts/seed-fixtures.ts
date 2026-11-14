@@ -11,6 +11,7 @@ import {
   fixtureCountExtras,
   participations,
   projectUpdates,
+  reviewAssignments,
   projects,
   reviews,
   users,
@@ -71,6 +72,8 @@ type Fixtures = {
     votes: number;
     reviewCount: number;
     updates?: { version: number; date: string; text: string }[];
+    description?: string[];
+    build?: { duration: string; hardestPart: string; prompt?: string };
   }[];
   votes: Record<string, string[]>;
   reviews: Record<
@@ -83,6 +86,7 @@ type Fixtures = {
       body: string;
     }[]
   >;
+  reviewAssignments: Record<string, string[]>;
 };
 
 // Not in fixtures.json, so it can't change what any reference screen shows.
@@ -150,6 +154,18 @@ const GIVEN_NAME: Record<string, string> = {
   "kovacs-reka": "Réka",
   "szabo-attila": "Attila",
 };
+// Not in fixtures.json: the bucket behind the build story's own words
+// ("Cam 20 de ore…" is "Între 10 și 30 de ore").
+const BUILD_DURATION: Record<
+  string,
+  (typeof projects.$inferInsert)["buildDuration"]
+> = {
+  "tuns-la-fix": "10_30h",
+};
+// Screenshots don't exist yet: launched projects get the two a launch needs
+// (rule 4), three where the reference shows three. /dev/captura serves them as
+// transparent images, so the `tint` placeholder behind each shows (HANDOVER §9.1).
+const SCREENSHOTS: Record<string, number> = { "tuns-la-fix": 3 };
 // Joined the running challenge before the reference moment. Bianca isn't:
 // screen 08 shows her joining.
 const NOT_JOINED = new Set(["bianca-radu"]);
@@ -170,7 +186,7 @@ await withDb((db) =>
   db.transaction(async (tx) => {
     if (reset) {
       await tx.execute(
-        sql`truncate ${users}, ${challenges}, ${participations}, ${projects}, ${projectUpdates}, ${votes}, ${voteEvents}, ${reviews}, ${fixtureCountExtras} cascade`,
+        sql`truncate ${users}, ${challenges}, ${participations}, ${projects}, ${projectUpdates}, ${votes}, ${voteEvents}, ${reviews}, ${reviewAssignments}, ${fixtureCountExtras} cascade`,
       );
     } else {
       const [existing] = await tx.select({ n: count() }).from(users);
@@ -267,6 +283,18 @@ await withDb((db) =>
           liveUrl: p.liveUrl ?? `https://${p.slug}.example`,
           // Cards show the first two tools: the fixtures' `tools`, then the rest.
           tools: [...new Set([...p.tools, ...(p.toolsAll ?? [])])],
+          screenshots:
+            p.stage === "launched"
+              ? Array.from(
+                  { length: SCREENSHOTS[p.slug] ?? 2 },
+                  (_, i) => `/dev/captura/${p.slug}-${i + 1}.svg`,
+                )
+              : [],
+          description: p.description?.join("\n\n") ?? null,
+          buildDuration: BUILD_DURATION[p.slug] ?? null,
+          buildDurationText: p.build?.duration ?? null,
+          buildHardestPart: p.build?.hardestPart ?? null,
+          buildPrompt: p.build?.prompt ?? null,
           stage: p.stage,
           // Past challenges' projects have no launch time in the fixtures: use their deadline.
           launchedAt:
@@ -329,6 +357,27 @@ await withDb((db) =>
         ids.push(row!.id);
         reviewCount++;
       }
+    }
+
+    // Assigned when the reviewer launched; none is done yet (screen 10: "0 din 2").
+    const assignmentRows = Object.entries(fixtures.reviewAssignments).flatMap(
+      ([handle, slugs]) =>
+        slugs.map((slug) => ({
+          reviewerId: userId.get(handle)!,
+          projectId: projectId.get(slug)!,
+          createdAt:
+            fixtures.projects.find(
+              (p) => p.owner === handle && p.challenge === "frizerie",
+            )?.launchedAt ?? undefined,
+        })),
+    );
+    if (assignmentRows.length > 0) {
+      await tx.insert(reviewAssignments).values(
+        assignmentRows.map((a) => ({
+          ...a,
+          createdAt: a.createdAt ? new Date(a.createdAt) : undefined,
+        })),
+      );
     }
 
     // Everyone with a project in a challenge joined it, from its start.
@@ -436,7 +485,7 @@ await withDb((db) =>
     if (extras.length > 0) await tx.insert(fixtureCountExtras).values(extras);
 
     console.log(
-      `Seeded ${userRows.length} users (admin: ${ADMIN.handle}), ${challengeRows.length} challenges, ${participationRows.length} participations, ${projectRows.length} projects, ${updateRows.length} project updates, ${voteRows.length} votes, ${reviewCount} reviews, ${extras.length} fixture count extras.`,
+      `Seeded ${userRows.length} users (admin: ${ADMIN.handle}), ${challengeRows.length} challenges, ${participationRows.length} participations, ${projectRows.length} projects, ${updateRows.length} project updates, ${voteRows.length} votes, ${reviewCount} reviews, ${assignmentRows.length} review assignments, ${extras.length} fixture count extras.`,
     );
   }),
 );

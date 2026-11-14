@@ -5,6 +5,7 @@ import {
   text,
   timestamp,
   uuid,
+  unique,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { createdAt } from "./columns";
@@ -30,5 +31,22 @@ export const reviews = pgTable(
     createdAt: createdAt(),
     editedAt: timestamp({ withTimezone: true }),
   },
-  (t) => [index().on(t.projectId)],
+  (t) => [index().on(t.projectId), index().on(t.authorId, t.createdAt)],
+);
+
+// One of the two launched projects a builder is asked to review after launching
+// (rule 16). doneAt is set by their first review of it.
+export const reviewAssignments = pgTable(
+  "review_assignments",
+  {
+    reviewerId: uuid()
+      .notNull()
+      .references(() => users.id),
+    projectId: uuid()
+      .notNull()
+      .references(() => projects.id),
+    createdAt: createdAt(),
+    doneAt: timestamp({ withTimezone: true }),
+  },
+  (t) => [unique().on(t.reviewerId, t.projectId)],
 );

@@ -17,6 +17,13 @@ export const projectStage = pgEnum("project_stage", [
   "launched",
 ]);
 
+// "Cât a durat?" on the launch form (screen 09).
+export const buildDuration = pgEnum("build_duration", [
+  "under_10h",
+  "10_30h",
+  "over_30h",
+]);
+
 export const projects = pgTable(
   "projects",
   {
@@ -34,6 +41,14 @@ export const projects = pgTable(
     tools: text().array().notNull().default([]),
     // Blob URLs in display order; the first is the thumbnail.
     screenshots: text().array().notNull().default([]),
+    // "Despre proiect". Paragraphs are separated by a blank line.
+    description: text(),
+    // "Cum l-am construit": required before launching (rule 4), except the prompt.
+    buildDuration: buildDuration(),
+    // The builder's own words for the duration, shown instead of the bucket's label.
+    buildDurationText: text(),
+    buildHardestPart: text(),
+    buildPrompt: text(),
     stage: projectStage().notNull().default("in_progress"),
     launchedAt: timestamp({ withTimezone: true }),
     createdAt: createdAt(),

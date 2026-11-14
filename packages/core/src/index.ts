@@ -1,6 +1,7 @@
 import type { Db } from "@repo/db";
 import { createChallenges } from "./challenges";
 import { createProjects } from "./projects";
+import { createReviews } from "./reviews";
 import { createSignIn } from "./sign-in";
 import { createVotes } from "./votes";
 
@@ -15,6 +16,7 @@ export function createCore(deps: CoreDeps) {
   return {
     challenges: createChallenges({ db: deps.db, now }),
     projects: createProjects({ db: deps.db, now }),
+    reviews: createReviews({ db: deps.db, now }),
     signIn: createSignIn({ db: deps.db, now }),
     votes: createVotes({ db: deps.db, now }),
   };
@@ -35,10 +37,19 @@ export type {
   BoardOpts,
   BoardProject,
   BoardScope,
+  ProjectPage,
   ProjectSummary,
   ProjectUpdate,
   Projects,
 } from "./projects";
+export type {
+  Review,
+  ReviewAuthor,
+  ReviewRefusal,
+  ReviewResult,
+  ReviewThread,
+  Reviews,
+} from "./reviews";
 export type { SignIn, SignInLinkRefusal, SignInLinkResult } from "./sign-in";
 export type { VoteRefusal, VoteResult } from "./votes";
 export { createMemoryMailer, type Email, type Mailer } from "./mailer";

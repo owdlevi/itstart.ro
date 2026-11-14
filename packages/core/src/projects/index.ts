@@ -1,6 +1,7 @@
 import {
   and,
   arrayContains,
+  count,
   desc,
   eq,
   isNotNull,
@@ -73,6 +74,33 @@ export type BoardOpts = {
   agents?: boolean;
 };
 
+/** Everything the project page (screen 04) shows about a project. */
+export type ProjectPage = Omit<ProjectSummary, "owner"> & {
+  liveUrl: string;
+  /** In display order; the first is the thumbnail. */
+  screenshots: string[];
+  /** Paragraphs of "Despre proiect". */
+  description: string[];
+  build: {
+    duration: "under_10h" | "10_30h" | "over_30h" | null;
+    /** The builder's own words; shown instead of the duration's label. */
+    durationText: string | null;
+    hardestPart: string | null;
+    prompt: string | null;
+  };
+  launchedAt: Date | null;
+  /** False once its challenge's deadline has passed (rule 3); always true outside a challenge. */
+  votingOpen: boolean;
+  challenge: { slug: string; number: number; title: string } | null;
+  owner: ProjectSummary["owner"] & {
+    city: string | null;
+    /** Their launched projects, this one included. */
+    launched: number;
+  };
+  /** Newest first. */
+  updates: ProjectUpdate[];
+};
+
 type ListOpts = {
   challengeId: string;
   limit: number;
@@ -91,6 +119,8 @@ export type Projects = {
    * (rule 5), filtered and sorted. No limit yet: a month brings tens of launches.
    */
   board(opts: BoardOpts): Promise<BoardProject[]>;
+  /** One project with everything its page shows, or null if there's none. */
+  bySlug(slug: string, viewerId?: string | null): Promise<ProjectPage | null>;
 };
 
 export function createProjects(deps: { db: Db; now: () => Date }): Projects {
@@ -114,9 +144,10 @@ export function createProjects(deps: { db: Db; now: () => Date }): Projects {
   // In progress, a project moves when it gets an update, or when it's created.
   const lastActive = sql`coalesce((select max(${projectUpdates.createdAt}) from ${projectUpdates} where ${projectUpdates.projectId} = ${projects.id}), ${projects.createdAt})`;
 
-  const at = sql<Date>`case when ${projects.stage} = 'launched' then coalesce(${projects.launchedAt}, ${projects.createdAt}) else ${lastActive} end`.mapWith(
-    projects.launchedAt,
-  );
+  const at =
+    sql<Date>`case when ${projects.stage} = 'launched' then coalesce(${projects.launchedAt}, ${projects.createdAt}) else ${lastActive} end`.mapWith(
+      projects.launchedAt,
+    );
 
   const select = async ({
     where,
@@ -199,6 +230,80 @@ export function createProjects(deps: { db: Db; now: () => Date }): Projects {
     mostVoted: (opts) =>
       list(opts, "launched", [desc(voteCount), desc(projects.launchedAt)]),
     inProgress: (opts) => list(opts, "in_progress", [desc(lastActive)]),
+
+    bySlug: async (slug, viewerId) => {
+      const [row] = await select({
+        where: [eq(projects.slug, slug)],
+        orderBy: [],
+        limit: 1,
+        viewerId,
+      });
+      if (!row) return null;
+      const [[details], updates, [launched]] = await Promise.all([
+        db
+          .select({
+            liveUrl: projects.liveUrl,
+            screenshots: projects.screenshots,
+            description: projects.description,
+            buildDuration: projects.buildDuration,
+            buildDurationText: projects.buildDurationText,
+            buildHardestPart: projects.buildHardestPart,
+            buildPrompt: projects.buildPrompt,
+            launchedAt: projects.launchedAt,
+            city: users.city,
+            challenge: {
+              slug: challenges.slug,
+              number: challenges.number,
+              title: challenges.title,
+            },
+          })
+          .from(projects)
+          .innerJoin(users, eq(users.id, projects.ownerId))
+          .leftJoin(challenges, eq(challenges.id, projects.challengeId))
+          .where(eq(projects.id, row.id)),
+        db
+          .select({
+            version: projectUpdates.version,
+            text: projectUpdates.text,
+            createdAt: projectUpdates.createdAt,
+          })
+          .from(projectUpdates)
+          .where(eq(projectUpdates.projectId, row.id))
+          .orderBy(desc(projectUpdates.version)),
+        db
+          .select({ n: count() })
+          .from(projects)
+          .where(
+            and(
+              eq(projects.ownerId, row.owner.id),
+              eq(projects.stage, "launched"),
+            ),
+          ),
+      ]);
+      const d = details!;
+      const { at: _at, latestUpdate: _latest, ...summary } = row;
+      return {
+        ...summary,
+        latestUpdate: updates[0] ?? null,
+        liveUrl: d.liveUrl,
+        screenshots: d.screenshots,
+        description: (d.description ?? "")
+          .split(/\n\s*\n/)
+          .map((p) => p.trim())
+          .filter(Boolean),
+        build: {
+          duration: d.buildDuration,
+          durationText: d.buildDurationText,
+          hardestPart: d.buildHardestPart,
+          prompt: d.buildPrompt,
+        },
+        launchedAt: d.launchedAt,
+        // A left join gives an object of nulls when there's no challenge.
+        challenge: d.challenge?.slug ? d.challenge : null,
+        owner: { ...row.owner, city: d.city, launched: launched?.n ?? 0 },
+        updates,
+      };
+    },
 
     board: ({ scope, stage, sort, tool, viewerId, agents }) =>
       select({

@@ -363,9 +363,7 @@ describe("projects.board", () => {
       sort: "newest",
     });
 
-    expect(
-      [...all, ...own].map((p) => [p.name, p.votingOpen]),
-    ).toEqual([
+    expect([...all, ...own].map((p) => [p.name, p.votingOpen])).toEqual([
       ["Acum", true],
       ["Încheiat", false],
       ["Propriu", true],
@@ -409,5 +407,82 @@ describe("projects.board", () => {
 
     expect(hidden.map((p) => p.name)).toEqual(["Om"]);
     expect(await projects.board(opts)).toHaveLength(2);
+  });
+});
+
+describe("projects.bySlug", () => {
+  test("returns everything the project page shows", async () => {
+    const { db, projects, challenge, owner, make } = await setup();
+    const project = await make({
+      slug: "tuns-la-fix",
+      tools: ["Next.js", "Claude"],
+      screenshots: ["a.webp", "b.webp"],
+      description: "Primul paragraf.\n\nAl doilea.",
+      buildDuration: "10_30h",
+      buildDurationText: "Cam 20 de ore.",
+      buildHardestPart: "Orele suprapuse.",
+      launchedAt: new Date("2026-11-10T17:00:00Z"),
+    });
+    await make({ name: "Alt proiect lansat" });
+    await make({ name: "În lucru", stage: "in_progress" });
+    await addUpdate(db, project.id, 1, new Date("2026-11-04T10:00:00Z"));
+    await addUpdate(db, project.id, 2, new Date("2026-11-07T10:00:00Z"));
+    await vote(db, project.id, 2);
+
+    const page = await projects.bySlug("tuns-la-fix");
+
+    expect(page).toMatchObject({
+      id: project.id,
+      thumbnail: "a.webp",
+      screenshots: ["a.webp", "b.webp"],
+      description: ["Primul paragraf.", "Al doilea."],
+      build: {
+        duration: "10_30h",
+        durationText: "Cam 20 de ore.",
+        hardestPart: "Orele suprapuse.",
+        prompt: null,
+      },
+      votes: 2,
+      votingOpen: true,
+      challenge: { slug: challenge.slug, number: challenge.number },
+      owner: { id: owner.id, launched: 2 },
+    });
+    expect(page!.updates.map((u) => u.version)).toEqual([2, 1]);
+  });
+
+  test("returns null for an unknown slug", async () => {
+    const { projects } = await setup();
+    expect(await projects.bySlug("nu-exista")).toBeNull();
+  });
+
+  test("has no challenge for a project of its own", async () => {
+    const { projects, make } = await setup();
+    await make({ slug: "propriu", challengeId: null });
+    expect((await projects.bySlug("propriu"))!.challenge).toBeNull();
+  });
+
+  test("says whether the viewer voted (rule 10); a visitor never has (rule 12)", async () => {
+    const { db, projects, make } = await setup();
+    const project = await make({ slug: "votat" });
+    const viewer = await makeUser(db);
+    await db.insert(votes).values({ userId: viewer.id, projectId: project.id });
+
+    expect((await projects.bySlug("votat", viewer.id))!.voted).toBe(true);
+    expect((await projects.bySlug("votat", null))!.voted).toBe(false);
+  });
+
+  test("closes voting once the challenge has ended (rule 3)", async () => {
+    const { db, projects, owner } = await setup();
+    const ended = await makeChallenge(db, {
+      slug: "octombrie",
+      startsAt: new Date("2026-09-30T21:00:00Z"),
+      endsAt: new Date("2026-10-31T21:59:00Z"),
+    });
+    await makeProject(db, {
+      ownerId: owner.id,
+      challengeId: ended.id,
+      slug: "vechi",
+    });
+    expect((await projects.bySlug("vechi"))!.votingOpen).toBe(false);
   });
 });
