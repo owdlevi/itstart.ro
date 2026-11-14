@@ -95,6 +95,28 @@ export type Participant = {
   isAgent: boolean;
 };
 
+export type JoinRefusal =
+  | "not_found"
+  | "ended" // rules 1 and 3: the month is over
+  | "not_onboarded"; // no name yet, so nothing to list them by
+
+export type LeaveRefusal =
+  | "not_found"
+  | "not_joined"
+  | "ended"; // rule 3: after the deadline the list is the month's record
+
+export type ParticipationResult<R> =
+  | { ok: true; slug: string }
+  | { ok: false; reason: R };
+
+/** "Pașii tăi" on the challenge page: what a participant has done so far. */
+export type ParticipantSteps = {
+  /** They have a project in the challenge, in progress or launched. */
+  posted: boolean;
+  /** One of them is launched. */
+  launched: boolean;
+};
+
 export type Challenges = {
   /** The challenge running now (rule 1), with its counts, or null between challenges. */
   running(): Promise<RunningChallenge | null>;
@@ -103,15 +125,40 @@ export type Challenges = {
   /** Every challenge that has started (running or ended), newest first. */
   started(): Promise<ChallengeOption[]>;
   /**
-   * The first people in a challenge, for its participant list: the viewer
-   * first if they're in it, then the earliest to join. People who left aren't
-   * listed (rule 2), and neither are agents, which have their own panel.
+   * The first people in a challenge, for its participant list, earliest to
+   * join first. The viewer is always among them if they're in it. People who
+   * left aren't listed (rule 2), and neither are agents, which have their own
+   * panel.
    */
   participants(opts: {
     challengeId: string;
     limit: number;
     viewerId?: string | null;
   }): Promise<Participant[]>;
+  /** The user's participation in a challenge, or null if they never joined or left. */
+  participation(
+    challengeId: string,
+    userId: string,
+  ): Promise<{ joinedAt: Date } | null>;
+  /**
+   * Joins a running or upcoming challenge (rule 2: one action). Joining again
+   * changes nothing; joining after leaving rejoins, from now. Throws only for
+   * an unknown user.
+   */
+  join(
+    userId: string,
+    slug: string,
+  ): Promise<ParticipationResult<JoinRefusal>>;
+  /**
+   * Leaves a challenge before its deadline (rule 2): off the participant list
+   * and its count, while their projects stay where they are.
+   */
+  leave(
+    userId: string,
+    slug: string,
+  ): Promise<ParticipationResult<LeaveRefusal>>;
+  /** What a participant has done in the challenge so far ("Pașii tăi"). */
+  steps(challengeId: string, userId: string): Promise<ParticipantSteps>;
 };
 
 export function createChallenges(deps: {
@@ -235,6 +282,7 @@ export function createChallenges(deps: {
           avatarUrl: users.avatarUrl,
           avatarFill: users.avatarFill,
           isAgent: users.isAgent,
+          joinedAt: participations.joinedAt,
         })
         .from(participations)
         .innerJoin(users, eq(users.id, participations.userId))
@@ -246,15 +294,120 @@ export function createChallenges(deps: {
           ),
         )
         .orderBy(
+          // The viewer makes the cut whenever they're in; the list is then
+          // put back in join order.
           ...(viewerId ? [desc(sql`${users.id} = ${viewerId}`)] : []),
           asc(participations.joinedAt),
           asc(users.id),
         )
         .limit(limit);
-      return rows.map((p) => ({
-        ...p,
-        givenName: p.givenName ?? p.name.split(/\s+/)[0]!,
-      }));
+      return rows
+        .sort(
+          (a, b) =>
+            a.joinedAt.getTime() - b.joinedAt.getTime() ||
+            (a.id < b.id ? -1 : 1),
+        )
+        .map(({ joinedAt: _, ...p }) => ({
+          ...p,
+          givenName: p.givenName ?? p.name.split(/\s+/)[0]!,
+        }));
+    },
+
+    participation: async (challengeId, userId) => {
+      const [row] = await db
+        .select({ joinedAt: participations.joinedAt })
+        .from(participations)
+        .where(
+          and(
+            eq(participations.challengeId, challengeId),
+            eq(participations.userId, userId),
+            isNull(participations.leftAt),
+          ),
+        );
+      return row ?? null;
+    },
+
+    join: (userId, slug) =>
+      db.transaction(async (tx) => {
+        const at = now();
+        const [user] = await tx
+          .select({ onboardedAt: users.onboardedAt })
+          .from(users)
+          .where(eq(users.id, userId));
+        if (!user) throw new Error(`challenges.join: unknown user ${userId}`);
+        const [challenge] = await tx
+          .select({
+            id: challenges.id,
+            startsAt: challenges.startsAt,
+            endsAt: challenges.endsAt,
+          })
+          .from(challenges)
+          .where(eq(challenges.slug, slug));
+        if (!challenge) return { ok: false, reason: "not_found" };
+        if (challengeStatus(challenge, at) === "ended") {
+          return { ok: false, reason: "ended" };
+        }
+        if (!user.onboardedAt) return { ok: false, reason: "not_onboarded" };
+
+        // One row per person and challenge: a rejoin clears `leftAt` and
+        // starts from now; a second join leaves the row as it is.
+        await tx
+          .insert(participations)
+          .values({ userId, challengeId: challenge.id, joinedAt: at })
+          .onConflictDoUpdate({
+            target: [participations.userId, participations.challengeId],
+            set: {
+              joinedAt: sql`case when ${participations.leftAt} is null then ${participations.joinedAt} else ${at} end`,
+              leftAt: null,
+            },
+          });
+        return { ok: true, slug };
+      }),
+
+    leave: (userId, slug) =>
+      db.transaction(async (tx) => {
+        const [challenge] = await tx
+          .select({
+            id: challenges.id,
+            startsAt: challenges.startsAt,
+            endsAt: challenges.endsAt,
+          })
+          .from(challenges)
+          .where(eq(challenges.slug, slug));
+        if (!challenge) return { ok: false, reason: "not_found" };
+        const at = now();
+        if (challengeStatus(challenge, at) === "ended") {
+          return { ok: false, reason: "ended" };
+        }
+        const left = await tx
+          .update(participations)
+          .set({ leftAt: at })
+          .where(
+            and(
+              eq(participations.challengeId, challenge.id),
+              eq(participations.userId, userId),
+              isNull(participations.leftAt),
+            ),
+          )
+          .returning({ userId: participations.userId });
+        if (left.length === 0) return { ok: false, reason: "not_joined" };
+        return { ok: true, slug };
+      }),
+
+    steps: async (challengeId, userId) => {
+      const rows = await db
+        .select({ stage: projects.stage })
+        .from(projects)
+        .where(
+          and(
+            eq(projects.challengeId, challengeId),
+            eq(projects.ownerId, userId),
+          ),
+        );
+      return {
+        posted: rows.length > 0,
+        launched: rows.some((p) => p.stage === "launched"),
+      };
     },
   };
 }

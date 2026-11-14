@@ -34,6 +34,10 @@ export {
   type ChallengeStatus,
   type Participant,
   type Challenges,
+  type JoinRefusal,
+  type LeaveRefusal,
+  type ParticipantSteps,
+  type ParticipationResult,
   type RunningChallenge,
 } from "./challenges";
 export {

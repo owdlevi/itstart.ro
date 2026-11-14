@@ -1,4 +1,6 @@
+import { eq } from "drizzle-orm";
 import { describe, expect, test } from "vitest";
+import { projects } from "@repo/db";
 import { createTestDb } from "@repo/db/testing";
 import {
   addExtra,
@@ -213,7 +215,7 @@ describe("challenges.participants", () => {
     expect(list.map((p) => p.givenName)).toEqual(["Ioana", "Andrei", "Réka"]);
   });
 
-  test("puts the viewer first when they're in it, and stops at the limit", async () => {
+  test("always includes the viewer when they're in it, in join order, and stops at the limit", async () => {
     const { db, challenges } = await setup("2026-11-11T05:35:00Z");
     const november = await makeChallenge(db, NOVEMBER);
     const ioana = await makeUser(db, { name: "Ioana Mureșan" });
@@ -229,7 +231,215 @@ describe("challenges.participants", () => {
       viewerId: bianca.id,
     });
 
-    expect(list.map((p) => p.givenName)).toEqual(["Bianca", "Ioana"]);
+    expect(list.map((p) => p.givenName)).toEqual(["Ioana", "Bianca"]);
+  });
+});
+
+describe("challenges.join", () => {
+  const at = "2026-11-11T05:35:00Z";
+
+  test("joins in one action and counts them as a participant (rule 2)", async () => {
+    const { db, challenges } = await setup(at);
+    const november = await makeChallenge(db, NOVEMBER);
+    const bianca = await makeUser(db, { onboardedAt: new Date(at) });
+
+    const result = await challenges.join(bianca.id, november.slug);
+
+    expect(result).toEqual({ ok: true, slug: november.slug });
+    expect(await challenges.participation(november.id, bianca.id)).toEqual({
+      joinedAt: new Date(at),
+    });
+    expect((await challenges.bySlug(november.slug))?.counts.participants).toBe(
+      1,
+    );
+  });
+
+  test("joining twice keeps one participation and the first join time (rule 2)", async () => {
+    const { db, challenges } = await setup(at);
+    const november = await makeChallenge(db, NOVEMBER);
+    const bianca = await makeUser(db, { onboardedAt: new Date(at) });
+    const earlier = new Date("2026-11-02T10:00:00Z");
+    await join(db, bianca.id, november.id, null, earlier);
+
+    expect(await challenges.join(bianca.id, november.slug)).toMatchObject({
+      ok: true,
+    });
+
+    expect(await challenges.participation(november.id, bianca.id)).toEqual({
+      joinedAt: earlier,
+    });
+    expect((await challenges.bySlug(november.slug))?.counts.participants).toBe(
+      1,
+    );
+  });
+
+  test("a join after leaving rejoins, from now (rule 2)", async () => {
+    const { db, challenges } = await setup(at);
+    const november = await makeChallenge(db, NOVEMBER);
+    const bianca = await makeUser(db, { onboardedAt: new Date(at) });
+    await join(
+      db,
+      bianca.id,
+      november.id,
+      new Date("2026-11-05T10:00:00Z"),
+      new Date("2026-11-02T10:00:00Z"),
+    );
+
+    expect(await challenges.join(bianca.id, november.slug)).toMatchObject({
+      ok: true,
+    });
+
+    expect(await challenges.participation(november.id, bianca.id)).toEqual({
+      joinedAt: new Date(at),
+    });
+  });
+
+  test("an upcoming challenge can be joined ahead of its start (rule 1)", async () => {
+    const { db, challenges } = await setup(at);
+    const december = await makeChallenge(db, DECEMBER);
+    const bianca = await makeUser(db, { onboardedAt: new Date(at) });
+
+    expect(await challenges.join(bianca.id, december.slug)).toMatchObject({
+      ok: true,
+    });
+  });
+
+  test("refuses an ended challenge (rules 1 and 3)", async () => {
+    const { db, challenges } = await setup(at);
+    const october = await makeChallenge(db, OCTOBER);
+    const bianca = await makeUser(db, { onboardedAt: new Date(at) });
+
+    expect(await challenges.join(bianca.id, october.slug)).toEqual({
+      ok: false,
+      reason: "ended",
+    });
+    expect(await challenges.participation(october.id, bianca.id)).toBeNull();
+  });
+
+  test("refuses someone who hasn't finished onboarding, so the list never shows a nameless participant (rule 2)", async () => {
+    const { db, challenges } = await setup(at);
+    const november = await makeChallenge(db, NOVEMBER);
+    const newcomer = await makeUser(db, { name: "", onboardedAt: null });
+
+    expect(await challenges.join(newcomer.id, november.slug)).toEqual({
+      ok: false,
+      reason: "not_onboarded",
+    });
+  });
+
+  test("refuses an unknown challenge", async () => {
+    const { db, challenges } = await setup(at);
+    const bianca = await makeUser(db, { onboardedAt: new Date(at) });
+
+    expect(await challenges.join(bianca.id, "nu-exista")).toEqual({
+      ok: false,
+      reason: "not_found",
+    });
+  });
+});
+
+describe("challenges.leave", () => {
+  const at = "2026-11-11T05:35:00Z";
+
+  test("removes them from the participant list and the count, and keeps their projects (rule 2)", async () => {
+    const { db, challenges } = await setup(at);
+    const november = await makeChallenge(db, NOVEMBER);
+    const bianca = await makeUser(db, { name: "Bianca Radu" });
+    const ioana = await makeUser(db, { name: "Ioana Mureșan" });
+    await join(db, bianca.id, november.id);
+    await join(db, ioana.id, november.id);
+    const project = await makeProject(db, {
+      ownerId: bianca.id,
+      challengeId: november.id,
+      stage: "in_progress",
+    });
+
+    expect(await challenges.leave(bianca.id, november.slug)).toEqual({
+      ok: true,
+      slug: november.slug,
+    });
+
+    expect(await challenges.participation(november.id, bianca.id)).toBeNull();
+    const list = await challenges.participants({
+      challengeId: november.id,
+      limit: 8,
+      viewerId: bianca.id,
+    });
+    expect(list.map((p) => p.givenName)).toEqual(["Ioana"]);
+    const after = await challenges.bySlug(november.slug);
+    expect(after?.counts.participants).toBe(1);
+    expect(after?.counts.inProgress).toBe(1);
+    const [kept] = await db
+      .select({ challengeId: projects.challengeId })
+      .from(projects)
+      .where(eq(projects.id, project.id));
+    expect(kept?.challengeId).toBe(november.id);
+  });
+
+  test("refuses someone who isn't in the challenge (rule 2)", async () => {
+    const { db, challenges } = await setup(at);
+    const november = await makeChallenge(db, NOVEMBER);
+    const bianca = await makeUser(db);
+    await join(db, bianca.id, november.id, new Date("2026-11-05T10:00:00Z"));
+
+    expect(await challenges.leave(bianca.id, november.slug)).toEqual({
+      ok: false,
+      reason: "not_joined",
+    });
+  });
+
+  test("refuses after the deadline: the list is the month's record by then (rule 3)", async () => {
+    const { db, challenges } = await setup(at);
+    const october = await makeChallenge(db, OCTOBER);
+    const bianca = await makeUser(db);
+    await join(db, bianca.id, october.id);
+
+    expect(await challenges.leave(bianca.id, october.slug)).toEqual({
+      ok: false,
+      reason: "ended",
+    });
+    expect(await challenges.participation(october.id, bianca.id)).not.toBeNull();
+  });
+});
+
+describe("challenges.steps", () => {
+  const at = "2026-11-11T05:35:00Z";
+
+  test("ticks off posting a link and launching from the participant's own projects in the challenge (rules 4 and 5)", async () => {
+    const { db, challenges } = await setup(at);
+    const november = await makeChallenge(db, NOVEMBER);
+    const october = await makeChallenge(db, OCTOBER);
+    const bianca = await makeUser(db);
+    const ioana = await makeUser(db);
+
+    expect(await challenges.steps(november.id, bianca.id)).toEqual({
+      posted: false,
+      launched: false,
+    });
+
+    // Someone else's launch, and her own in another month, don't count.
+    await makeProject(db, { ownerId: ioana.id, challengeId: november.id });
+    await makeProject(db, { ownerId: bianca.id, challengeId: october.id });
+    expect(await challenges.steps(november.id, bianca.id)).toEqual({
+      posted: false,
+      launched: false,
+    });
+
+    await makeProject(db, {
+      ownerId: bianca.id,
+      challengeId: november.id,
+      stage: "in_progress",
+    });
+    expect(await challenges.steps(november.id, bianca.id)).toEqual({
+      posted: true,
+      launched: false,
+    });
+
+    await makeProject(db, { ownerId: bianca.id, challengeId: november.id });
+    expect(await challenges.steps(november.id, bianca.id)).toEqual({
+      posted: true,
+      launched: true,
+    });
   });
 });
 
