@@ -34,11 +34,11 @@ describe("safeNext", () => {
 describe("signInDestination", () => {
   it("sends a first sign-in to /bun-venit, carrying the challenge and next on", () => {
     expect(
-      signInDestination({ handle: null, next: null, challengeSlug: null }),
+      signInDestination({ onboarded: false, next: null, challengeSlug: null }),
     ).toBe("/bun-venit");
     expect(
       signInDestination({
-        handle: null,
+        onboarded: false,
         next: "/proiecte/brici",
         challengeSlug: "frizerie",
       }),
@@ -48,7 +48,7 @@ describe("signInDestination", () => {
   it("returns to the page the visitor came from (rule 12)", () => {
     expect(
       signInDestination({
-        handle: "andrei-popescu",
+        onboarded: true,
         next: "/proiecte/brici#pareri",
         challengeSlug: null,
       }),
@@ -58,7 +58,7 @@ describe("signInDestination", () => {
   it("goes to the challenge the visitor came to join", () => {
     expect(
       signInDestination({
-        handle: "andrei-popescu",
+        onboarded: true,
         next: null,
         challengeSlug: "frizerie",
       }),
@@ -67,11 +67,11 @@ describe("signInDestination", () => {
 
   it("goes Home from the header, or when next points elsewhere", () => {
     expect(
-      signInDestination({ handle: "a", next: null, challengeSlug: null }),
+      signInDestination({ onboarded: true, next: null, challengeSlug: null }),
     ).toBe("/");
     expect(
       signInDestination({
-        handle: "a",
+        onboarded: true,
         next: "https://evil.example",
         challengeSlug: null,
       }),

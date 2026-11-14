@@ -36,7 +36,19 @@ export {
   type Challenges,
   type RunningChallenge,
 } from "./challenges";
-export type { FinishedChallenge, Profile, Profiles } from "./profiles";
+export {
+  CITY_MAX_LENGTH,
+  INTEREST_TOOLS,
+  INTEREST_UNSURE,
+  NAME_MAX_LENGTH,
+} from "./profiles";
+export type {
+  FinishedChallenge,
+  OnboardingInput,
+  OnboardingResult,
+  Profile,
+  Profiles,
+} from "./profiles";
 export type {
   BoardOpts,
   BoardProject,

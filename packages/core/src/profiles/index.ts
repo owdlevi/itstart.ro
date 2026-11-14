@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, like, or, sql } from "drizzle-orm";
 import { users, type Db } from "@repo/db";
 import type { ProfileProject, Projects } from "../projects";
 
@@ -39,10 +39,68 @@ export type Profile = {
   challenges: FinishedChallenge[];
 };
 
+/** The tools screen 07 offers ("Cu ce vrei să construiești?"). */
+export const INTEREST_TOOLS = ["Claude", "Cursor", "v0", "Lovable", "Bolt"];
+/** "Încă nu știu": stored, so an edit form can show it again; never with a tool. */
+export const INTEREST_UNSURE = "unsure";
+export const NAME_MAX_LENGTH = 60;
+export const CITY_MAX_LENGTH = 60;
+
+/** What a first sign-in fills in on /bun-venit (screen 07). */
+export type OnboardingInput = {
+  name: string;
+  city?: string | null;
+  toolsInterest: string[];
+  /** Reminder e-mails: false unless they ticked it (rule 22). */
+  remindersOptIn: boolean;
+};
+
+export type OnboardingResult =
+  | { ok: true; handle: string }
+  | {
+      ok: false;
+      reason:
+        | "already_onboarded"
+        | "name_empty"
+        | "name_too_long"
+        | "city_too_long"
+        | "unknown_tool";
+    };
+
 export type Profiles = {
   /** A profile by handle, as the viewer sees it, or null if there's none. */
   byHandle(handle: string, viewerId?: string | null): Promise<Profile | null>;
+  /**
+   * Finishes a first sign-in: name, city, tools, the reminders choice, and a
+   * handle made from the name when they have none yet. Once only.
+   */
+  onboard(userId: string, input: OnboardingInput): Promise<OnboardingResult>;
 };
+
+/**
+ * The handle a name asks for: diacritics folded, lowercase, words joined by
+ * "-", at most 40 characters. "Kovács Réka" → "kovacs-reka".
+ */
+export function handleBase(name: string): string {
+  const base = name
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+/, "")
+    .slice(0, 40)
+    .replace(/-+$/, "");
+  // A name with no latin letters or digits at all.
+  return base || "constructor";
+}
+
+/** `base`, or the first of `base-2`, `base-3`… that isn't taken. */
+export function freeHandle(base: string, taken: Set<string>): string {
+  if (!taken.has(base)) return base;
+  let n = 2;
+  while (taken.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
 
 // Months are counted in Bucharest, like the challenges' deadlines.
 const monthOf = new Intl.DateTimeFormat("en", {
@@ -126,6 +184,62 @@ export function createProfiles(deps: {
           (a, b) => b.number - a.number,
         ),
       };
+    },
+
+    onboard: async (userId, input) => {
+      const name = input.name.trim().replace(/\s+/g, " ");
+      if (!name) return { ok: false, reason: "name_empty" };
+      if (name.length > NAME_MAX_LENGTH) {
+        return { ok: false, reason: "name_too_long" };
+      }
+      const city = input.city?.trim().replace(/\s+/g, " ") || null;
+      if (city && city.length > CITY_MAX_LENGTH) {
+        return { ok: false, reason: "city_too_long" };
+      }
+      const tools = [...new Set(input.toolsInterest)];
+      const known = tools.every(
+        (tool) => tool === INTEREST_UNSURE || INTEREST_TOOLS.includes(tool),
+      );
+      if (!known || (tools.includes(INTEREST_UNSURE) && tools.length > 1)) {
+        return { ok: false, reason: "unknown_tool" };
+      }
+
+      return db.transaction(async (tx) => {
+        const [user] = await tx
+          .select({ handle: users.handle, onboardedAt: users.onboardedAt })
+          .from(users)
+          .where(eq(users.id, userId))
+          .for("update");
+        if (!user) throw new Error(`Unknown user ${userId}`);
+        if (user.onboardedAt) return { ok: false, reason: "already_onboarded" };
+
+        let handle = user.handle;
+        if (!handle) {
+          const base = handleBase(name);
+          // Two people named alike finishing at once can't both get `base`.
+          await tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${`handle:${base}`}))`,
+          );
+          const taken = await tx
+            .select({ handle: users.handle })
+            .from(users)
+            .where(or(eq(users.handle, base), like(users.handle, `${base}-%`)));
+          handle = freeHandle(base, new Set(taken.map((t) => t.handle ?? "")));
+        }
+
+        await tx
+          .update(users)
+          .set({
+            name,
+            city,
+            toolsInterest: tools,
+            remindersOptIn: input.remindersOptIn,
+            handle,
+            onboardedAt: now(),
+          })
+          .where(eq(users.id, userId));
+        return { ok: true, handle };
+      });
     },
   };
 }

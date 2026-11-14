@@ -21,7 +21,7 @@ export async function finishSignIn(
   const challenge = await getJoinableChallenge(parsed.data.challengeSlug);
   redirect(
     signInDestination({
-      handle: session.user.handle,
+      onboarded: !!session.user.onboardedAt,
       next: parsed.data.next,
       challengeSlug: challenge?.slug,
     }),

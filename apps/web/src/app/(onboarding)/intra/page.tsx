@@ -44,7 +44,7 @@ export default async function SignInPage({
   if (session) {
     redirect(
       signInDestination({
-        handle: session.user.handle,
+        onboarded: !!session.user.onboardedAt,
         next,
         challengeSlug: joining?.slug,
       }),

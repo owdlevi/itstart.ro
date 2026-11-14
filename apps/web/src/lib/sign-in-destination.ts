@@ -25,24 +25,25 @@ export function safeNext(raw: string | null | undefined): string | null {
 
 /**
  * Where someone goes once they're signed in (screen 06):
- * - a first sign-in (no handle yet) goes to /bun-venit (screen 07), carrying
+ * - someone who hasn't finished onboarding goes to /bun-venit (screen 07), carrying
  *   `provocare` and `next` on;
  * - otherwise back to `next` (rule 12: a vote, a review);
  * - otherwise to the challenge they came to join;
  * - otherwise Home.
  */
 export function signInDestination({
-  handle,
+  onboarded,
   next,
   challengeSlug,
 }: {
-  handle: string | null | undefined;
+  /** `onboardedAt` is set: they've been through /bun-venit. */
+  onboarded: boolean;
   next: string | null | undefined;
   /** A challenge that can still be joined, already checked by the caller. */
   challengeSlug: string | null | undefined;
 }): string {
   const back = safeNext(next);
-  if (!handle) {
+  if (!onboarded) {
     const query = new URLSearchParams();
     if (challengeSlug) query.set("provocare", challengeSlug);
     if (back) query.set("next", back);
