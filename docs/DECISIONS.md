@@ -61,6 +61,8 @@ Decided by the product owner. Final. Each line: what, why, and the alternative t
 
 ## 2026-11-13 · Sign-in
 
+_On hold: sign-in is email and password for now; see "2026-11-14 · Email and password for now". Everything below is still configured and applies again once Resend and the OAuth apps exist._
+
 - **Link lifetime:** `expiresIn: 900` (15 minutes; Better Auth's default is 5). Links are single use, and sending a new link doesn't cancel the old one.
 - **Link scanners:** the e-mail links to our own confirm page (`/intra/confirma?token=…`) with one "Intră în ITStart" button that verifies the token. A scanner that pre-fetches the URL (e.g. Outlook Safe Links) would otherwise use up the link.
 - **Users table:** product fields live on Better Auth's `user` table, with defaults and `input: false`, so clients can't set `role` or `isAgent`. Store tokens hashed (`storeToken: "hashed"`).
@@ -142,6 +144,22 @@ Judgment calls made while setting up the database, Better Auth and the compositi
 - **Seed:** the admin is an extra user, `echipa-itstart`, kept out of `fixtures.json` so no reference screen changes. Fixture e-mails are `<handle>@fixtures.itstart.invalid`, and agents use `<handle>@agents.itstart.invalid`. `bianca-radu` isn't onboarded, because screen 07 shows her first sign-in. Past challenges' launched projects have no launch time in the fixtures, so the seed uses their challenge deadline. The seed loads only tables that exist so far (users, challenges, projects, votes); extend it as screens add tables.
 - **Local Postgres:** user, password and database are all `itstart`, on port 5432.
 - **Mailer:** the in-memory mailer is wired in for now and logs each link to the server console. The Resend adapter waits for the sign-in e-mail template and a verified domain.
+
+## 2026-11-14 · Email and password for now
+
+- **Decided by the owner:** until Resend and the Google/GitHub OAuth apps exist, people sign up and sign in with an e-mail address and password (Better Auth `emailAndPassword`). Magic link, Google and GitHub stay configured in `createAuth`, but nothing in the UI uses them.
+- **Why:** both of the decided methods need an outside account first: magic link needs a mailer, and the providers need OAuth apps. Password sign-in needs neither, so screens can be built and tried locally now.
+- **Settings:** Better Auth's defaults: passwords 8–128 characters, stored hashed in `accounts.password` (`provider_id = credential`), signed in straight after sign-up. Better Auth's per-IP limiter covers `/sign-in/email` and `/sign-up/email` (database storage). The per-address sign-in link limit doesn't apply to passwords.
+- **Known gaps, acceptable before public launch only:**
+  - No e-mail verification: anyone can sign up with any address, and `emailVerified` stays `false`.
+  - No password reset: a forgotten password can't be recovered.
+  - No limit on failed password attempts per account, only per IP.
+- **When magic link and OAuth come back,** password users are unverified. That matters in two ways:
+  - Google/GitHub won't link to them automatically (`requireLocalEmailVerified`).
+  - A magic-link sign-in to one of them deletes their `accounts` rows (the password included) and their sessions (`revokeUnprovenAccountAccess`).
+  
+  Decide then whether passwords stay (with verification and reset) or go. Either way, mark existing addresses verified only after they've proven them.
+- **Screen 06 (`/intra`):** the reference shows Google, GitHub and the link form, so the password form has no reference design. Ask the owner for its copy when that screen is built, and record it here. Until sign-in switches back, expect `capture.mjs` to report `differs` for screen 06.
 
 ## Verify during M1 setup
 
