@@ -140,7 +140,8 @@ export function SignInForm({
         }
         error={passwordError}
       >
-        {/* Looks like one control; the button sits inside its edge. */}
+        {/* Looks like one control; the button sits inside its edge, and a long
+            (Hungarian) label wraps rather than pushing it wider. */}
         <div className="flex min-h-12 items-center gap-1 rounded-md border border-border bg-surface has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-3 has-[input:focus-visible]:outline-primary has-[[aria-invalid=true]]:border-warning-ink">
           <input
             id={passwordId}
@@ -150,7 +151,7 @@ export function SignInForm({
             aria-describedby={
               passwordError || signUp ? noteId(passwordId) : undefined
             }
-            className="min-h-12 min-w-0 flex-1 rounded-md bg-transparent pl-3.5 text-base leading-6 text-ink focus-visible:outline-none"
+            className="min-h-12 min-w-[50%] flex-1 rounded-md bg-transparent pl-3.5 text-base leading-6 text-ink focus-visible:outline-none"
             {...register("password")}
           />
           <button
@@ -158,7 +159,7 @@ export function SignInForm({
             aria-pressed={shown}
             aria-controls={passwordId}
             onClick={() => setShown(!shown)}
-            className="mr-0.5 min-h-11 shrink-0 rounded-sm px-3 text-sm font-semibold text-primary hover:text-primary-hover"
+            className="mr-0.5 min-h-11 min-w-0 rounded-sm px-3 py-1 text-right text-sm font-semibold text-primary hover:text-primary-hover"
           >
             {shown ? t("password.hide") : t("password.show")}
           </button>

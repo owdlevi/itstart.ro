@@ -90,7 +90,9 @@ export default async function SignInPage({
   return (
     <Container>
       <div className="flex flex-wrap items-start justify-center gap-7 pb-10 pt-6 md:gap-16 md:pb-24 md:pt-[72px]">
-        <section className="flex min-w-0 max-w-[460px] flex-[1_1_380px] flex-col gap-4 rounded-lg border border-line bg-surface p-5 md:p-8">
+        {/* The reference sizes the panel's content box (max 460px, basis 380px):
+            these add the padding and the border. */}
+        <section className="flex min-w-0 max-w-[502px] flex-[1_1_422px] flex-col gap-4 rounded-lg border border-line bg-surface p-5 md:max-w-[526px] md:flex-[1_1_446px] md:p-8">
           {joining && (
             <p className="text-[13px] font-bold uppercase leading-[18px] tracking-[0.06em] text-primary">
               {t("eyebrow", {
