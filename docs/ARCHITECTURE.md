@@ -28,7 +28,7 @@ src/
     fonts.ts, fonts/ Bricolage Grotesque + Inter via next/font/local
     globals.css      design tokens; the only colours, radii and shadows Tailwind knows
     (site)/          full shell (header + footer): /, /provocari/[slug], /lansari, /proiecte/[slug],
-                     /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /lanseaza
+                     /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /u/[handle]/editeaza, /lanseaza
     (onboarding)/    bare header: /intra, /intra/confirma, /bun-venit
     admin/           role = admin, functional styling (no reference design)
       (site)/lansari/board-params.ts   the board's URL parameters: parse, and build a query without the defaults
@@ -86,10 +86,10 @@ M1 modules:
 |---|---|
 | `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
 | `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `started()` (the board's chips), `participants()` (rule 2) and `challengeStatus()` are done. To come: join/leave (rule 2), admin create/edit |
-| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`) and `bySlug()` (the project page) are done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), adding updates |
+| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`), `bySlug()` (the project page) and `launchedBy()` (a profile's cards) are done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), adding updates |
 | `votes` | done (rules 10–14) |
 | `reviews` | `thread()` (automated first, replies, counts: rules 17–18) and `post()` (reviews, the owner's replies, 10 per hour, fulfils an assignment: rules 15–16) are done. To come: assignment picking on launch (rule 16), hiding (admin) |
-| `profiles` | onboarding, handle generation, consent flags (rule 22) |
+| `profiles` | `byHandle()` (the public profile: stats, launched projects, the challenges launched in; never the e-mail, rule 23) is done; it reads projects through `projects.launchedBy()`. To come: onboarding, editing, handle generation, consent flags (rule 22) |
 | `notifications` | who gets which e-mail when (§11) |
 
 ### Shape of a core module

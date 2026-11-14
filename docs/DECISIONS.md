@@ -305,6 +305,39 @@ Judgment calls made while setting up the database, Better Auth and the compositi
   Comparing every element's position and size in the reference HTML and the app with Playwright, all other elements match to the pixel at 1280 and 390px. Aligned regions, screenshots left out: the main column 0.55% (light) and 0.56% (dark), the builder panel's header 0.35–0.39%, the footer 0.1%, under the 0.61% baseline.
 - **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, with and without the Hungarian sample on every text: no horizontal scroll, nothing clipped except the tag and badge ellipses. Keyboard order follows the layout (back link, tags, the three buttons, the strip, the form, the sidebar), with the 3px outline on every stop. Tried in a browser on `pnpm dev` (port 3000 is free now, so it hydrates): an empty submit (error, focus on the field), a review, the owner's reply, a vote that holds after a reload, the copy-link fallback, the strip, signed out (unvoted, sign-in link). Also rendered: the owner (Andrei on Scaunul 3: "96 voturi · proiectul tău", no form), an agent's project (Frizerie Simplă), a project in progress (Rând la Tuns: "În lucru" box, reviews open), a closed challenge's project (Meniu QR: "33 voturi · votul s-a încheiat"), a project with no review rows (La Fix: the heading counts the fixture extras, "Păreri · 2", and only the form shows below it), and an unknown slug (404). Every fixture project has a review count, so a true "Păreri · 0" wasn't seen.
 
+## 2026-11-14 · Screen 05 data
+
+- **"Provocări terminate" lists the challenges someone launched in, running ones included** (decided by the owner). The reference shows #4 Frizerie, still running, as "Terminată" beside #3 and #2, so "Terminată" means they finished the challenge (launched a project in it), not that its deadline passed. Joining without launching doesn't add a row, and projects of their own (no challenge) don't either. With several launches in one challenge, the row names them all ("proiecte: A, B"), newest first. Rows are newest challenge first.
+- **`profiles.byHandle(handle, viewerId)`** is the page's one read: the public fields (never the e-mail, rule 23), the stats, the launched projects (`projects.launchedBy()`, newest launch first, each with its challenge and `votingOpen`) and the challenges above. `createCore` hands `profiles` the `projects` module, so a card on a profile is built by the same query as everywhere else.
+- **Stats:**
+  - "proiecte lansate" counts launched projects, own projects included.
+  - "luni la rând" counts consecutive Bucharest calendar months with at least one launch, ending this month or last month; a run whose last month is older reads 0. Late launches count: it's about building every month, not recognitions.
+  - "voturi primite" sums the votes of their launched projects, each through `withExtra`, so the fixtures read 128 + 74 + 39 = 241. Projects in progress can't hold votes (rule 5).
+- **"În comunitate din"** is the account's creation month (`users.createdAt`; the seed sets it from the fixtures' `joinedAt`, and agents get the seed's fixed date).
+
+## 2026-11-14 · Screen 05 build
+
+- **ProjectCard takes `meta`,** which replaces the builder in the footer (spec). On a profile it reads "Provocarea #4 · noiembrie" (the challenge's month, from `startsAt`), and "Proiect propriu" for a project outside any challenge (new copy). A recognition ("Provocarea #3 · Alegerea juriului") replaces the month in M2, when recognitions exist; until then Meniu la Minut reads "Provocarea #3 · octombrie".
+- **Vote slots follow the rules, not the reference:** the reference shows live vote buttons on #3's and #2's projects, but those challenges have ended, so they show the plain count ("74 voturi", rule 3), as on screen 04. On your own profile every card shows "N voturi" (rule 11).
+- **Stat labels have no "de"** ("241 voturi primite"), word for word from the reference and like "128 voturi" on the vote buttons; one is singular ("1 proiect lansat", "1 lună la rând", "1 vot primit"). The stats are a `dl`: the label is the `dt` (read first by screen readers), shown under the number.
+- **"Editează profilul"** (own profile only, secondary, small, in the row where "Scrie-i" sits for others) links to `/u/<handle>/editeaza`, which doesn't exist yet. Screen 07's form will serve it, prefilled, the way `/proiecte/<slug>/editeaza` reuses screen 09's. `/bun-venit` was turned down: it's the first sign-in only, and its copy ("Pasul 2 din 2", "Gata, intru în provocare") doesn't fit editing.
+- **Links** show without the scheme, `www.` and a trailing slash ("github.com/ioanamuresan"), with `rel="nofollow ugc noopener"`, in the same tab like "Deschide proiectul". Lucide's link icon stands in for the reference's.
+- **The challenge rows** keep the reference's look: the "#4" badge is decorative, so the title carries a hidden "Provocarea #4: " for screen readers. Neither the title nor the project names are links, as in the reference.
+- **Without a city** the line is "În comunitate din septembrie 2026". Bio and links are left out when empty.
+- **Empty states** (no reference): with no launches, "Proiecte lansate" shows "Niciun proiect lansat încă." and "Provocări terminate" is left out (it would say the same thing). Stats read 0.
+- **Agents' profiles:** square "AI" avatar and AgentBadge after the name (rule 19). Their projects are listed: HANDOVER §3 hides agent-built projects on screens 02, 03 and 08, not on profiles, and screen 04 already shows them. In M1 production there are none.
+- **Hidden until M3:** the "Deschisă la colaborări" chip and "Scrie-i Ioanei" (a comment marks the row). The header panel is 56px shorter, and everything below moves up by that.
+- **Avatar** gains a 72px size (the profile on phones).
+- **New copy, for the owner to review:** "Niciun proiect lansat încă.", "Proiect propriu", "În comunitate din …" (without a city), "proiecte: A, B" (several launches in one challenge).
+- **Visual check (`capture.mjs --only 05`, against `pnpm dev`):** desktop light and dark `differs` 11.5%, mobile light and dark `differs` 17.9% and 13.1%, all expected:
+  - the hidden M3 row (56px; the page is 56px shorter);
+  - thumbnails (§9.4);
+  - the closed vote counts on #3's and #2's projects (rule 3), and "octombrie" for the M2 recognition;
+  - the November challenge's title, "…frizerie de cartier" (DECISIONS, "Screen 04 build").
+
+  Comparing element positions in the reference HTML and the app with Playwright at 1280 and 390px, every element matches to the pixel apart from the 56px shift (headings' boxes are narrower, at the same position and height). Aligned regions, thumbnails and the closed vote boxes left out: desktop 0.17–0.27%, mobile 0.06–0.07%, under the 0.61% baseline.
+- **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, with and without the Hungarian sample on every text, for Ioana as Andrei, signed out, Andrei's own profile, an agent (`agent-claude`), a profile with no launches (`bianca-radu`) and an unknown handle (404): no horizontal scroll and nothing clipped. Keyboard order follows the layout (links, then each card's title, tags and vote), with the 3px outline on every stop.
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.
