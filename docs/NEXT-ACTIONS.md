@@ -2,7 +2,7 @@
 
 Things only the product owner can do: accounts, secrets, settings and decisions. Agents: read this to know what isn't set up yet, and don't work around a missing item. Tick items off here (or delete them) as they're done, and record any decision in `DECISIONS.md`.
 
-State on 2026-11-14: `main` on GitHub (`owdlevi/itstart.ro`) has the M1 foundation: database, Better Auth, composition root and local environment. Sign-in is email and password for now (DECISIONS, "Email and password for now"), so local work needs no outside accounts.
+State on 2026-11-14 (screens 02 and 03 built locally on `screen-02-provocare`): `main` on GitHub (`owdlevi/itstart.ro`) has the M1 foundation: database, Better Auth, composition root and local environment. Sign-in is email and password for now (DECISIONS, "Email and password for now"), so local work needs no outside accounts.
 
 ## Now
 
@@ -13,6 +13,8 @@ State on 2026-11-14: `main` on GitHub (`owdlevi/itstart.ro`) has the M1 foundati
 - [ ] **GitHub:** once the CI workflow (`.github/workflows/ci.yml`, on the `screen-01-groundwork` branch) is on `main`, protect `main`: require PRs and require the `check` job.
 - [ ] **Decide: Home's "Cele mai votate săptămâna asta"** (HANDOVER §13.1). It shows the top 3 of the running challenge. Keep the heading, or change it to "Cele mai votate luna asta"?
 - [ ] **Review the vote refusal copy** in DECISIONS, "Screen 01 build" (it has no reference design).
+- [ ] **Review new copy from screens 02 and 03** (none of it has a reference design): an ended challenge's sidebar ("64 de oameni au construit", "40 au lansat."), the upcoming chip ("Începe pe 1 decembrie"), and the board's older week headings ("26 octombrie – 1 noiembrie" with "4 lansări" beside them). DECISIONS, "Screen 02 build" and "Screen 03 build".
+- [ ] **Confirm the board's tag chips:** a fixed list from the reference (Claude, Cursor, v0, Lovable, Next.js, Supabase). Keep it fixed, or should an admin be able to edit it? DECISIONS, "Screen 03 build".
 
 ## Before the first deploy
 

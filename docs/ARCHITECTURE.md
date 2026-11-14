@@ -31,11 +31,13 @@ src/
                      /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /lanseaza
     (onboarding)/    bare header: /intra, /intra/confirma, /bun-venit
     admin/           role = admin, functional styling (no reference design)
+      (site)/lansari/board-params.ts   the board's URL parameters: parse, and build a query without the defaults
     dev/login-as/[handle]/   404 unless DESIGN_FIXTURES=1
     api/             Better Auth handler (auth/[...all]), Blob upload-token route, unsubscribe endpoint
     actions/         server actions, one file per area (votes.ts: toggleVote)
   components/        the spec components, one file each (button, avatar, vote-button, project-card,
-                     launch-row, countdown, …) and the shell (site-header, site-footer); shadcn files in components/ui/
+                     launch-row, countdown, filter-chip, …), the shell (site-header, site-footer), and
+                     link-tabs (URL tabs on Base UI); shadcn files, rewritten onto our tokens, in components/ui/ (tabs)
   i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
   lib/auth-client.ts Better Auth's browser client (sign-in calls), magic-link plugin ready
@@ -48,7 +50,7 @@ src/
     challenge.ts     getRunningChallenge(): core.challenges.running(), cached per request
   workflows/         Vercel Workflow: sleep, ask core.notifications, send
   emails/            React Email templates
-  lib/dates.ts       daysAgo(): calendar days in Bucharest, for "ieri" / "acum 3 zile"
+  lib/dates.ts       daysAgo() ("ieri", "acum 3 zile") and weekOf()/weeksAgo()/weekDays() (Monday–Sunday weeks), in Bucharest
   flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number; M1 screens must look right with them off
 messages/ro.json     all copy, keys grouped by screen or component; e-mail copy under "emails"
 scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:generate`
@@ -80,8 +82,8 @@ M1 modules:
 | Module | Covers |
 |---|---|
 | `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
-| `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `participants()` (rule 2) and `challengeStatus()` are done. To come: join/leave (rule 2), admin create/edit |
-| `projects` | `mostVoted()` and `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) are done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), adding updates |
+| `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `started()` (the board's chips), `participants()` (rule 2) and `challengeStatus()` are done. To come: join/leave (rule 2), admin create/edit |
+| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`) are done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), adding updates |
 | `votes` | done (rules 10–14) |
 | `reviews` | reviews, replies and counts; assignment picking (rules 15–17) |
 | `profiles` | onboarding, handle generation, consent flags (rule 22) |
@@ -146,5 +148,8 @@ M1 modules:
 - In a production build, Link prefetches of routes that don't exist yet stay pending, so Playwright's `networkidle` (which `capture.mjs` waits for) never arrives. Until those screens exist, run `capture.mjs` against `pnpm dev`.
 - `capture.mjs` needs design-fixtures mode, and `apps/web/.env.local` doesn't turn it on. Start the server with `DESIGN_FIXTURES=1 pnpm dev`, or the countdown and relative dates follow the real clock.
 - Postgres can't `order by` a constant (`order by false` is a syntax error). Build an optional sort key conditionally, as `challenges.participants()` does.
+- `next/form` builds the URL from the form's fields only: unlike a native GET form, it drops the name and value of the button that submitted it. Put a chip's value in hidden inputs, one form per chip (`lansari/page.tsx`).
+- Base UI gives a tab panel its own tab stop. When the panel starts with focusable controls, pass `tabIndex={-1}` (`LinkTabs`).
+- `pkill -f "next start"` misses the production server, whose process is named `next-server`. A leftover one holds the port, and the next `next start` fails with `EADDRINUSE`.
 - next/font puts a metric-matched fallback face (local Arial, no `unicode-range`) right after each family. With latin and latin-ext as separate families, that fallback catches every diacritic before latin-ext is tried. `fonts.ts` turns it off on the latin faces (`adjustFontFallback: false`); keep it that way when adding a font.
 - `next build` with `withWorkflow()` generates `src/app/.well-known/workflow/`. It's gitignored and skipped by ESLint.

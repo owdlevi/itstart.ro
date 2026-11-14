@@ -96,7 +96,7 @@ _On hold: sign-in is email and password for now; see "2026-11-14 · Email and pa
 
 ## 2026-11-13 · M1 install list
 
-Installed on 2026-11-13, with the M1 foundation finished on 2026-11-14; exact versions are in each `package.json`. Still to do, as part of building: adding `tabs` and `alert-dialog` from shadcn when those components are built. Run `pnpm exec playwright install chromium` once per machine for `capture.mjs`.
+Installed on 2026-11-13, with the M1 foundation finished on 2026-11-14; exact versions are in each `package.json`. Still to do, as part of building: adding `alert-dialog` from shadcn when the leave-challenge confirm is built (`tabs` was added for screen 03). Run `pnpm exec playwright install chromium` once per machine for `capture.mjs`.
 
 **`apps/web`**
 - `@repo/core`, `@repo/db` (`workspace:*`): the composition root wires core with real adapters.
@@ -232,6 +232,35 @@ Judgment calls made while setting up the database, Better Auth and the compositi
   
   Diffing the aligned regions instead (each section against its shifted counterpart, the thumbnail column left out): desktop 0.36–0.60%, mobile 0.01–0.57%, all under the tool's 0.61% self-test baseline.
 - **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, with and without the Hungarian sample appended to every text: no horizontal scroll and nothing clipped except the tag ellipsis above. Keyboard order follows the visual order (except the sidebar on desktop, above), and every stop shows the 3px outline. Ended (`cafenea`) and upcoming (dates moved in the local database) both render cleanly. Signed in as `andrei-popescu`: "Ai votat" on Tuns la Fix, "96 voturi · proiectul tău" on Scaunul 3 (rule 11).
+
+## 2026-11-14 · Screen 03 data
+
+- **`challenges.shortTitle`** (new, nullable): the name on the board's challenge chips ("#4 Frizerie", "#2 Meșter local"). It can't come from the slug, which drops diacritics. Null falls back to the title. The seed sets it for the four fixture challenges.
+- **`projects.board()`** is one read for the whole board: a scope (one challenge, every challenge, or projects outside any: "Proiecte proprii"), a stage (launched or in progress, never both: rule 5), a tool and a sort. Each row carries `at`, what the board groups by (the launch, or for a project in progress its latest update or creation, as on screen 02), and `votingOpen`, false once that row's challenge has ended (rule 3), so a board across challenges shows plain counts on finished months. No limit or paging yet: a month brings tens of launches. Revisit when "Toate" gets long.
+- **`challenges.started()`** lists the challenges that have started, newest first, for the chips. Upcoming ones have no projects to show.
+
+## 2026-11-14 · Screen 03 build
+
+- **URL parameters** (Romanian, defaults left out): `tip=proprii` (tab), `provocare=<slug>` or `provocare=toate`, `eticheta=<tool>`, `stadiu=in-lucru`, `sortare=voturi`. The parsing lives in `lansari/board-params.ts`. Unknown values fall back to the default; an unknown challenge slug shows every challenge.
+- **The board opens on the running challenge.** The reference is captured at plain `/lansari` with "#4 Frizerie" selected, so that's the default, and "Toate" needs its own value (`provocare=toate`). With no running challenge, the default is every challenge.
+- **Switching tabs** starts the new tab from its defaults, keeping only the sort. "Proiecte proprii" is the same board without the challenge row (§13.4).
+- **No "Toate" in the Stadiu row,** as in the reference: launched is the default, and launched and in-progress projects are never mixed (rule 5).
+- **The sort row is hidden for projects in progress**, which have no votes to sort by; `sortare` is ignored there. In M3 the "Arată și agenții AI" checkbox joins that row (`flags.builderAgents`), so the row will show for both stages then.
+- **The Etichete chips are a fixed list** from the reference: Claude, Cursor, v0, Lovable, Next.js, Supabase (the AI builders from screen 07, then the two most common stacks). Usage counts in the fixtures don't produce that list, so it isn't derived. A tool from a Tag link that isn't in the list (`eticheta=Astro`) is added at the end, selected.
+- **Week groups** run Monday to Sunday in Bucharest (`weekOf()` in `lib/dates.ts`), newest first; within a week, rows keep the chosen sort. This week and last week are named, with the dates beside them ("9–15 noiembrie · 3 lansări"); older weeks are headed by their dates ("26 octombrie – 1 noiembrie"), with only the count beside them (new layout, not in the reference). The count is the rows shown, and says "proiecte" for projects in progress.
+- **Empty state:** "Nicio lansare aici încă." and, when a filter is narrowing the board, a "Șterge filtrele" link to every challenge, launched, any tool (keeping the tab and sort). With no filter to clear, the link is left out.
+- **Filters are GET forms (`next/form`), one per chip.** They work before hydration and become client-side navigations after. next/form builds the URL from the form's fields only and drops the button that submitted it, so each chip's hidden inputs hold the whole query it leads to. FilterChip is a `type="submit"` button with `aria-pressed` (spec). It's capped at its row's width, so a long (Hungarian) label wraps inside the chip instead of widening the page.
+- **Tabs are links with tab semantics:** shadcn's Base UI tabs, rewritten onto our tokens (`components/ui/tabs.tsx`), and `LinkTabs`, whose triggers render as `Link`s. Arrow keys move between tabs once hydrated; Enter follows the link. Only the selected tab's panel is rendered. Base UI gives a panel its own tab stop, which this one doesn't need (it starts with chips), so it's `tabIndex={-1}`.
+- **"+ Lansează un proiect" under the lead (phones)** shows only when signed in, like the header's desktop button.
+- **Signing in from a vote returns to the same page with its query** (rule 12), so a filtered board comes back filtered. This changes VoteButton for every screen.
+- **Agent rows and the "Arată și agenții AI" checkbox are hidden** (M3, `flags.builderAgents`).
+- **Visual check (`capture.mjs --only 03`, against `pnpm dev`):** all four variants report `differs` (17–25%), all of it expected:
+  - the hidden agent rows (Frizerie Simplă, Programare Rapidă), so the week counts read "3 lansări" instead of 4, and the page is 268px (desktop) and 409px (mobile) shorter;
+  - the hidden "Arată și agenții AI" checkbox, which on phones wraps to its own 52px line;
+  - thumbnails (§9.4).
+  
+  Every element above the first hidden row sits at the reference's exact position and size. Aligned regions, thumbnails left out: desktop 0.03–0.57%, mobile 0.01–0.06% (and 1.3–1.9% in a block whose crop is off by one device pixel), under the 0.61% baseline.
+- **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, with and without the Hungarian sample: no horizontal scroll; on phones the chip rows scroll sideways inside themselves. Keyboard order follows the layout, with the 3px outline on every stop. Tested on `next build && next start`: every chip, combined filters, sort, the stage switch, the tabs by keyboard, the links from screen 02 ("Vezi toate", both) and from Tags, the empty state and its link, and a vote that holds after a reload. Signed out: every row unvoted (rule 12), no launch button.
 
 ## Verify during M1 setup
 
