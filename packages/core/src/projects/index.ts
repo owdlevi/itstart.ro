@@ -101,6 +101,20 @@ export type ProjectPage = Omit<ProjectSummary, "owner"> & {
   updates: ProjectUpdate[];
 };
 
+/** A launched project on its builder's profile (screen 05). */
+export type ProfileProject = ProjectSummary & {
+  launchedAt: Date;
+  /** False once its challenge's deadline has passed (rule 3); always true outside a challenge. */
+  votingOpen: boolean;
+  /** Null for a project of its own. */
+  challenge: {
+    slug: string;
+    number: number;
+    title: string;
+    startsAt: Date;
+  } | null;
+};
+
 type ListOpts = {
   challengeId: string;
   limit: number;
@@ -121,6 +135,11 @@ export type Projects = {
   board(opts: BoardOpts): Promise<BoardProject[]>;
   /** One project with everything its page shows, or null if there's none. */
   bySlug(slug: string, viewerId?: string | null): Promise<ProjectPage | null>;
+  /** Someone's launched projects, newest launch first. */
+  launchedBy(
+    ownerId: string,
+    viewerId?: string | null,
+  ): Promise<ProfileProject[]>;
 };
 
 export function createProjects(deps: { db: Db; now: () => Date }): Projects {
@@ -189,6 +208,12 @@ export function createProjects(deps: { db: Db; now: () => Date }): Projects {
         latestUpdate,
         at,
         endsAt: challenges.endsAt,
+        challenge: {
+          slug: challenges.slug,
+          number: challenges.number,
+          title: challenges.title,
+          startsAt: challenges.startsAt,
+        },
       })
       .from(projects)
       .innerJoin(users, eq(users.id, projects.ownerId))
@@ -198,15 +223,19 @@ export function createProjects(deps: { db: Db; now: () => Date }): Projects {
     const rows = await (limit === undefined ? query : query.limit(limit));
 
     const instant = now();
-    return rows.map(({ screenshots, latestUpdate, endsAt, ...p }) => ({
-      ...p,
-      thumbnail: screenshots[0] ?? null,
-      latestUpdate: latestUpdate && {
-        ...latestUpdate,
-        createdAt: new Date(latestUpdate.createdAt),
-      },
-      votingOpen: !endsAt || instant <= endsAt,
-    }));
+    return rows.map(
+      ({ screenshots, latestUpdate, endsAt, challenge, ...p }) => ({
+        ...p,
+        // A left join gives an object of nulls when there's no challenge.
+        challenge: challenge?.slug ? challenge : null,
+        thumbnail: screenshots[0] ?? null,
+        latestUpdate: latestUpdate && {
+          ...latestUpdate,
+          createdAt: new Date(latestUpdate.createdAt),
+        },
+        votingOpen: !endsAt || instant <= endsAt,
+      }),
+    );
   };
 
   // The two lists on a challenge page return summaries only.
@@ -222,7 +251,9 @@ export function createProjects(deps: { db: Db; now: () => Date }): Projects {
       viewerId,
       agents,
     });
-    return rows.map(({ at: _at, votingOpen: _open, ...p }) => p);
+    return rows.map(
+      ({ at: _at, votingOpen: _open, challenge: _challenge, ...p }) => p,
+    );
   };
 
   return {
@@ -281,7 +312,12 @@ export function createProjects(deps: { db: Db; now: () => Date }): Projects {
           ),
       ]);
       const d = details!;
-      const { at: _at, latestUpdate: _latest, ...summary } = row;
+      const {
+        at: _at,
+        latestUpdate: _latest,
+        challenge: _challenge,
+        ...summary
+      } = row;
       return {
         ...summary,
         latestUpdate: updates[0] ?? null,
@@ -303,6 +339,15 @@ export function createProjects(deps: { db: Db; now: () => Date }): Projects {
         owner: { ...row.owner, city: d.city, launched: launched?.n ?? 0 },
         updates,
       };
+    },
+
+    launchedBy: async (ownerId, viewerId) => {
+      const rows = await select({
+        where: [eq(projects.ownerId, ownerId), eq(projects.stage, "launched")],
+        orderBy: [desc(at), desc(projects.id)],
+        viewerId,
+      });
+      return rows.map(({ at, ...p }) => ({ ...p, launchedAt: at }));
     },
 
     board: ({ scope, stage, sort, tool, viewerId, agents }) =>
