@@ -36,15 +36,16 @@ src/
     dev/captura/[name]/      the fixtures' screenshots (transparent SVGs); 404 unless DESIGN_FIXTURES=1
     api/             Better Auth handler (auth/[...all]), Blob upload-token route, unsubscribe endpoint
     actions/         server actions, one file per area (votes.ts: toggleVote, reviews.ts: postReview,
-                     sign-in.ts: finishSignIn, which sends someone on after Better Auth signs them in)
+                     sign-in.ts: finishSignIn, which sends someone on after Better Auth signs them in,
+                     onboarding.ts: completeOnboarding)
   components/        the spec components, one file each (button, avatar, vote-button, project-card,
-                     launch-row, countdown, filter-chip, field, …), the shell (site-header with BareHeader,
-                     site-footer), sign-in-form (screen 06), and
+                     launch-row, countdown, filter-chip, field, checkbox, …), the shell (site-header with BareHeader,
+                     site-footer), sign-in-form (screen 06), onboarding-form (screen 07), and
                      link-tabs (URL tabs on Base UI); shadcn files, rewritten onto our tokens, in components/ui/ (tabs)
   i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
-  lib/schemas/       zod schemas shared by a form and its server action (review.ts, sign-in.ts)
-  lib/sign-in-destination.ts   where a sign-in goes next (/bun-venit, `next`, the challenge) and safeNext()
+  lib/schemas/       zod schemas shared by a form and its server action (review.ts, sign-in.ts, onboarding.ts)
+  lib/sign-in-destination.ts   where a sign-in or onboarding goes next (/bun-venit, `next`, the challenge) and safeNext()
   lib/auth-client.ts Better Auth's browser client (sign-in calls), magic-link plugin ready
   server/
     auth.ts          createAuth(deps): the Better Auth config. No server-only, so the CLI can load it
@@ -69,7 +70,7 @@ scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:gener
 - **Forms** use react-hook-form + zod on the client. The server action re-parses with the same schema before calling core.
 - **Uploads** go from the browser straight to Blob through the token route (png/jpg/webp ≤ 5 MB, session checked). Server actions receive only blob paths. Vercel caps a request body at 4.5 MB.
 - **Admin checks** read `role` from the database on each request, in the `admin` layout and in every admin server action, never from Better Auth's cookie cache.
-- **Sign-in, for now,** is email and password (`authClient.signUp.email` / `authClient.signIn.email`); see DECISIONS "Email and password for now". Like every sign-in, it goes through Better Auth's HTTP endpoint, not `auth.api` in a server action, so the per-IP rate limit applies. Once it succeeds, the `/intra` form calls `finishSignIn({ next, challengeSlug })`, which reads the new session and redirects (`signInDestination`): a first sign-in to `/bun-venit`, carrying `provocare` and `next`. Joining on sign-in (screen 08) goes in that action. `/intra` itself redirects a signed-in visitor the same way.
+- **Sign-in, for now,** is email and password (`authClient.signUp.email` / `authClient.signIn.email`); see DECISIONS "Email and password for now". Like every sign-in, it goes through Better Auth's HTTP endpoint, not `auth.api` in a server action, so the per-IP rate limit applies. Once it succeeds, the `/intra` form calls `finishSignIn({ next, challengeSlug })`, which reads the new session and redirects (`signInDestination`): anyone not onboarded (`onboardedAt` null) to `/bun-venit`, carrying `provocare` and `next`. `/bun-venit`'s `completeOnboarding` redirects with the same rules. Joining on sign-in (screen 08) goes in both actions. `/intra` itself redirects a signed-in visitor the same way.
 - **Magic link** (configured, not in the UI yet) uses `authClient.signIn.magicLink`. `sendMagicLink` asks `core.signIn.requestLink(email)` first. A refusal comes back as HTTP 429 with `code` `TOO_SOON` or `TOO_MANY` and `retryAfter` in seconds, or 400 `UNDELIVERABLE` for `.invalid` addresses. The `/intra` form maps the code to copy. The e-mail links to `/intra/confirma` with the same query string as Better Auth's verify URL (`token`, `callbackURL`, …).
 - **Better Auth schema:** after changing anything in `createAuth` that affects tables (fields, plugins), run `pnpm --filter web auth:generate`, then `pnpm db:generate`. Never edit `packages/db/src/schema/auth.ts` by hand.
 
@@ -93,7 +94,7 @@ M1 modules:
 | `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`), `bySlug()` (the project page) and `launchedBy()` (a profile's cards) are done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), adding updates |
 | `votes` | done (rules 10–14) |
 | `reviews` | `thread()` (automated first, replies, counts: rules 17–18) and `post()` (reviews, the owner's replies, 10 per hour, fulfils an assignment: rules 15–16) are done. To come: assignment picking on launch (rule 16), hiding (admin) |
-| `profiles` | `byHandle()` (the public profile: stats, launched projects, the challenges launched in; never the e-mail, rule 23) is done; it reads projects through `projects.launchedBy()`. To come: onboarding, editing, handle generation, consent flags (rule 22) |
+| `profiles` | `byHandle()` (the public profile: stats, launched projects, the challenges launched in; never the e-mail, rule 23; it reads projects through `projects.launchedBy()`) and `onboard()` (screen 07: name, city, tools, reminders as ticked (rule 22), a handle from the name, once) are done. To come: editing (bio, links, avatar), consent for "Deschis la colaborări" (M3) |
 | `notifications` | who gets which e-mail when (§11) |
 
 ### Shape of a core module
