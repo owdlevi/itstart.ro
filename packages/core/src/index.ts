@@ -23,11 +23,14 @@ export function createCore(deps: CoreDeps) {
 export type Core = ReturnType<typeof createCore>;
 export {
   challengeStatus,
+  type Challenge,
+  type ChallengeCounts,
   type ChallengeStatus,
+  type Participant,
   type Challenges,
   type RunningChallenge,
 } from "./challenges";
-export type { ProjectSummary, Projects } from "./projects";
+export type { ProjectSummary, ProjectUpdate, Projects } from "./projects";
 export type { SignIn, SignInLinkRefusal, SignInLinkResult } from "./sign-in";
 export type { VoteRefusal, VoteResult } from "./votes";
 export { createMemoryMailer, type Email, type Mailer } from "./mailer";

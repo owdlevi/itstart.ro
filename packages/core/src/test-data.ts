@@ -2,6 +2,7 @@ import {
   challenges,
   fixtureCountExtras,
   participations,
+  projectUpdates,
   projects,
   reviews,
   users,
@@ -71,8 +72,23 @@ export async function join(
   userId: string,
   challengeId: string,
   leftAt: Date | null = null,
+  joinedAt?: Date,
 ) {
-  await db.insert(participations).values({ userId, challengeId, leftAt });
+  await db
+    .insert(participations)
+    .values({ userId, challengeId, leftAt, joinedAt });
+}
+
+export async function addUpdate(
+  db: Db,
+  projectId: string,
+  version: number,
+  createdAt: Date,
+  text = `v${version}`,
+) {
+  await db
+    .insert(projectUpdates)
+    .values({ projectId, version, text, createdAt });
 }
 
 export async function vote(db: Db, projectId: string, count: number) {

@@ -114,6 +114,121 @@ describe("challenges.running", () => {
       agents: 0,
       launched: 25,
       inProgress: 0,
+      launchers: 0,
     });
+  });
+});
+
+describe("challenges.bySlug", () => {
+  test("returns the challenge with its brief, whether or not it's running", async () => {
+    const { db, challenges } = await setup("2026-11-11T05:35:00Z");
+    await makeChallenge(db, {
+      slug: "frizerie",
+      scenario: "Nea Gică are o frizerie.",
+      baseLevel: ["Clientul alege ora."],
+      tips: [{ title: "Lansează devreme", text: "Pune-l pe panou." }],
+      ...NOVEMBER,
+    });
+    await makeChallenge(db, { slug: "cafenea", ...OCTOBER });
+
+    const challenge = await challenges.bySlug("frizerie");
+
+    expect(challenge).toMatchObject({
+      slug: "frizerie",
+      scenario: "Nea Gică are o frizerie.",
+      baseLevel: ["Clientul alege ora."],
+      tips: [{ title: "Lansează devreme", text: "Pune-l pe panou." }],
+    });
+    expect((await challenges.bySlug("cafenea"))?.slug).toBe("cafenea");
+    expect(await challenges.bySlug("nu-exista")).toBeNull();
+  });
+
+  test("is running until its deadline, and votes are accepted (rule 1)", async () => {
+    const { db, challenges } = await setup("2026-11-30T21:59:00Z");
+    await makeChallenge(db, { slug: "frizerie", ...NOVEMBER });
+
+    expect(await challenges.bySlug("frizerie")).toMatchObject({
+      status: "running",
+      votingOpen: true,
+    });
+  });
+
+  test("has ended after its deadline, and voting is closed (rule 3)", async () => {
+    const { db, challenges } = await setup("2026-11-11T05:35:00Z");
+    await makeChallenge(db, { slug: "cafenea", ...OCTOBER });
+
+    expect(await challenges.bySlug("cafenea")).toMatchObject({
+      status: "ended",
+      votingOpen: false,
+    });
+  });
+
+  test("counts the people who launched, once each and without agents", async () => {
+    const { db, challenges } = await setup("2026-11-11T05:35:00Z");
+    const november = await makeChallenge(db, { slug: "frizerie", ...NOVEMBER });
+    const ana = await makeUser(db);
+    const agent = await makeUser(db, { isAgent: true });
+    const bogdan = await makeUser(db);
+    await makeProject(db, { ownerId: ana.id, challengeId: november.id });
+    await makeProject(db, { ownerId: ana.id, challengeId: november.id });
+    await makeProject(db, { ownerId: agent.id, challengeId: november.id });
+    await makeProject(db, {
+      ownerId: bogdan.id,
+      challengeId: november.id,
+      stage: "in_progress",
+    });
+    await addExtra(db, november.id, "launchers", 22);
+
+    const challenge = await challenges.bySlug("frizerie");
+
+    expect(challenge?.counts).toMatchObject({ launched: 3, launchers: 23 });
+  });
+});
+
+describe("challenges.participants", () => {
+  const minute = (n: number) =>
+    new Date(NOVEMBER.startsAt.getTime() + n * 60_000);
+
+  test("lists people earliest-joined first, without those who left (rule 2) or agents", async () => {
+    const { db, challenges } = await setup("2026-11-11T05:35:00Z");
+    const november = await makeChallenge(db, NOVEMBER);
+    const people = {
+      ioana: await makeUser(db, { name: "Ioana Mureșan" }),
+      andrei: await makeUser(db, { name: "Andrei Popescu" }),
+      reka: await makeUser(db, { name: "Kovács Réka", givenName: "Réka" }),
+      left: await makeUser(db, { name: "Dan Plecat" }),
+      agent: await makeUser(db, { name: "Agent Claude", isAgent: true }),
+    };
+    await join(db, people.reka.id, november.id, null, minute(3));
+    await join(db, people.ioana.id, november.id, null, minute(1));
+    await join(db, people.andrei.id, november.id, null, minute(2));
+    await join(db, people.left.id, november.id, minute(5), minute(0));
+    await join(db, people.agent.id, november.id, null, minute(0));
+
+    const list = await challenges.participants({
+      challengeId: november.id,
+      limit: 8,
+    });
+
+    expect(list.map((p) => p.givenName)).toEqual(["Ioana", "Andrei", "Réka"]);
+  });
+
+  test("puts the viewer first when they're in it, and stops at the limit", async () => {
+    const { db, challenges } = await setup("2026-11-11T05:35:00Z");
+    const november = await makeChallenge(db, NOVEMBER);
+    const ioana = await makeUser(db, { name: "Ioana Mureșan" });
+    const andrei = await makeUser(db, { name: "Andrei Popescu" });
+    const bianca = await makeUser(db, { name: "Bianca Radu" });
+    await join(db, ioana.id, november.id, null, minute(1));
+    await join(db, andrei.id, november.id, null, minute(2));
+    await join(db, bianca.id, november.id, null, minute(9));
+
+    const list = await challenges.participants({
+      challengeId: november.id,
+      limit: 2,
+      viewerId: bianca.id,
+    });
+
+    expect(list.map((p) => p.givenName)).toEqual(["Bianca", "Ioana"]);
   });
 });

@@ -3,6 +3,7 @@ import { votes } from "@repo/db";
 import { createTestDb } from "@repo/db/testing";
 import {
   addExtra,
+  addUpdate,
   makeChallenge,
   makeProject,
   makeUser,
@@ -134,5 +135,87 @@ describe("projects.mostVoted", () => {
 
     expect(top?.thumbnail).toBe("https://blob/1.webp");
     expect(top?.owner).toMatchObject({ handle: "ana-pop", name: "Ana Pop" });
+  });
+});
+
+describe("agent-built projects", () => {
+  test("are listed unless the caller hides them", async () => {
+    const { db, projects, challenge, make } = await setup();
+    await make({ name: "Om" });
+    const agent = await makeUser(db, { isAgent: true });
+    await makeProject(db, {
+      ownerId: agent.id,
+      challengeId: challenge.id,
+      name: "Agent",
+    });
+
+    const all = await projects.mostVoted({
+      challengeId: challenge.id,
+      limit: 4,
+    });
+    const people = await projects.mostVoted({
+      challengeId: challenge.id,
+      limit: 4,
+      agents: false,
+    });
+
+    expect(all.map((p) => p.name).sort()).toEqual(["Agent", "Om"]);
+    expect(people.map((p) => p.name)).toEqual(["Om"]);
+  });
+});
+
+describe("projects.inProgress", () => {
+  test("lists only projects in progress, kept apart from the vote (rule 5)", async () => {
+    const { projects, challenge, make } = await setup();
+    await make({ name: "Lansat" });
+    await make({ name: "În lucru", stage: "in_progress" });
+
+    const list = await projects.inProgress({
+      challengeId: challenge.id,
+      limit: 4,
+    });
+
+    expect(list.map((p) => [p.name, p.stage])).toEqual([
+      ["În lucru", "in_progress"],
+    ]);
+  });
+
+  test("puts the most recently updated first, with its latest update", async () => {
+    const { db, projects, challenge, make } = await setup();
+    const older = await make({ name: "Foarfeca", stage: "in_progress" });
+    const newer = await make({ name: "Rând la Tuns", stage: "in_progress" });
+    await addUpdate(db, older.id, 1, new Date("2026-11-08T10:00:00Z"));
+    await addUpdate(db, newer.id, 1, new Date("2026-11-04T10:00:00Z"));
+    await addUpdate(
+      db,
+      newer.id,
+      2,
+      new Date("2026-11-10T10:00:00Z"),
+      "am adăugat confirmarea pe e-mail.",
+    );
+
+    const list = await projects.inProgress({
+      challengeId: challenge.id,
+      limit: 4,
+    });
+
+    expect(list.map((p) => p.name)).toEqual(["Rând la Tuns", "Foarfeca"]);
+    expect(list[0]!.latestUpdate).toEqual({
+      version: 2,
+      text: "am adăugat confirmarea pe e-mail.",
+      createdAt: new Date("2026-11-10T10:00:00Z"),
+    });
+  });
+
+  test("has no latest update before the first one", async () => {
+    const { projects, challenge, make } = await setup();
+    await make({ stage: "in_progress" });
+
+    const [project] = await projects.inProgress({
+      challengeId: challenge.id,
+      limit: 4,
+    });
+
+    expect(project!.latestUpdate).toBeNull();
   });
 });
