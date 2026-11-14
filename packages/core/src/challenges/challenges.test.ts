@@ -232,3 +232,32 @@ describe("challenges.participants", () => {
     expect(list.map((p) => p.givenName)).toEqual(["Bianca", "Ioana"]);
   });
 });
+
+describe("challenges.started", () => {
+  test("lists the challenges that have started, newest first, with their short title", async () => {
+    const { db, challenges } = await setup("2026-11-11T05:35:00Z");
+    await makeChallenge(db, {
+      ...OCTOBER,
+      number: 103,
+      slug: "cafenea",
+      title: "Meniu digital pentru o cafenea",
+      shortTitle: "Cafenea",
+    });
+    await makeChallenge(db, {
+      ...NOVEMBER,
+      number: 104,
+      slug: "frizerie",
+      title: "Pagină pentru o frizerie",
+    });
+    await makeChallenge(db, { ...DECEMBER, number: 105, slug: "decembrie" });
+
+    const list = await challenges.started();
+
+    expect(list.map((c) => [c.number, c.slug, c.shortTitle, c.status])).toEqual(
+      [
+        [104, "frizerie", "Pagină pentru o frizerie", "running"],
+        [103, "cafenea", "Cafenea", "ended"],
+      ],
+    );
+  });
+});

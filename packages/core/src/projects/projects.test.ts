@@ -12,9 +12,12 @@ import {
 } from "../test-data";
 import { createProjects } from "./index";
 
+// Wednesday 11 November 2026, 07:35 in Bucharest: the design fixtures' moment.
+const NOW = new Date("2026-11-11T05:35:00Z");
+
 async function setup() {
   const db = await createTestDb();
-  const projects = createProjects({ db });
+  const projects = createProjects({ db, now: () => NOW });
   const challenge = await makeChallenge(db);
   const owner = await makeUser(db, { handle: "ana-pop", name: "Ana Pop" });
   const make = (
@@ -217,5 +220,194 @@ describe("projects.inProgress", () => {
     });
 
     expect(project!.latestUpdate).toBeNull();
+  });
+});
+
+describe("projects.board", () => {
+  const launched = (iso: string) => ({ launchedAt: new Date(iso) });
+
+  test("lists a challenge's launched projects, newest launch first, with when they launched", async () => {
+    const { projects, challenge, make } = await setup();
+    await make({ name: "Luni", ...launched("2026-11-09T10:00:00Z") });
+    await make({ name: "Miercuri", ...launched("2026-11-11T05:00:00Z") });
+    await make({ name: "Marți", ...launched("2026-11-03T10:00:00Z") });
+    await make({ name: "WIP", stage: "in_progress" });
+
+    const rows = await projects.board({
+      scope: { challengeId: challenge.id },
+      stage: "launched",
+      sort: "newest",
+    });
+
+    expect(rows.map((p) => p.name)).toEqual(["Miercuri", "Luni", "Marți"]);
+    expect(rows[0]!.at).toEqual(new Date("2026-11-11T05:00:00Z"));
+  });
+
+  test("sorts by votes, newest first on a tie", async () => {
+    const { db, projects, challenge, make } = await setup();
+    const a = await make({ name: "A", ...launched("2026-11-02T10:00:00Z") });
+    const b = await make({ name: "B", ...launched("2026-11-03T10:00:00Z") });
+    const c = await make({ name: "C", ...launched("2026-11-04T10:00:00Z") });
+    await vote(db, a.id, 2);
+    await vote(db, b.id, 1);
+    await vote(db, c.id, 2);
+
+    const rows = await projects.board({
+      scope: { challengeId: challenge.id },
+      stage: "launched",
+      sort: "votes",
+    });
+
+    expect(rows.map((p) => p.name)).toEqual(["C", "A", "B"]);
+  });
+
+  test("lists projects in progress on their own, by their latest change (rule 5)", async () => {
+    const { db, projects, challenge, make } = await setup();
+    await make({ name: "Lansat", ...launched("2026-11-10T10:00:00Z") });
+    const old = await make({
+      name: "Vechi",
+      stage: "in_progress",
+      createdAt: new Date("2026-11-02T10:00:00Z"),
+    });
+    await make({
+      name: "Nou",
+      stage: "in_progress",
+      createdAt: new Date("2026-11-05T10:00:00Z"),
+    });
+    await addUpdate(db, old.id, 2, new Date("2026-11-10T08:00:00Z"));
+
+    const rows = await projects.board({
+      scope: { challengeId: challenge.id },
+      stage: "in_progress",
+      sort: "newest",
+    });
+
+    expect(rows.map((p) => [p.name, p.at])).toEqual([
+      ["Vechi", new Date("2026-11-10T08:00:00Z")],
+      ["Nou", new Date("2026-11-05T10:00:00Z")],
+    ]);
+  });
+
+  test("filters by tool", async () => {
+    const { projects, challenge, make } = await setup();
+    await make({ name: "Cu Claude", tools: ["Next.js", "Claude"] });
+    await make({ name: "Fără", tools: ["Cursor"] });
+
+    const rows = await projects.board({
+      scope: { challengeId: challenge.id },
+      stage: "launched",
+      sort: "newest",
+      tool: "Claude",
+    });
+
+    expect(rows.map((p) => p.name)).toEqual(["Cu Claude"]);
+  });
+
+  test("spans every challenge, or lists only the projects outside any", async () => {
+    const { db, projects, make } = await setup();
+    const other = await makeChallenge(db, { slug: "alta" });
+    await make({ name: "Aici", ...launched("2026-11-03T10:00:00Z") });
+    await make({
+      name: "Acolo",
+      challengeId: other.id,
+      ...launched("2026-11-02T10:00:00Z"),
+    });
+    await make({
+      name: "Propriu",
+      challengeId: null,
+      ...launched("2026-11-01T10:00:00Z"),
+    });
+
+    const all = await projects.board({
+      scope: "challenges",
+      stage: "launched",
+      sort: "newest",
+    });
+    const own = await projects.board({
+      scope: "own",
+      stage: "launched",
+      sort: "newest",
+    });
+
+    expect(all.map((p) => p.name)).toEqual(["Aici", "Acolo"]);
+    expect(own.map((p) => p.name)).toEqual(["Propriu"]);
+  });
+
+  test("closes the vote on projects of a challenge past its deadline, not on others (rule 3)", async () => {
+    const { db, projects, make } = await setup();
+    const ended = await makeChallenge(db, {
+      slug: "octombrie",
+      startsAt: new Date("2026-09-30T21:00:00Z"),
+      endsAt: new Date("2026-10-31T21:59:00Z"),
+    });
+    await make({ name: "Acum", ...launched("2026-11-03T10:00:00Z") });
+    await make({
+      name: "Încheiat",
+      challengeId: ended.id,
+      ...launched("2026-10-20T10:00:00Z"),
+    });
+    await make({
+      name: "Propriu",
+      challengeId: null,
+      ...launched("2026-10-01T10:00:00Z"),
+    });
+
+    const all = await projects.board({
+      scope: "challenges",
+      stage: "launched",
+      sort: "newest",
+    });
+    const own = await projects.board({
+      scope: "own",
+      stage: "launched",
+      sort: "newest",
+    });
+
+    expect(
+      [...all, ...own].map((p) => [p.name, p.votingOpen]),
+    ).toEqual([
+      ["Acum", true],
+      ["Încheiat", false],
+      ["Propriu", true],
+    ]);
+  });
+
+  test("marks the viewer's votes, and none for a signed-out visitor (rule 12)", async () => {
+    const { db, projects, challenge, make } = await setup();
+    const project = await make();
+    const viewer = await makeUser(db);
+    await db.insert(votes).values({ userId: viewer.id, projectId: project.id });
+    const opts = {
+      scope: { challengeId: challenge.id },
+      stage: "launched",
+      sort: "newest",
+    } as const;
+
+    const [mine] = await projects.board({ ...opts, viewerId: viewer.id });
+    const [anon] = await projects.board(opts);
+
+    expect(mine!.voted).toBe(true);
+    expect(anon!.voted).toBe(false);
+  });
+
+  test("hides agent-built projects when the caller asks", async () => {
+    const { db, projects, challenge, make } = await setup();
+    const agent = await makeUser(db, { isAgent: true });
+    await make({ name: "Om" });
+    await makeProject(db, {
+      name: "Agent",
+      ownerId: agent.id,
+      challengeId: challenge.id,
+    });
+    const opts = {
+      scope: { challengeId: challenge.id },
+      stage: "launched",
+      sort: "newest",
+    } as const;
+
+    const hidden = await projects.board({ ...opts, agents: false });
+
+    expect(hidden.map((p) => p.name)).toEqual(["Om"]);
+    expect(await projects.board(opts)).toHaveLength(2);
   });
 });

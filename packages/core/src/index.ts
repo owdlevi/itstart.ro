@@ -14,7 +14,7 @@ export function createCore(deps: CoreDeps) {
   const now = deps.now ?? (() => new Date());
   return {
     challenges: createChallenges({ db: deps.db, now }),
-    projects: createProjects({ db: deps.db }),
+    projects: createProjects({ db: deps.db, now }),
     signIn: createSignIn({ db: deps.db, now }),
     votes: createVotes({ db: deps.db, now }),
   };
@@ -25,12 +25,20 @@ export {
   challengeStatus,
   type Challenge,
   type ChallengeCounts,
+  type ChallengeOption,
   type ChallengeStatus,
   type Participant,
   type Challenges,
   type RunningChallenge,
 } from "./challenges";
-export type { ProjectSummary, ProjectUpdate, Projects } from "./projects";
+export type {
+  BoardOpts,
+  BoardProject,
+  BoardScope,
+  ProjectSummary,
+  ProjectUpdate,
+  Projects,
+} from "./projects";
 export type { SignIn, SignInLinkRefusal, SignInLinkResult } from "./sign-in";
 export type { VoteRefusal, VoteResult } from "./votes";
 export { createMemoryMailer, type Email, type Mailer } from "./mailer";

@@ -102,6 +102,13 @@ const BUILT_FOR: Record<string, string> = {
   "mester-local": "un meșter local",
   "pagina-personala": "tine",
 };
+// Not in fixtures.json: the names on screen 03's challenge chips ("#4 Frizerie").
+const SHORT_TITLE: Record<string, string> = {
+  frizerie: "Frizerie",
+  cafenea: "Cafenea",
+  "mester-local": "Meșter local",
+  "pagina-personala": "Pagină personală",
+};
 // Not in fixtures.json: the rest of the running challenge's brief on screen 02.
 const BRIEF: Record<
   string,
@@ -220,6 +227,7 @@ await withDb((db) =>
           number: c.number,
           slug: c.slug,
           title: c.title,
+          shortTitle: SHORT_TITLE[c.slug] ?? null,
           intro: c.intro ?? null,
           summary: c.summary ?? null,
           builtFor: BUILT_FOR[c.slug] ?? null,

@@ -72,6 +72,16 @@ export type Challenge = RunningChallenge & {
   votingOpen: boolean;
 };
 
+/** A challenge as the launch board's filter lists it. */
+export type ChallengeOption = {
+  id: string;
+  number: number;
+  slug: string;
+  /** "Frizerie" in "#4 Frizerie"; the title when no short one is set. */
+  shortTitle: string;
+  status: ChallengeStatus;
+};
+
 export type Participant = {
   id: string;
   handle: string | null;
@@ -88,6 +98,8 @@ export type Challenges = {
   running(): Promise<RunningChallenge | null>;
   /** Any challenge by its slug, with its brief, status and counts. */
   bySlug(slug: string): Promise<Challenge | null>;
+  /** Every challenge that has started (running or ended), newest first. */
+  started(): Promise<ChallengeOption[]>;
   /**
    * The first people in a challenge, for its participant list: the viewer
    * first if they're in it, then the earliest to join. People who left aren't
@@ -186,6 +198,28 @@ export function createChallenges(deps: {
       if (!row) return null;
       const status = challengeStatus(row, now());
       return { ...withCounts(row), status, votingOpen: status !== "ended" };
+    },
+
+    started: async () => {
+      const at = now();
+      const rows = await db
+        .select({
+          id: challenges.id,
+          number: challenges.number,
+          slug: challenges.slug,
+          title: challenges.title,
+          shortTitle: challenges.shortTitle,
+          startsAt: challenges.startsAt,
+          endsAt: challenges.endsAt,
+        })
+        .from(challenges)
+        .where(lte(challenges.startsAt, at))
+        .orderBy(desc(challenges.startsAt));
+      return rows.map(({ title, shortTitle, startsAt, endsAt, ...c }) => ({
+        ...c,
+        shortTitle: shortTitle ?? title,
+        status: challengeStatus({ startsAt, endsAt }, at),
+      }));
     },
 
     participants: async ({ challengeId, limit, viewerId }) => {

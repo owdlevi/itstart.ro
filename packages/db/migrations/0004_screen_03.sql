@@ -1,0 +1,1 @@
+ALTER TABLE "challenges" ADD COLUMN "short_title" text;

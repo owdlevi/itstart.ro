@@ -19,6 +19,9 @@ export const challenges = pgTable("challenges", {
   number: integer().notNull().unique(),
   slug: text().notNull().unique(),
   title: text().notNull(),
+  // The name on the launch board's filter chips: "Frizerie" in "#4 Frizerie".
+  // Null falls back to the title.
+  shortTitle: text(),
   intro: text(),
   // One or two lines for cards (Home's challenge card).
   summary: text(),

@@ -1,5 +1,15 @@
-import { and, desc, eq, sql, type SQL } from "drizzle-orm";
 import {
+  and,
+  arrayContains,
+  desc,
+  eq,
+  isNotNull,
+  isNull,
+  sql,
+  type SQL,
+} from "drizzle-orm";
+import {
+  challenges,
   projects,
   projectUpdates,
   reviews,
@@ -41,6 +51,28 @@ export type ProjectSummary = {
   latestUpdate: ProjectUpdate | null;
 };
 
+/** A row on the launch board (screen 03). */
+export type BoardProject = ProjectSummary & {
+  /** What the board groups by: when it launched, or, in progress, when it last changed. */
+  at: Date;
+  /** False once its challenge's deadline has passed (rule 3); always true outside a challenge. */
+  votingOpen: boolean;
+};
+
+/** One challenge, every challenge ("Din provocări"), or none ("Proiecte proprii"). */
+export type BoardScope = { challengeId: string } | "challenges" | "own";
+
+export type BoardOpts = {
+  scope: BoardScope;
+  stage: "launched" | "in_progress";
+  /** "newest" by `at`; "votes" by votes, newest first on a tie. */
+  sort: "newest" | "votes";
+  tool?: string | null;
+  viewerId?: string | null;
+  /** Include projects built by agents. Off while that's hidden (HANDOVER §3, M3). */
+  agents?: boolean;
+};
+
 type ListOpts = {
   challengeId: string;
   limit: number;
@@ -54,10 +86,15 @@ export type Projects = {
   mostVoted(opts: ListOpts): Promise<ProjectSummary[]>;
   /** A challenge's projects "În lucru", most recently updated first. */
   inProgress(opts: ListOpts): Promise<ProjectSummary[]>;
+  /**
+   * The launch board: launched projects or projects in progress, never both
+   * (rule 5), filtered and sorted. No limit yet: a month brings tens of launches.
+   */
+  board(opts: BoardOpts): Promise<BoardProject[]>;
 };
 
-export function createProjects(deps: { db: Db }): Projects {
-  const { db } = deps;
+export function createProjects(deps: { db: Db; now: () => Date }): Projects {
+  const { db, now } = deps;
 
   const voteCount = withExtra(
     sql`select count(*) from ${votes} where ${votes.projectId} = ${projects.id}`,
@@ -77,16 +114,28 @@ export function createProjects(deps: { db: Db }): Projects {
   // In progress, a project moves when it gets an update, or when it's created.
   const lastActive = sql`coalesce((select max(${projectUpdates.createdAt}) from ${projectUpdates} where ${projectUpdates.projectId} = ${projects.id}), ${projects.createdAt})`;
 
-  const list = async (
-    { challengeId, limit, viewerId, agents = true }: ListOpts,
-    stage: "launched" | "in_progress",
-    orderBy: SQL[],
-  ): Promise<ProjectSummary[]> => {
+  const at = sql<Date>`case when ${projects.stage} = 'launched' then coalesce(${projects.launchedAt}, ${projects.createdAt}) else ${lastActive} end`.mapWith(
+    projects.launchedAt,
+  );
+
+  const select = async ({
+    where,
+    orderBy,
+    limit,
+    viewerId,
+    agents = true,
+  }: {
+    where: (SQL | undefined)[];
+    orderBy: SQL[];
+    limit?: number;
+    viewerId?: string | null;
+    agents?: boolean;
+  }) => {
     const voted = viewerId
       ? sql<boolean>`exists (select 1 from ${votes} where ${votes.projectId} = ${projects.id} and ${votes.userId} = ${viewerId})`
       : sql<boolean>`false`;
 
-    const rows = await db
+    const query = db
       .select({
         id: projects.id,
         slug: projects.slug,
@@ -107,27 +156,42 @@ export function createProjects(deps: { db: Db }): Projects {
         reviews: reviewCount,
         voted,
         latestUpdate,
+        at,
+        endsAt: challenges.endsAt,
       })
       .from(projects)
       .innerJoin(users, eq(users.id, projects.ownerId))
-      .where(
-        and(
-          eq(projects.challengeId, challengeId),
-          eq(projects.stage, stage),
-          agents ? undefined : eq(users.isAgent, false),
-        ),
-      )
-      .orderBy(...orderBy)
-      .limit(limit);
+      .leftJoin(challenges, eq(challenges.id, projects.challengeId))
+      .where(and(...where, agents ? undefined : eq(users.isAgent, false)))
+      .orderBy(...orderBy);
+    const rows = await (limit === undefined ? query : query.limit(limit));
 
-    return rows.map(({ screenshots, latestUpdate, ...p }) => ({
+    const instant = now();
+    return rows.map(({ screenshots, latestUpdate, endsAt, ...p }) => ({
       ...p,
       thumbnail: screenshots[0] ?? null,
       latestUpdate: latestUpdate && {
         ...latestUpdate,
         createdAt: new Date(latestUpdate.createdAt),
       },
+      votingOpen: !endsAt || instant <= endsAt,
     }));
+  };
+
+  // The two lists on a challenge page return summaries only.
+  const list = async (
+    { challengeId, limit, viewerId, agents }: ListOpts,
+    stage: "launched" | "in_progress",
+    orderBy: SQL[],
+  ): Promise<ProjectSummary[]> => {
+    const rows = await select({
+      where: [eq(projects.challengeId, challengeId), eq(projects.stage, stage)],
+      orderBy,
+      limit,
+      viewerId,
+      agents,
+    });
+    return rows.map(({ at: _at, votingOpen: _open, ...p }) => p);
   };
 
   return {
@@ -135,5 +199,25 @@ export function createProjects(deps: { db: Db }): Projects {
     mostVoted: (opts) =>
       list(opts, "launched", [desc(voteCount), desc(projects.launchedAt)]),
     inProgress: (opts) => list(opts, "in_progress", [desc(lastActive)]),
+
+    board: ({ scope, stage, sort, tool, viewerId, agents }) =>
+      select({
+        where: [
+          scope === "own"
+            ? isNull(projects.challengeId)
+            : scope === "challenges"
+              ? isNotNull(projects.challengeId)
+              : eq(projects.challengeId, scope.challengeId),
+          eq(projects.stage, stage),
+          tool ? arrayContains(projects.tools, [tool]) : undefined,
+        ],
+        orderBy: [
+          ...(sort === "votes" ? [desc(voteCount)] : []),
+          desc(at),
+          desc(projects.id),
+        ],
+        viewerId,
+        agents,
+      }),
   };
 }
