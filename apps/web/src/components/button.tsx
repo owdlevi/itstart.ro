@@ -8,6 +8,8 @@ type ButtonProps = {
   full?: boolean;
   /** Renders a link that looks the same. */
   href?: string;
+  /** With `href`: a plain link to another site, not a client-side navigation. */
+  external?: boolean;
   className?: string;
   children: React.ReactNode;
 } & Omit<React.ComponentProps<"button">, "className" | "children">;
@@ -26,6 +28,7 @@ export function Button({
   size = "md",
   full,
   href,
+  external,
   className,
   children,
   ...props
@@ -37,6 +40,13 @@ export function Button({
     variants[variant],
     className,
   );
+  if (href && external) {
+    return (
+      <a href={href} rel="noopener" className={cls}>
+        {children}
+      </a>
+    );
+  }
   if (href) {
     return (
       <Link href={href} className={cls}>

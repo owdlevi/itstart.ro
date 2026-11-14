@@ -30,3 +30,34 @@ export function weekDays(week: string) {
   const monday = Date.parse(`${week}T12:00:00Z`);
   return { monday: new Date(monday), sunday: new Date(monday + 6 * DAY) };
 }
+
+const MINUTE = 60_000;
+
+/**
+ * How long ago, for a review: minutes or hours on the same Bucharest day,
+ * then calendar days ("ieri", "acum 3 zile"). Null after a week: show the date.
+ */
+export function timeAgo(
+  date: Date,
+  now: Date,
+): { unit: "now" | "minutes" | "hours" | "days"; n: number } | null {
+  const days = daysAgo(date, now);
+  if (days >= 7) return null;
+  if (days > 0) return { unit: "days", n: days };
+  const minutes = Math.floor((now.getTime() - date.getTime()) / MINUTE);
+  if (minutes < 1) return { unit: "now", n: 0 };
+  if (minutes < 60) return { unit: "minutes", n: minutes };
+  return { unit: "hours", n: Math.floor(minutes / 60) };
+}
+
+/** Minutes or hours from a launch to `date` ("la 6 minute după lansare"); null after a day. */
+export function afterLaunch(
+  date: Date,
+  launchedAt: Date,
+): { unit: "minutes" | "hours"; n: number } | null {
+  const minutes = Math.floor((date.getTime() - launchedAt.getTime()) / MINUTE);
+  if (minutes < 1 || minutes >= 24 * 60) return null;
+  return minutes < 60
+    ? { unit: "minutes", n: minutes }
+    : { unit: "hours", n: Math.floor(minutes / 60) };
+}

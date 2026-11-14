@@ -9,17 +9,21 @@ export function ProjectVote({
   project,
   viewerId,
   votingOpen,
+  wide,
 }: {
   project: ProjectSummary;
   viewerId: string | null;
   votingOpen: boolean;
+  /** The row shape on the project page. */
+  wide?: boolean;
 }) {
   if (project.stage === "in_progress") {
-    return <VoteCount count={project.votes} reason="wip" />;
+    return <VoteCount count={project.votes} reason="wip" wide={wide} />;
   }
-  if (!votingOpen) return <VoteCount count={project.votes} reason="closed" />;
+  if (!votingOpen)
+    return <VoteCount count={project.votes} reason="closed" wide={wide} />;
   if (project.owner.id === viewerId) {
-    return <VoteCount count={project.votes} reason="own" />;
+    return <VoteCount count={project.votes} reason="own" wide={wide} />;
   }
   return (
     <VoteButton
@@ -27,6 +31,7 @@ export function ProjectVote({
       count={project.votes}
       voted={project.voted}
       signedIn={viewerId !== null}
+      wide={wide}
     />
   );
 }

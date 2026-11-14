@@ -4,7 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-type NavLink = { href: string; label: string };
+type NavLink = {
+  href: string;
+  label: string;
+  /** Other sections this link is current for. */
+  also?: string[];
+};
 
 /** The header's two links; the current section gets `tint` and aria-current. */
 export function NavLinks({
@@ -22,8 +27,9 @@ export function NavLinks({
   return (
     <nav aria-label={label} className={className}>
       {links.map((link) => {
-        const current =
-          pathname === link.href || pathname.startsWith(`${link.href}/`);
+        const current = [link.href, ...(link.also ?? [])].some(
+          (href) => pathname === href || pathname.startsWith(`${href}/`),
+        );
         return (
           <Link
             key={link.href}

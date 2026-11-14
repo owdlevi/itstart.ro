@@ -116,9 +116,12 @@ export function VoteButton({
 export function VoteCount({
   count,
   reason,
+  wide,
 }: {
   count: number;
   reason: "own" | "closed" | "wip";
+  /** The row shape, beside "Deschide proiectul" on the project page. */
+  wide?: boolean;
 }) {
   const t = useTranslations("vote");
   if (reason === "wip") {
@@ -126,9 +129,25 @@ export function VoteCount({
       <div
         role="img"
         aria-label={t("wip")}
-        className="flex min-h-[60px] w-14 shrink-0 items-center justify-center rounded-md bg-warning-bg text-center text-xs font-bold leading-[15px] text-warning-ink"
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-md bg-warning-bg text-center font-bold text-warning-ink",
+          wide
+            ? "min-h-12 px-5 leading-5"
+            : "min-h-[60px] w-14 text-xs leading-[15px]",
+        )}
       >
-        {t.rich("wipBox", { br: () => <br /> })}
+        {wide ? t("wideWip") : t.rich("wipBox", { br: () => <br /> })}
+      </div>
+    );
+  }
+  if (wide) {
+    return (
+      <div
+        role="img"
+        aria-label={t(reason, { count })}
+        className="flex min-h-12 shrink-0 items-center justify-center rounded-md bg-tint px-5 font-bold leading-5 tabular-nums"
+      >
+        {t("wideVotes", { count })}
       </div>
     );
   }

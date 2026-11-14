@@ -44,7 +44,9 @@
       "rate_limited": "Ai votat de multe ori în ultimele minute. Mai încearcă puțin mai târziu.",
       "closed": "Votul pentru această provocare s-a încheiat.",
       "other": "Votul nu a mers. Mai încearcă o dată."
-    }
+    },
+    "wideVotes": "{count} voturi",
+    "wideWip": "În lucru"
   },
   "project": {
     "comments": "{n, plural, one {# comentariu} few {# comentarii} other {# de comentarii}}",
@@ -199,5 +201,67 @@
     },
     "empty": "Nicio lansare aici încă.",
     "clear": "Șterge filtrele"
+  },
+  "projectPage": {
+    "metaTitle": "ITStart · {name}",
+    "back": "Lansări",
+    "challengeTag": "Provocarea #{number}",
+    "open": "Deschide proiectul",
+    "share": "Distribuie",
+    "copied": "Am copiat linkul.",
+    "screenshots": {
+      "label": "Capturi de ecran",
+      "alt": "Captură de ecran din {name}",
+      "thumb": "Captura {n}"
+    },
+    "about": "Despre proiect",
+    "build": {
+      "title": "Cum l-am construit",
+      "duration": "Cât a durat",
+      "durations": {
+        "under_10h": "Sub 10 ore",
+        "10_30h": "Între 10 și 30 de ore",
+        "over_30h": "Peste 30 de ore"
+      },
+      "hardestPart": "Ce a fost cel mai greu",
+      "prompt": "Un prompt care a mers bine",
+      "quoted": "„{text}”"
+    },
+    "updates": {
+      "title": "Actualizări",
+      "label": "v{version} · {date}"
+    },
+    "reviews": {
+      "title": "Păreri · {n}",
+      "automated": "Părere automată",
+      "afterLaunch": "{unit, select, minutes {{n, plural, one {la un minut după lansare} few {la # minute după lansare} other {la # de minute după lansare}}} other {{n, plural, one {la o oră după lansare} few {la # ore după lansare} other {la # de ore după lansare}}}}",
+      "ago": "{unit, select, now {chiar acum} minutes {{n, plural, one {acum un minut} few {acum # minute} other {acum # de minute}}} hours {{n, plural, one {acum o oră} few {acum # ore} other {acum # de ore}}} other {{n, plural, one {ieri} few {acum # zile} other {acum # de zile}}}}",
+      "write": "Scrie o părere",
+      "placeholder": "Ce merge bine? Ce ai schimba?",
+      "send": "Trimite părerea",
+      "signIn": "Intră ca să scrii o părere",
+      "sent": "Părerea ta e publicată.",
+      "reply": "Răspunde",
+      "replyLabel": "Răspunsul tău",
+      "sendReply": "Trimite răspunsul",
+      "replySent": "Răspunsul tău e publicat.",
+      "errors": {
+        "empty": "Scrie ceva înainte să trimiți.",
+        "too_long": "Cel mult {max} de caractere.",
+        "rate_limited": "Ai scris multe păreri în ultima oră. Mai încearcă puțin mai târziu.",
+        "other": "Nu s-a trimis. Mai încearcă o dată."
+      }
+    },
+    "builtBy": {
+      "title": "Construit de",
+      "launched": "{n, plural, one {# proiect lansat} few {# proiecte lansate} other {# de proiecte lansate}}",
+      "profile": "Vezi profilul"
+    },
+    "tools": "Unelte folosite",
+    "madeFor": {
+      "title": "Făcut pentru",
+      "challenge": "Provocarea #{number} · {title}",
+      "launched": "Lansat {date}"
+    }
   }
 }
