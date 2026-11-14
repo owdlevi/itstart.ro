@@ -15,7 +15,7 @@ export async function SiteFooter() {
       <Container>
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-5">
           <div className="flex flex-col gap-1">
-            <Wordmark className="text-xl" />
+            <Wordmark className="text-[20px]" />
             <span className="text-sm text-muted">{t("tagline")}</span>
           </div>
           <nav aria-label={t("navLabel")} className="flex gap-5">

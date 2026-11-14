@@ -11,7 +11,7 @@ export const designFixtures =
   process.env.DESIGN_FIXTURES === "1" &&
   process.env.VERCEL_ENV !== "production";
 const FIXTURES_NOW = new Date("2026-11-11T07:35:00+02:00");
-const now = designFixtures ? () => FIXTURES_NOW : () => new Date();
+export const now = designFixtures ? () => FIXTURES_NOW : () => new Date();
 
 // One pool per instance. Fluid compute shares it across invocations, and
 // attachDatabasePool releases idle clients before the function suspends.

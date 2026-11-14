@@ -5,8 +5,10 @@ export function Wordmark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-baseline font-display leading-none tracking-[-0.02em]",
+        "inline-flex items-baseline font-display tracking-[-0.02em]",
         className,
+        // Last, so a size class can't bring its own line height back.
+        "leading-none",
       )}
     >
       <span className="font-medium text-ink">IT</span>

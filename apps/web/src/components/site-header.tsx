@@ -74,7 +74,7 @@ export async function SiteHeader() {
               aria-label={t("homeLabel")}
               className="inline-flex min-h-11 items-center no-underline"
             >
-              <Wordmark className="text-2xl md:text-[26px]" />
+              <Wordmark className="text-[24px] md:text-[26px]" />
             </Link>
             {nav("hidden gap-1 md:flex")}
           </div>

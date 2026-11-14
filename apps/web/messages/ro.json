@@ -32,6 +32,8 @@
   "vote": {
     "vote": "Votează · {count} voturi",
     "voted": "Ai votat · {count} voturi",
+    "wideVote": "Votează · {count}",
+    "wideVoted": "Ai votat · {count}",
     "votes": "voturi",
     "own": "{count} voturi · proiectul tău",
     "closed": "{count} voturi · votul s-a încheiat",
