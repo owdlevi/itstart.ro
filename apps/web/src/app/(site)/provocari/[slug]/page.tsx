@@ -72,7 +72,12 @@ export default async function ChallengePage({
               }),
             })}
           </p>
-          <ChallengeStatusChip challenge={challenge} />
+          {/* The chip shares a line with the M2 link (44px tap target), so it
+              holds that height and the header keeps the reference's rhythm
+              while the link is hidden, on one line or two. */}
+          <span className="inline-flex min-h-11 items-center">
+            <ChallengeStatusChip challenge={challenge} />
+          </span>
           {flags.challengeArchive && (
             <Link
               href="/provocari"

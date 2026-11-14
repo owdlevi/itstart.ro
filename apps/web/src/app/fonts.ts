@@ -4,10 +4,16 @@ import localFont from "next/font/local";
 // files, latin and latin-ext; the unicode-range keeps the browser from
 // fetching latin-ext until a page needs ă â î ș ț ő ű. next/font only
 // accepts literals, so the ranges are repeated in each call.
+//
+// The latin faces turn off next/font's generated fallback: it is a local
+// Arial with no unicode-range, so in "inter, inter Fallback, interExt" it
+// would draw every diacritic before the latin-ext face is tried. The ext
+// faces keep theirs, which ends the stack.
 const bricolage = localFont({
   src: "./fonts/bricolage-grotesque-latin-standard-normal.woff2",
   weight: "200 800",
   variable: "--font-bricolage",
+  adjustFontFallback: false,
   declarations: [
     {
       prop: "unicode-range",
@@ -34,6 +40,7 @@ const inter = localFont({
   src: "./fonts/inter-latin-wght-normal.woff2",
   weight: "100 900",
   variable: "--font-inter",
+  adjustFontFallback: false,
   declarations: [
     {
       prop: "unicode-range",
