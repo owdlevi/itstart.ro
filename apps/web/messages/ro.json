@@ -168,5 +168,36 @@
       },
       "note": "Votul se închide odată cu provocarea."
     }
+  },
+  "board": {
+    "title": "Lansări",
+    "lead": "Proiecte construite și lansate de comunitate. Votează-le pe cele care ți-ar fi de folos.",
+    "tabsLabel": "Tip de lansare",
+    "tabs": {
+      "challenges": "Din provocări",
+      "own": "Proiecte proprii"
+    },
+    "filters": {
+      "challenge": "Provocare",
+      "tags": "Etichete",
+      "stage": "Stadiu",
+      "all": "Toate",
+      "challengeChip": "#{number} {title}",
+      "launched": "Lansate",
+      "inProgress": "În lucru"
+    },
+    "sort": {
+      "label": "Sortare",
+      "newest": "Cele mai noi",
+      "votes": "Cele mai votate"
+    },
+    "week": {
+      "this": "Săptămâna aceasta",
+      "last": "Săptămâna trecută",
+      "count": "{stage, select, in_progress {{n, plural, one {# proiect} few {# proiecte} other {# de proiecte}}} other {{n, plural, one {# lansare} few {# lansări} other {# de lansări}}}}",
+      "meta": "{range} · {count}"
+    },
+    "empty": "Nicio lansare aici încă.",
+    "clear": "Șterge filtrele"
   }
 }
