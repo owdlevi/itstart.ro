@@ -27,6 +27,9 @@ export const challenges = pgTable("challenges", {
   summary: text(),
   // Who the brief is for, as a phrase that follows "pentru": "o frizerie".
   builtFor: text(),
+  // What everyone is building, as a phrase after "construiesc deja": "pagina
+  // frizeriei" (screen 06's "Ce urmează").
+  buildingPhrase: text(),
   // The brief (screen 02). Lists are in display order.
   // "Un scenariu realist, scris de echipa ITStart. Nu e o comandă de la un client."
   scenarioNote: text(),

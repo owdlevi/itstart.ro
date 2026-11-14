@@ -48,6 +48,8 @@ export type RunningChallenge = {
   title: string;
   summary: string | null;
   builtFor: string | null;
+  /** What everyone is building, after "construiesc deja": "pagina frizeriei". */
+  buildingPhrase: string | null;
   startsAt: Date;
   /** The deadline: 23:59 Europe/Bucharest on the month's last day. */
   endsAt: Date;
@@ -131,6 +133,7 @@ export function createChallenges(deps: {
     title: challenges.title,
     summary: challenges.summary,
     builtFor: challenges.builtFor,
+    buildingPhrase: challenges.buildingPhrase,
     startsAt: challenges.startsAt,
     endsAt: challenges.endsAt,
     participants: withExtra(members(false), challenges.id, "participants"),

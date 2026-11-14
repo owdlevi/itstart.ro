@@ -106,6 +106,14 @@ const BUILT_FOR: Record<string, string> = {
   "mester-local": "un meșter local",
   "pagina-personala": "tine",
 };
+// Not in fixtures.json: what everyone is building, on screen 06 ("86 de oameni
+// construiesc deja pagina frizeriei.").
+const BUILDING_PHRASE: Record<string, string> = {
+  frizerie: "pagina frizeriei",
+  cafenea: "meniul cafenelei",
+  "mester-local": "pagina meșterului",
+  "pagina-personala": "pagina lor personală",
+};
 // Not in fixtures.json: the names on screen 03's challenge chips ("#4 Frizerie").
 const SHORT_TITLE: Record<string, string> = {
   frizerie: "Frizerie",
@@ -247,6 +255,7 @@ await withDb((db) =>
           intro: c.intro ?? null,
           summary: c.summary ?? null,
           builtFor: BUILT_FOR[c.slug] ?? null,
+          buildingPhrase: BUILDING_PHRASE[c.slug] ?? null,
           scenarioNote: c.scenarioNote ?? null,
           scenario: c.scenario ?? null,
           baseLevel: c.baseLevel ?? [],
