@@ -196,6 +196,16 @@ Judgment calls made while setting up the database, Better Auth and the compositi
 - **Icons are Lucide.** The reference's clock and message icons are drawn slightly differently. The difference is within `capture.mjs`'s threshold.
 - **Visual check (`capture.mjs --only 01`, against `pnpm dev`):** mobile light and dark `match` (0.8%). Desktop light and dark report `check` (4.0% and 3.4%), and all of that difference is the thumbnails: placeholder art in the reference against flat `tint` in the app (§9.4, "Thumbnails and screenshots"). Outside the thumbnail strip the difference is 0.51%, under the tool's self-test baseline of 0.61% (text antialiasing).
 
+## 2026-11-14 · Screen 02 data
+
+- **Tips are per-challenge data.** The four "Construiește-l cu AI" cards name Nea Gică and the booking steps, so they belong to the brief: `challenges.tips` (jsonb, `{title, text}[]`, in order). So is the line under the launch criteria (`launchNote`, "…într-o frizerie adevărată").
+- **The "Trei recunoașteri la final" panel is fixed copy** in `ro.json`. The three recognitions and "Votul se închide odată cu provocarea" are product rules (§1, rule 3), the same every month. The jury's composition and criteria are per challenge (§13.6) in `challenges.juryNote`, which screen 11 shows in full. If a challenge's jury ever differs from "echipa ITStart și doi invitați", the panel's line needs a per-challenge field too.
+- **Not in the fixtures, so the seed sets them:** `tips`, `launchNote` and `materialsUrl` for `frizerie` (an `.example` URL, like the seeded live links), and `juryNote` for every challenge (screen 11's text).
+- **Given names:** the participant sentence says "Réka", not "Kovács", so `users.givenName` (nullable) holds what we call someone in a sentence when it isn't the first word of `name`. The seed sets it for Kovács Réka and Szabó Attila. Onboarding (screen 07) only asks for the name, so for now a family-name-first user gets their family name; screen 07 can add the field later if the owner wants it.
+- **Project updates** are their own table, `project_updates` (project, version, text, created at), unique per project and version. The seed gives fixture updates, which only have a date, noon in Bucharest that day.
+- **Participants are listed earliest-joined first.** The seed spaces the joins a minute apart in fixture order, so the sidebar reads "Ioana, Andrei, Réka…".
+- **"23 au lansat deja"** counts people with a launched project in the challenge, a new extras metric, `launchers`. The seed takes the fixtures' 25 launches minus the agents' two (one launch per person).
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.

@@ -24,6 +24,7 @@ export const users = pgTable("users", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   handle: text("handle").unique(),
+  givenName: text("given_name"),
   avatarFill: text("avatar_fill"),
   city: text("city"),
   bio: text("bio"),

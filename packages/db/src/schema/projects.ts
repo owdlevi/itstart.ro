@@ -1,9 +1,11 @@
 import {
   index,
+  integer,
   pgEnum,
   pgTable,
   text,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 import { challenges } from "./challenges";
@@ -37,4 +39,21 @@ export const projects = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index().on(t.challengeId)],
+);
+
+// "v2 · ieri: am adăugat confirmarea pe e-mail." One line per meaningful change (rule 8).
+export const projectUpdates = pgTable(
+  "project_updates",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    projectId: uuid()
+      .notNull()
+      .references(() => projects.id),
+    // 1, 2, 3… per project.
+    version: integer().notNull(),
+    // At most 140 characters.
+    text: text().notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [unique().on(t.projectId, t.version)],
 );

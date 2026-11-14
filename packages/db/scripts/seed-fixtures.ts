@@ -10,6 +10,7 @@ import {
   challenges,
   fixtureCountExtras,
   participations,
+  projectUpdates,
   projects,
   reviews,
   users,
@@ -40,6 +41,12 @@ type Fixtures = {
     title: string;
     intro?: string;
     summary?: string;
+    scenarioNote?: string;
+    scenario?: string;
+    baseLevel?: string[];
+    stretch?: string[];
+    launchCriteria?: string[];
+    materialsNote?: string;
     startsAt?: string;
     deadlineAt: string;
     displayCounts: {
@@ -63,6 +70,7 @@ type Fixtures = {
     toolsAll?: string[];
     votes: number;
     reviewCount: number;
+    updates?: { version: number; date: string; text: string }[];
   }[];
   votes: Record<string, string[]>;
   reviews: Record<
@@ -94,6 +102,47 @@ const BUILT_FOR: Record<string, string> = {
   "mester-local": "un meșter local",
   "pagina-personala": "tine",
 };
+// Not in fixtures.json: the rest of the running challenge's brief on screen 02.
+const BRIEF: Record<
+  string,
+  {
+    launchNote: string;
+    materialsUrl: string;
+    tips: { title: string; text: string }[];
+  }
+> = {
+  frizerie: {
+    launchNote:
+      "E o primă versiune pe care oricine o poate încerca. Nu trebuie să fie gata de folosit într-o frizerie adevărată.",
+    materialsUrl: "https://materiale.itstart.example/frizerie.zip",
+    tips: [
+      {
+        title: "Descrie clientul, nu codul",
+        text: "Spune-i AI-ului cine e Nea Gică și ce îl doare. Primești un rezultat mai bun decât dacă ceri „un formular”.",
+      },
+      {
+        title: "O singură pagină pe rând",
+        text: "Întâi alegerea orei. Apoi confirmarea. Apoi pagina frizerului. Pașii mici se repară ușor.",
+      },
+      {
+        title: "Testează pe telefonul tău",
+        text: "Fă o programare de la cap la coadă, cu degetul mare. Dacă te încurci tu, se încurcă și clientul.",
+      },
+      {
+        title: "Lansează devreme",
+        text: "Pune-l pe panou când merge partea de bază. Comentariile îți spun ce să repari mai departe.",
+      },
+    ],
+  },
+};
+// Not in fixtures.json: screen 11's jury note, the same for every challenge so far.
+const JURY_NOTE =
+  "Juriul: echipa ITStart și doi invitați din comunitate. Criteriile sunt publice: nivelul de bază merge pe telefon, se înțelege fără explicații, se vede atenția la detalii, iar povestea construcției e sinceră.";
+// Family name first, so the first word isn't what we call them (screen 02: "Réka").
+const GIVEN_NAME: Record<string, string> = {
+  "kovacs-reka": "Réka",
+  "szabo-attila": "Attila",
+};
 // Joined the running challenge before the reference moment. Bianca isn't:
 // screen 08 shows her joining.
 const NOT_JOINED = new Set(["bianca-radu"]);
@@ -114,7 +163,7 @@ await withDb((db) =>
   db.transaction(async (tx) => {
     if (reset) {
       await tx.execute(
-        sql`truncate ${users}, ${challenges}, ${participations}, ${projects}, ${votes}, ${voteEvents}, ${reviews}, ${fixtureCountExtras} cascade`,
+        sql`truncate ${users}, ${challenges}, ${participations}, ${projects}, ${projectUpdates}, ${votes}, ${voteEvents}, ${reviews}, ${fixtureCountExtras} cascade`,
       );
     } else {
       const [existing] = await tx.select({ n: count() }).from(users);
@@ -133,6 +182,7 @@ await withDb((db) =>
           return {
             handle: u.handle,
             name: u.name,
+            givenName: GIVEN_NAME[u.handle] ?? null,
             email: `${u.handle}@${u.isAgent ? "agents" : "fixtures"}.itstart.invalid`,
             emailVerified: !u.isAgent,
             avatarUrl: u.avatarUrl,
@@ -173,6 +223,16 @@ await withDb((db) =>
           intro: c.intro ?? null,
           summary: c.summary ?? null,
           builtFor: BUILT_FOR[c.slug] ?? null,
+          scenarioNote: c.scenarioNote ?? null,
+          scenario: c.scenario ?? null,
+          baseLevel: c.baseLevel ?? [],
+          stretch: c.stretch ?? [],
+          launchCriteria: c.launchCriteria ?? [],
+          launchNote: BRIEF[c.slug]?.launchNote ?? null,
+          materialsUrl: BRIEF[c.slug]?.materialsUrl ?? null,
+          materialsNote: c.materialsNote ?? null,
+          tips: BRIEF[c.slug]?.tips ?? [],
+          juryNote: JURY_NOTE,
           // Past challenges have no start in the fixtures: the 1st of the deadline's month.
           startsAt: new Date(
             c.startsAt ??
@@ -215,6 +275,19 @@ await withDb((db) =>
     const projectId = new Map(
       fixtures.projects.map((p, i) => [p.slug, projectRows[i]!.id]),
     );
+
+    // Updates have only a date in the fixtures: noon in Bucharest that day.
+    const updateRows = fixtures.projects.flatMap((p) =>
+      (p.updates ?? []).map((u) => ({
+        projectId: projectId.get(p.slug)!,
+        version: u.version,
+        text: u.text,
+        createdAt: new Date(`${u.date}T12:00:00+02:00`),
+      })),
+    );
+    if (updateRows.length > 0) {
+      await tx.insert(projectUpdates).values(updateRows);
+    }
 
     const voteRows = Object.entries(fixtures.votes).flatMap(([handle, slugs]) =>
       slugs.map((slug) => ({
@@ -264,13 +337,19 @@ await withDb((db) =>
         joined.get(c.slug)!.add(agent);
       }
     }
+    // A minute apart, in fixture order: screen 02 lists the earliest first
+    // ("Ioana, Andrei, Réka și încă 83").
+    const order = new Map(fixtures.users.map((u, i) => [u.handle, i]));
     const participationRows = [...joined].flatMap(([slug, handles]) =>
       [...handles].map((handle) => ({
         userId: userId.get(handle)!,
         challengeId: challengeId.get(slug)!,
         joinedAt: new Date(
-          fixtures.challenges.find((c) => c.slug === slug)!.startsAt ??
-            deadline.get(slug)!,
+          new Date(
+            fixtures.challenges.find((c) => c.slug === slug)!.startsAt ??
+              deadline.get(slug)!,
+          ).getTime() +
+            order.get(handle)! * 60_000,
         ),
       })),
     );
@@ -315,6 +394,21 @@ await withDb((db) =>
         shown.launched,
         own.filter((p) => p.stage === "launched").length,
       );
+      // "23 au lansat deja": the people's launches, so the agents' two are left out.
+      extra(
+        id,
+        "launchers",
+        shown.launched === undefined
+          ? undefined
+          : shown.launched -
+              own.filter((p) => p.stage === "launched" && isAgent.has(p.owner))
+                .length,
+        new Set(
+          own
+            .filter((p) => p.stage === "launched" && !isAgent.has(p.owner))
+            .map((p) => p.owner),
+        ).size,
+      );
       extra(
         id,
         "in_progress",
@@ -334,7 +428,7 @@ await withDb((db) =>
     if (extras.length > 0) await tx.insert(fixtureCountExtras).values(extras);
 
     console.log(
-      `Seeded ${userRows.length} users (admin: ${ADMIN.handle}), ${challengeRows.length} challenges, ${participationRows.length} participations, ${projectRows.length} projects, ${voteRows.length} votes, ${reviewCount} reviews, ${extras.length} fixture count extras.`,
+      `Seeded ${userRows.length} users (admin: ${ADMIN.handle}), ${challengeRows.length} challenges, ${participationRows.length} participations, ${projectRows.length} projects, ${updateRows.length} project updates, ${voteRows.length} votes, ${reviewCount} reviews, ${extras.length} fixture count extras.`,
     );
   }),
 );
