@@ -96,7 +96,7 @@ _On hold: sign-in is email and password for now; see "2026-11-14 · Email and pa
 
 ## 2026-11-13 · M1 install list
 
-Installed on 2026-11-13, with the M1 foundation finished on 2026-11-14; exact versions are in each `package.json`. Still to do, as part of building: adding `alert-dialog` from shadcn when the leave-challenge confirm is built (`tabs` was added for screen 03). Run `pnpm exec playwright install chromium` once per machine for `capture.mjs`.
+Installed on 2026-11-13, with the M1 foundation finished on 2026-11-14; exact versions are in each `package.json`. shadcn's `tabs` was added for screen 03 and `alert-dialog` for screen 08's leave confirm (its generated `ui/button.tsx` was deleted: we have our own Button). Run `pnpm exec playwright install chromium` once per machine for `capture.mjs`.
 
 **`apps/web`**
 - `@repo/core`, `@repo/db` (`workspace:*`): the composition root wires core with real adapters.
@@ -174,7 +174,7 @@ Judgment calls made while setting up the database, Better Auth and the compositi
 - **`challenges.builtFor`** (new, nullable): the phrase after "pentru" that Home uses twice ("Luna asta: o frizerie.", "Luna asta construim pentru o frizerie. Vii?"). It isn't in the fixtures, so the seed sets it per challenge.
 - **Screenshots** are a `text[]` of Blob URLs on `projects`, in display order (the first is the thumbnail), not a separate table. There are only 2–4 per project, and they're always read with it.
 - **Tools on cards:** `projects.tools` holds every tool, and cards and rows show the first two. The seed puts the fixtures' card tags (`tools`) first, then the rest (`toolsAll`).
-- **Participations in the seed:** every owner of a project in a challenge, plus the agents in its agent panel, joined at the challenge's start. Bianca hasn't joined `frizerie`, because screen 08 shows her joining (her "În lucru" project is still seeded).
+- **Participations in the seed:** every owner of a project in a challenge, plus the agents in its agent panel, joined at the challenge's start. Bianca hasn't joined `frizerie`, because screen 08 shows her joining (her "În lucru" project is still seeded). _Since changed: she joins a minute before the frozen clock (see "Screen 08 data")._
 - **Past challenges' start:** the fixtures have none for #1 and #2, so the seed uses the 1st of the deadline's month.
 
 ## 2026-11-14 · Screen 01 build
@@ -212,9 +212,9 @@ Judgment calls made while setting up the database, Better Auth and the compositi
 - **Agent-built projects are hidden in M1** (HANDOVER §3, "agent-built projects", M3). Lists on 02 pass `agents: flags.builderAgents` to core. Counts still include them ("Proiecte lansate · 25"). In production M1 there are no agent-built projects, so lists and counts agree; only the fixtures show the gap.
 - **Launched rows are the four with the most votes** (ties: latest launch first). The reference's order (Tuns la Fix, Scaunul 3, Frizerie Simplă, Brici) puts the agent's 38 votes above Brici's 81, which no rule produces. Screen 03's reference shuffles agent rows the same way. With agents hidden, 02 shows Tuns la Fix, Scaunul 3, Brici, La Fix.
 - **"În lucru" rows** are the four most recently updated (or created, before the first update). The update line reads "v2 · ieri: …" in Bucharest calendar days ("azi", "ieri", "acum 3 zile").
-- **Participant list:** at most 8 avatars (40px), earliest-joined first, with the viewer first when they're in it (screen 08: "Tu, Ioana…"). The sentence names the first three and says "și încă N", where N is the participant count minus the names shown. The reference shows Bianca's avatar, but the seed has her not joined (screen 08 shows her joining), so 02 shows 7 avatars. That's an expected difference.
+- **Participant list:** at most 8 avatars (40px), earliest-joined first, with the viewer first when they're in it (screen 08: "Tu, Ioana…"). _Since changed: the viewer is always among the avatars but in join order; only the sentence names them first (see "Screen 08 data")._ The sentence names the first three and says "și încă N", where N is the participant count minus the names shown. The reference shows Bianca's avatar, but the seed has her not joined (screen 08 shows her joining), so 02 shows 7 avatars. That's an expected difference.
 - **The sidebar comes first in the DOM,** so phones get the countdown and join button above the brief (§6 02). It moves right with `order` only from 984px, where both columns fit side by side (560 + 40 + 320 + 2 × 32). Between 768 and 983px the row wraps to one column, so a 768px tablet gets the phone order too; with `md:` the join button sat below the whole brief there. On desktop, keyboard focus reaches the sidebar before the brief. A single DOM can't match both references' order, and phones come first (§2.5).
-- **Join button:** `/intra?provocare=<slug>` for everyone until screen 08 adds joining.
+- **Join button:** `/intra?provocare=<slug>` for everyone until screen 08 adds joining. _Since changed: see "Screen 08 build"._
 - **Statuses other than running** (no reference until screen 11): an ended challenge shows the outlined "Încheiată" badge and no time-left panel, and its vote counts are plain counts (rule 3). An upcoming one shows a warning chip "Începe pe {date}" (new copy).
 - **Links into screen 03:** "Vezi toate" goes to `/lansari?provocare=<slug>` (launched) and `/lansari?provocare=<slug>&stadiu=in-lucru` (in progress). Screen 03 must honour `provocare` and `stadiu`, as well as `eticheta`.
 - **"Un minut. Fără parolă."** under the join button is the reference copy, but it's untrue while sign-in is email and password. _Since changed to "Durează un minut." (see "Screen 06 copy: password sign-in")._ Kept word for word; the owner decides (NEXT-ACTIONS).
@@ -382,7 +382,7 @@ Errors, replacing the field's hint (Field spec), or under the button for the las
 
 ## 2026-11-14 · Screen 06 build
 
-- **`?provocare=<slug>` is carried on, not joined, for now** (joining is screen 08's). Only a challenge that can still be joined counts (running or upcoming); an ended or unknown slug is ignored, and the page shows the header version. After sign-in:
+- **`?provocare=<slug>` is carried on, not joined, for now** (joining is screen 08's). _Since changed: signing in joins it (see "Screen 08 build")._ Only a challenge that can still be joined counts (running or upcoming); an ended or unknown slug is ignored, and the page shows the header version. After sign-in:
   - someone not onboarded yet (`onboardedAt` null; see "Screen 07 data") goes to `/bun-venit?provocare=<slug>&next=<path>`, and screen 07 carries both on;
   - anyone else goes back to `next` if there is one, otherwise to `/provocari/<slug>`, otherwise to Home.
   
@@ -430,6 +430,74 @@ Errors, replacing the field's hint (Field spec), or under the button for the las
 - **Visual check (`capture.mjs --only 07`, against `pnpm dev`):** all four variants `match` (desktop 0.22% and 0.15%, mobile 0.39% and 0.36%). The two differences left: the button says "…în comunitate", because `capture.mjs` opens `/bun-venit` without `provocare`, and the dev-mode "N" indicator.
 - **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, with errors showing and the Hungarian sample on every text: no horizontal scroll, long chip labels wrap inside their chips. Keyboard order: name, city, the six chips, the checkbox, the button, with the 3px outline on each. Tried on `pnpm dev`: signed out (→ `/intra` with the query), Bianca prefilled, the exclusive "Încă nu știu", an empty name (error, focus), a city over 60, a new password account through `/intra?provocare=frizerie` → `/bun-venit` → `/provocari/frizerie` with handle `ana-pop` and everything stored, and an onboarded user on `/bun-venit?next=/lansari` (→ `/lansari`).
 
+## 2026-11-14 · Screen 08 data
+
+- **`core.challenges.join(userId, slug)`** (rule 2: one action). Joining again changes nothing and keeps the first join time. Joining after leaving clears `leftAt` and starts `joinedAt` from now, so a rejoin moves to the end of the list. Refusals are values:
+  - `ended`: the deadline has passed (rules 1 and 3).
+  - `not_onboarded`: no name yet. The participant list names people, and a password sign-up has an empty name until `/bun-venit`. So sign-in joins only someone onboarded, and `/bun-venit` joins the rest (see "Screen 08 build").
+  - `not_found`: an unknown slug.
+- **Upcoming challenges can be joined,** as screen 06 already assumed (`getJoinableChallenge`: running or upcoming). Ended ones can't.
+- **`leave(userId, slug)`** (rule 2) sets `leftAt`. It doesn't touch projects: they stay in the lists and the counts ("Proiecte lansate · 25"); only the person leaves the participant list and its count. Refusals: `not_joined`, `not_found` and `ended`. After the deadline the list is the month's record ("64 de oameni au construit"), so leaving isn't offered then.
+- **`participation(challengeId, userId)`** returns `{ joinedAt }` while they're in, and null otherwise. **`steps(challengeId, userId)`** gives "Pașii tăi": `posted` (a project of theirs in the challenge, any stage) and `launched` (one of them launched; a late launch counts, since the step is about launching).
+- **`participants()` keeps the viewer in join order.** The 08 reference lists the avatars as on 02 (Bianca 7th), while the sentence starts with "Tu". The viewer is still always among the avatars when they're in; the page names them first.
+- **Fixtures, decided by the owner:** the seed joins Bianca to `frizerie` a minute before the frozen clock, after the fixture extras are worked out, so her join adds one: every screen at the reference moment reads **87**. Screens 01, 02 and 06 therefore read 87 (and 02 "încă 84") where their references say 86; 02 gains its 8th avatar (BR), as in its reference. Screen 07 reads only her profile and is unaffected (still `match`).
+- **Avatars:** having joined last, Bianca's avatar comes after Szabó Attila's (…VI, SA, BR), while both references show BR before SA (fixture order). That's an expected difference on 02 and 08.
+- **Bianca's vote on Tuns la Fix:** the 08 reference shows "Ai votat · 128" on it, which `fixtures.votes` doesn't have. The seed adds it (`EXTRA_VOTES`), inside the 128, so screens 01–04 don't change.
+
+## 2026-11-14 · Screen 08 build
+
+- **The banner, once:** a join redirects to `/provocari/<slug>?inscris=1` (`joinedHref`): from the join button, from `finishSignIn`, and from `completeOnboarding`. The page shows "Ești în provocare, …" (`role="status"`) when the flag is there and the viewer is in the challenge. `FlashBanner` then drops the flag with `history.replaceState`, so a reload, a bookmark or a shared link never shows it again.
+  - **Design fixtures only:** a join less than 10 minutes old (by the frozen clock) counts too. `capture.mjs` opens the plain route, and Bianca's seeded join is a minute old, so screen 08's capture shows the banner.
+  - **Turned down:** a flash cookie (it needs a client round trip to clear, and the seed can't set one), and a `welcomedAt` column (the first `capture.mjs` variant would use it up, so the other three would miss the banner).
+- **Banner copy:** "Ești în provocare, {name}." then "Ai 19 zile să construiești și să lansezi." `{name}` is how the participant list calls them (`givenName`, or the name's first word), and the days are the countdown's whole days. New copy:
+  - "Ai o zi…" and "Ai 20 de zile…" (Romanian plurals);
+  - "Ai mai puțin de o zi să construiești și să lansezi." on the last day;
+  - "Începe pe 1 decembrie. Până atunci, citește brief-ul." for an upcoming challenge;
+  - "Ești în provocare." without a name.
+- **The chip is "Ești înscris/ă"** (HANDOVER §6 08's fallback, §13.3). Nothing stores or asks for a grammatical gender: screen 07 asks only the name, and guessing from a name is unreliable. §13.3's neutral "Ești în provocare" was turned down because the banner right above it says the same words. The chip is 5px wider than the reference's "Ești înscrisă". Storing a gender is the owner's call (NEXT-ACTIONS). The chip shows only while the challenge is running or upcoming.
+- **"Intră în provocare" by viewer:**
+  - Signed out: `/intra?provocare=<slug>` as before, with "Durează un minut." under it. Signing in joins.
+  - Signed in, not onboarded: `/bun-venit?provocare=<slug>`, with the same note; finishing onboarding joins (core refuses `not_onboarded` before that).
+  - Signed in and onboarded: a form posting `joinChallenge` (one action), with no note, since there's nothing to sign in to. A refusal shows under the button: "Provocarea s-a încheiat între timp." or "Nu a mers. Mai încearcă o dată." (new copy).
+- **Joining on sign-in:** `finishSignIn` joins a joinable `?provocare=` when the user is onboarded; otherwise `/bun-venit` carries it on and `completeOnboarding` joins it. `next` still wins the redirect (no banner then), but the join happens anyway.
+- **The participant's sidebar** (in "Timp rămas", after the deadline line, as in the reference): "Pașii tăi" with three steps from real data:
+  - "Te-ai înscris" is always done;
+  - "Pune linkul când merge ceva" and "Marchează-l ca lansat până pe 30 noiembrie" follow `steps()`.
+  
+  Done steps get a filled `primary` circle with a check, `muted` text and " · făcut" after it (the reference's words, which also tell screen readers); the circles are decorative. Then primary "Adaugă proiectul" → `/lanseaza` (screen 09, a 404 until it's built) and the "Renunță la provocare" text button, full width, as in the reference.
+- **Leave confirm** (no reference design): shadcn's `alert-dialog` on Base UI 1.9, rewritten onto our tokens (`components/ui/alert-dialog.tsx`, `components/leave-challenge.tsx`):
+  - The panel is `surface` with a `line` border, radius 12 and `shadow-raised`, 440px wide at most and centered, with no animation.
+  - The backdrop is `bg` at 80%: pale in light mode, dark in dark mode, with no colour of its own.
+  - The focus starts on "Rămân", so Enter never leaves by accident. Escape or "Rămân" closes it and returns the focus to the trigger.
+  - After leaving, the page reloads with `?renuntat=1`, which shows a quiet status line (`tint`, no icon) once, the same way as the banner.
+
+  | Where | Copy |
+  |---|---|
+  | Title | "Renunți la provocare?" |
+  | Text | "Ieși din lista participanților. Proiectele tale rămân publice, iar până la termen poți intra din nou oricând." |
+  | Buttons | "Rămân" (secondary), "Da, renunț" (primary) |
+  | Refused | "Provocarea s-a încheiat între timp." / "Nu a mers. Mai încearcă o dată." |
+  | After leaving | "Ai ieșit din provocare. Proiectele tale rămân publice." |
+- **Ended challenge:** a participant sees what everyone does (no "Timp rămas" panel, so no steps or leave), and no chip.
+- **StatusChip is capped at its row** with an ellipsis, like Tag and AgentBadge, and the two chips wrap as a pair. With the Hungarian sample on phones the pair pushed the page sideways.
+- **Visual check (`capture.mjs --only 08`, against `pnpm dev`):** desktop light and dark `differs` 16.7% and 15.9%, mobile 24.6% and 22.5%, all expected:
+  - everything screen 02 reports ("Screen 02 build"): the hidden M2/M3 sections (the page is 423px shorter on desktop), thumbnails, and the launched rows;
+  - on phones, the page is 897px shorter: 02's 861px plus 36px, because beside two chips the hidden "Toate provocările" link would take a line of its own;
+  - "Ești înscris/ă" (above);
+  - "Pune linkul când merge ceva · făcut": Bianca's seeded "Rând la Tuns" is in progress, so the step is done, and on desktop it wraps to two lines (22px);
+  - the avatars' order (BR after SA, "Screen 08 data").
+
+  Comparing element positions in the reference HTML and the app with Playwright at 1280 and 390px, the banner, the eyebrow, the title, "Timp rămas", "Pașii tăi" and each step, the buttons and the people panel match to the pixel, apart from the shifts above. Aligned regions: desktop 0.15–0.30% (header, banner, the sidebar down to the steps, the main column), 0.84% around the done step, 0.15% for the people sentence; mobile 0.00–0.03%, and 1.23% around the done step. Avatar rows: 10.9% and 12.1% (the swap).
+- **Other screens after the seed change:** 01 mobile 0.47% → 0.57% ("87"), 02 unchanged in size and percentages (15–22%), 03–05 unchanged, 06 5.2% desktop, 07 still `match`.
+- **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, as Bianca, with the Hungarian sample on every text: no horizontal scroll after the chip fix, nothing clipped except the chip ellipsis. Keyboard: the dialog is `role="alertdialog"` with `aria-labelledby` and `aria-describedby`; Tab and Shift+Tab stay inside it (Base UI's focus guards move the focus back asynchronously); Escape returns the focus to "Renunță la provocare". Tried on `pnpm dev` (Playwright):
+  - signed out (link to `/intra?provocare=frizerie`, note, 87);
+  - a new password account from `/intra?provocare=frizerie` → `/bun-venit?provocare=frizerie` → joined, with the banner, "Tu, Ioana, Andrei și încă 85." and 88, the flag dropped and no banner after a reload;
+  - leaving (status line, 87, the one-click join button);
+  - rejoining with that button (banner);
+  - signing out and back in through `/intra?provocare=frizerie&cont=intra` (joined, banner);
+  - Bianca leaving (her link becomes `/bun-venit?provocare=frizerie`);
+  - Ioana on the ended `cafenea` (no chip, steps or leave).
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.
@@ -437,4 +505,4 @@ Facts the research couldn't confirm. Check each one once, and record the result 
 - **Resend:** one test send. Does DKIM cover the `List-Unsubscribe` headers? Do ă/â/î/ș/ț render correctly in Gmail, Outlook and Apple Mail? Set `lang="ro"`, add a UTF-8 charset meta, and send a text part.
 - **sharp:** confirm memory and time for a 5 MB image on a preview deploy.
 - **Neon previews:** do preview database URLs exist at build time, so migrations can run? Do preview branches reset on later pushes?
-- **Base UI:** confirm `role="alertdialog"` and the focus trap in the leave-challenge confirm (screen 08). That confirm has no reference design, so record its copy and backdrop here.
+- **Base UI:** confirm `role="alertdialog"` and the focus trap in the leave-challenge confirm (screen 08). That confirm has no reference design, so record its copy and backdrop here. _Checked locally on 2026-11-14 with Base UI 1.9: `role="alertdialog"`, labelled and described, the focus trapped (Tab and Shift+Tab), and Escape returning the focus to the trigger. Copy and backdrop are in "Screen 08 build". Check once more on a preview deploy._
