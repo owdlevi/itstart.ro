@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { cache } from "react";
 import { AgentBadge } from "@/components/agent-badge";
+import { FlashBanner } from "@/components/flash-banner";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/button";
 import { Container } from "@/components/container";
@@ -17,6 +18,7 @@ import { ScreenshotViewer } from "@/components/screenshot-viewer";
 import { ShareButton } from "@/components/share-button";
 import { Tag } from "@/components/tag";
 import { afterLaunch, timeAgo } from "@/lib/dates";
+import { SAVED_PARAM } from "@/lib/schemas/project";
 import { cn } from "@/lib/utils";
 import { core, now } from "@/server/core";
 import { getSession } from "@/server/session";
@@ -51,8 +53,9 @@ export async function generateMetadata({
 /** Screen 04 · Proiect (HANDOVER §6). */
 export default async function ProjectPageRoute({
   params,
+  searchParams,
 }: PageProps<"/proiecte/[slug]">) {
-  const { slug } = await params;
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
   const session = await getSession();
   const viewerId = session?.user.id ?? null;
   const project = await getProject(slug, viewerId);
@@ -76,6 +79,7 @@ export default async function ProjectPageRoute({
     ...listTools(project),
   ];
   const { build } = project;
+  const own = viewerId === project.owner.id;
   const duration =
     build.durationText ??
     (build.duration && t(`build.durations.${build.duration}`));
@@ -90,6 +94,10 @@ export default async function ProjectPageRoute({
           <ArrowLeft size={18} strokeWidth={2.2} aria-hidden />
           {t("back")}
         </Link>
+        {/* After the launch form saves (screen 09), once. */}
+        {own && query[SAVED_PARAM] && (
+          <FlashBanner param={SAVED_PARAM}>{t("saved")}</FlashBanner>
+        )}
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5 pb-6 pt-2 md:pb-9 md:pt-3">
@@ -126,6 +134,15 @@ export default async function ProjectPageRoute({
               wide
             />
             <ShareButton title={project.name} />
+            {own && (
+              <Button
+                href={`/proiecte/${project.slug}/editeaza`}
+                variant="secondary"
+                className="w-full md:w-auto"
+              >
+                {t("edit")}
+              </Button>
+            )}
           </div>
         </div>
       </div>

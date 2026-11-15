@@ -21,11 +21,15 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 attachDatabasePool(pool);
 
 export const db = createDb(pool);
-const linkChecker = createHttpsLinkChecker();
+const httpsLinkChecker = createHttpsLinkChecker();
+/** Rule 9's check; core uses it on save, the launch form on blur. */
+export const linkChecker = designFixtures
+  ? withExampleHosts(httpsLinkChecker)
+  : httpsLinkChecker;
 export const core = createCore({
   db,
   now,
-  linkChecker: designFixtures ? withExampleHosts(linkChecker) : linkChecker,
+  linkChecker,
   // Fails closed where nothing can be stored yet: no screenshot is ours.
   storage: screenshotStorage ?? undefined,
 });

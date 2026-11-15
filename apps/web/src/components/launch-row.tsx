@@ -7,7 +7,7 @@ import { now } from "@/server/core";
 import { AgentBadge } from "./agent-badge";
 import { Avatar } from "./avatar";
 import { listTools } from "./project-card";
-import { ProjectThumbnail } from "./project-thumbnail";
+import { LaunchRowFrame } from "./launch-row-frame";
 import { Tag } from "./tag";
 
 /** A project as one row: the board, and every list on a phone. */
@@ -20,40 +20,33 @@ export async function LaunchRow({
 }) {
   const t = await getTranslations("project");
   return (
-    <article className="flex items-start gap-3 rounded-lg border border-line bg-surface p-3 md:gap-4 md:p-4">
-      <ProjectThumbnail
-        src={project.thumbnail}
-        className="size-16 shrink-0 rounded-[8px] md:h-[88px] md:w-32"
-      />
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-0.5">
-          <h3 className="text-lg font-bold leading-[1.25] tracking-[-0.01em] md:text-xl">
-            <Link
-              href={`/proiecte/${project.slug}`}
-              className="text-ink no-underline hover:text-ink"
-            >
-              {project.name}
-            </Link>
-          </h3>
-          <p className="text-sm text-muted md:text-[15px] md:leading-[22px]">
-            {project.pitch}
-          </p>
-          {project.stage === "in_progress" && project.latestUpdate && (
-            <p className="mt-0.5 text-[13px] leading-5 text-ink">
-              {t("update", {
-                version: project.latestUpdate.version,
-                days: daysAgo(project.latestUpdate.createdAt, now()),
-                text: project.latestUpdate.text,
-              })}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-          {listTools(project).map((tag) => (
-            <Tag key={tag.label} href={tag.href}>
-              {tag.label}
-            </Tag>
-          ))}
+    <LaunchRowFrame
+      thumbnail={project.thumbnail}
+      title={
+        <Link
+          href={`/proiecte/${project.slug}`}
+          className="text-ink no-underline hover:text-ink"
+        >
+          {project.name}
+        </Link>
+      }
+      pitch={project.pitch}
+      update={
+        project.stage === "in_progress" &&
+        project.latestUpdate &&
+        t("update", {
+          version: project.latestUpdate.version,
+          days: daysAgo(project.latestUpdate.createdAt, now()),
+          text: project.latestUpdate.text,
+        })
+      }
+      tags={listTools(project).map((tag) => (
+        <Tag key={tag.label} href={tag.href}>
+          {tag.label}
+        </Tag>
+      ))}
+      meta={
+        <>
           <span className="inline-flex items-center gap-1.5 text-[13px] leading-5 text-muted">
             <Avatar person={project.owner} size={22} />
             {project.owner.name}
@@ -65,9 +58,9 @@ export async function LaunchRow({
             <MessageSquare size={14} strokeWidth={2.2} aria-hidden />
             {t("comments", { n: project.reviews })}
           </span>
-        </div>
-      </div>
-      {vote}
-    </article>
+        </>
+      }
+      vote={vote}
+    />
   );
 }

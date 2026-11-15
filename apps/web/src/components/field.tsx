@@ -45,12 +45,12 @@ export function Field({
               id={noteId(id)}
               className="mt-1.5 flex items-start gap-1.5 text-sm font-semibold text-warning-ink"
             >
-            <CircleAlert
-              size={18}
-              strokeWidth={2.2}
-              aria-hidden
-              className="shrink-0"
-            />
+              <CircleAlert
+                size={18}
+                strokeWidth={2.2}
+                aria-hidden
+                className="shrink-0"
+              />
               {error}
             </span>
           ) : (
@@ -71,4 +71,23 @@ const control =
 
 export function Input({ className, ...props }: React.ComponentProps<"input">) {
   return <input className={cn(control, "min-h-12", className)} {...props} />;
+}
+
+export function Textarea({
+  className,
+  ...props
+}: React.ComponentProps<"textarea">) {
+  return (
+    <textarea className={cn(control, "resize-y py-3", className)} {...props} />
+  );
+}
+
+/** Native, so phones get their own picker. */
+export function Select({
+  className,
+  ...props
+}: React.ComponentProps<"select">) {
+  return (
+    <select className={cn(control, "min-h-12 px-3", className)} {...props} />
+  );
 }

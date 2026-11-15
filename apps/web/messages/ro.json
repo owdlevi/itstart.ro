@@ -294,7 +294,9 @@
       "title": "Făcut pentru",
       "challenge": "Provocarea #{number} · {title}",
       "launched": "Lansat {date}"
-    }
+    },
+    "edit": "Editează proiectul",
+    "saved": "Am salvat proiectul."
   },
   "profile": {
     "metaTitle": "ITStart · {name}",
@@ -396,6 +398,125 @@
       "nameEmpty": "Scrie-ți numele.",
       "tooLong": "Cel mult {max} de caractere.",
       "other": "Nu a mers. Mai încearcă o dată."
+    }
+  },
+  "launch": {
+    "metaTitle": "Lansează un proiect",
+    "editMetaTitle": "Editează {name}",
+    "title": "Lansează un proiect",
+    "editTitle": "Editează proiectul",
+    "lead": "Cinci minute. Apoi e public și oamenii pot vota.",
+    "editLead": "Ce schimbi apare pe pagina proiectului imediat ce salvezi.",
+    "optional": "(opțional)",
+    "challenge": {
+      "label": "Pentru ce provocare?",
+      "option": "Provocarea #{number} · {title}",
+      "own": "Fără provocare · proiect propriu",
+      "locked": "Un proiect lansat rămâne în provocarea lui."
+    },
+    "name": {
+      "label": "Numele proiectului"
+    },
+    "pitch": {
+      "label": "Pe scurt, într-o frază",
+      "hint": "{count} din {max} de caractere. Spune ce face, nu cu ce e făcut."
+    },
+    "liveUrl": {
+      "label": "Linkul live",
+      "hint": "Trebuie să se deschidă fără cont, pentru oricine.",
+      "checking": "Verific linkul…"
+    },
+    "screenshots": {
+      "label": "Capturi de ecran",
+      "hint": "Între 2 și 4 imagini. Prima apare pe panou.",
+      "add": "Adaugă",
+      "tile": "Captura {n} din {total}",
+      "tileFirst": "Captura {n} din {total}, apare pe panou",
+      "moveHint": "Mut-o cu săgețile sau trage-o.",
+      "remove": "Șterge captura {n}",
+      "uploading": "Se încarcă…",
+      "moved": "Captura e acum pe locul {n} din {total}.",
+      "removed": "Am șters captura.",
+      "added": "Am adăugat captura."
+    },
+    "description": {
+      "label": "Descriere",
+      "hint": "Ce face, pentru cine și ce ai învățat construindu-l."
+    },
+    "tools": {
+      "label": "Unelte folosite",
+      "other": "+ Alta",
+      "otherLabel": "Altă unealtă",
+      "otherAdd": "Adaugă",
+      "otherCancel": "Renunță"
+    },
+    "build": {
+      "title": "Cum l-ai construit",
+      "lead": "Asta citesc ceilalți cel mai atent. Scurt și sincer.",
+      "duration": {
+        "label": "Cât a durat?",
+        "choose": "Alege",
+        "under_10h": "Sub 10 ore",
+        "10_30h": "Între 10 și 30 de ore",
+        "over_30h": "Peste 30 de ore"
+      },
+      "hardestPart": {
+        "label": "Ce a fost cel mai greu?"
+      },
+      "prompt": {
+        "label": "Un prompt care a mers bine"
+      }
+    },
+    "stage": {
+      "label": "În ce stadiu e?",
+      "in_progress": "În lucru",
+      "launched": "Lansat, intră la vot",
+      "hint": "Poți începe cu „În lucru” și să-l marchezi ca lansat mai târziu, la aceeași adresă."
+    },
+    "update": {
+      "label": "Ce s-a schimbat?",
+      "hint": "Un rând, cel mult {max} de caractere. Apare ca v{version} pe pagina proiectului."
+    },
+    "submit": "{stage, select, launched {Lansează proiectul} other {Salvează}}",
+    "draft": {
+      "save": "Salvează ciorna",
+      "saved": "Am salvat ciorna pe acest dispozitiv. N-o vede nimeni până nu salvezi proiectul.",
+      "restored": "Am pus înapoi ciorna salvată pe acest dispozitiv.",
+      "discard": "Începe de la zero"
+    },
+    "preview": {
+      "title": "Așa va apărea pe panou",
+      "name": "Numele proiectului"
+    },
+    "checklist": {
+      "title": "Înainte să lansezi",
+      "link": "Linkul se deschide fără cont.",
+      "phone": "Arată bine pe telefon.",
+      "note": "Poți edita proiectul și după lansare."
+    },
+    "errors": {
+      "tooLong": "Cel mult {max} de caractere.",
+      "nameEmpty": "Scrie numele proiectului.",
+      "pitchEmpty": "Spune într-o frază ce face.",
+      "linkEmpty": "Pune linkul la care se deschide proiectul.",
+      "linkInvalid": "Pune un link public care începe cu https://.",
+      "linkUnreachable": "Linkul nu se deschide. Încearcă-l într-o fereastră privată, apoi mai verifică o dată.",
+      "linkNeedsAccount": "Linkul cere cont sau parolă. Trebuie să se deschidă pentru oricine.",
+      "screenshotsLaunch": "Pentru lansare ai nevoie de cel puțin 2 capturi.",
+      "screenshotType": "Doar imagini png, jpg sau webp.",
+      "screenshotTooLarge": "O imagine poate avea cel mult 5 MB.",
+      "screenshotUnavailable": "Aici nu se pot încărca imagini încă.",
+      "screenshotFailed": "Imaginea nu s-a încărcat. Mai încearcă o dată.",
+      "screenshotUnknown": "O captură nu s-a încărcat cum trebuie. Șterge-o și adaug-o din nou.",
+      "descriptionLaunch": "Pentru lansare scrie câteva rânduri despre proiect.",
+      "durationLaunch": "Alege cât a durat.",
+      "hardestPartLaunch": "Spune ce a fost cel mai greu.",
+      "toolsTooMany": "Cel mult {max} unelte.",
+      "challengeNotRunning": "Provocarea nu mai primește proiecte noi. Alege „Fără provocare”.",
+      "challengeLocked": "Un proiect lansat rămâne în provocarea lui.",
+      "alreadyLaunched": "Proiectul e deja lansat și nu se mai poate întoarce la „În lucru”.",
+      "notOnboarded": "Termină-ți profilul înainte să lansezi.",
+      "other": "Nu s-a salvat. Mai încearcă o dată."
     }
   }
 }
