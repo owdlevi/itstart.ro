@@ -50,6 +50,8 @@ export type RunningChallenge = {
   builtFor: string | null;
   /** What everyone is building, after "construiesc deja": "pagina frizeriei". */
   buildingPhrase: string | null;
+  /** The brief's end-to-end test, the last line of "Înainte să lansezi" (screen 09). */
+  launchCheck: string | null;
   startsAt: Date;
   /** The deadline: 23:59 Europe/Bucharest on the month's last day. */
   endsAt: Date;
@@ -197,6 +199,7 @@ export function createChallenges(deps: {
     summary: challenges.summary,
     builtFor: challenges.builtFor,
     buildingPhrase: challenges.buildingPhrase,
+    launchCheck: challenges.launchCheck,
     startsAt: challenges.startsAt,
     endsAt: challenges.endsAt,
     participants: withExtra(members(false), challenges.id, "participants"),

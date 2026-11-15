@@ -4,6 +4,8 @@ import { createDb } from "@repo/db";
 import { attachDatabasePool } from "@vercel/functions";
 import { Pool } from "pg";
 import { createAuth } from "./auth";
+import { createHttpsLinkChecker, withExampleHosts } from "./link-checker";
+import { screenshotStorage } from "./storage";
 
 // Design-fixtures mode: the clock stops at the moment the reference PNGs show,
 // and /dev/login-as works. Never in production, whatever the env says.
@@ -19,7 +21,14 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 attachDatabasePool(pool);
 
 export const db = createDb(pool);
-export const core = createCore({ db, now });
+const linkChecker = createHttpsLinkChecker();
+export const core = createCore({
+  db,
+  now,
+  linkChecker: designFixtures ? withExampleHosts(linkChecker) : linkChecker,
+  // Fails closed where nothing can be stored yet: no screenshot is ours.
+  storage: screenshotStorage ?? undefined,
+});
 
 // In-memory until the Resend adapter exists; logs each e-mail so local sign-in works.
 const memoryMailer = createMemoryMailer();

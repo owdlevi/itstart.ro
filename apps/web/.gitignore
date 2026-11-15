@@ -36,3 +36,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /.swc
+
+# local screenshots (server/storage.ts)
+/.data

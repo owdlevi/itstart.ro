@@ -21,27 +21,24 @@ import {
 import { withExtra } from "../counts";
 import { createCannedLinkChecker, type LinkChecker } from "../link-checker";
 import { createPrefixStorage, type Storage } from "../storage";
-import {
-  createSaving,
-  type EditableResult,
-  type ProjectEdit,
-  type ProjectInput,
-  type SaveResult,
-} from "./save";
+import type { ProjectEdit, ProjectInput } from "./rules";
+import { createSaving, type EditableResult, type SaveResult } from "./save";
 
 export {
   isHttpsUrl,
   missingToLaunch,
   PROJECT_LIMITS,
   type BuildDuration,
-  type EditableProject,
-  type EditableResult,
   type LaunchField,
   type ProjectEdit,
   type ProjectInput,
   type ProjectStage,
-  type SaveRefusal,
-  type SaveResult,
+} from "./rules";
+export type {
+  EditableProject,
+  EditableResult,
+  SaveRefusal,
+  SaveResult,
 } from "./save";
 
 export type ProjectUpdate = {

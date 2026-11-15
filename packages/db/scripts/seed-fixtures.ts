@@ -128,6 +128,8 @@ const BRIEF: Record<
   string,
   {
     launchNote: string;
+    /** The last line of "Înainte să lansezi" on screen 09. */
+    launchCheck: string;
     materialsUrl: string;
     tips: { title: string; text: string }[];
   }
@@ -135,6 +137,7 @@ const BRIEF: Record<
   frizerie: {
     launchNote:
       "E o primă versiune pe care oricine o poate încerca. Nu trebuie să fie gata de folosit într-o frizerie adevărată.",
+    launchCheck: "Ai făcut o programare de test, de la cap la coadă.",
     materialsUrl: "https://materiale.itstart.example/frizerie.zip",
     tips: [
       {
@@ -272,6 +275,7 @@ await withDb((db) =>
           stretch: c.stretch ?? [],
           launchCriteria: c.launchCriteria ?? [],
           launchNote: BRIEF[c.slug]?.launchNote ?? null,
+          launchCheck: BRIEF[c.slug]?.launchCheck ?? null,
           materialsUrl: BRIEF[c.slug]?.materialsUrl ?? null,
           materialsNote: c.materialsNote ?? null,
           tips: BRIEF[c.slug]?.tips ?? [],

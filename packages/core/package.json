@@ -8,6 +8,7 @@
     "./challenges": "./src/challenges/index.ts",
     "./profiles": "./src/profiles/index.ts",
     "./projects": "./src/projects/index.ts",
+    "./project-rules": "./src/projects/rules.ts",
     "./sign-in": "./src/sign-in/index.ts",
     "./votes": "./src/votes/index.ts"
   },

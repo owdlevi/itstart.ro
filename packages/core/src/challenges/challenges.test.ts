@@ -398,7 +398,9 @@ describe("challenges.leave", () => {
       ok: false,
       reason: "ended",
     });
-    expect(await challenges.participation(october.id, bianca.id)).not.toBeNull();
+    expect(
+      await challenges.participation(october.id, bianca.id),
+    ).not.toBeNull();
   });
 });
 
