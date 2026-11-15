@@ -64,10 +64,13 @@ export type {
 } from "./profiles";
 export { isHttpsUrl, missingToLaunch, PROJECT_LIMITS } from "./projects";
 export type {
+  AssignedProject,
   BuildDuration,
   EditableProject,
   EditableResult,
   LaunchField,
+  LaunchPage,
+  LaunchPageResult,
   ProjectEdit,
   ProjectInput,
   ProjectStage,

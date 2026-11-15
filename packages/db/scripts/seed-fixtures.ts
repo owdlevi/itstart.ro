@@ -385,25 +385,24 @@ await withDb((db) =>
       }
     }
 
-    // Assigned when the reviewer launched; none is done yet (screen 10: "0 din 2").
+    // Assigned when the reviewer launched, a second apart so screen 10 lists
+    // them in fixture order; none is done yet ("0 din 2").
     const assignmentRows = Object.entries(fixtures.reviewAssignments).flatMap(
-      ([handle, slugs]) =>
-        slugs.map((slug) => ({
+      ([handle, slugs]) => {
+        const launchedAt = fixtures.projects.find(
+          (p) => p.owner === handle && p.challenge === "frizerie",
+        )?.launchedAt;
+        return slugs.map((slug, i) => ({
           reviewerId: userId.get(handle)!,
           projectId: projectId.get(slug)!,
-          createdAt:
-            fixtures.projects.find(
-              (p) => p.owner === handle && p.challenge === "frizerie",
-            )?.launchedAt ?? undefined,
-        })),
+          createdAt: launchedAt
+            ? new Date(new Date(launchedAt).getTime() + i * 1000)
+            : undefined,
+        }));
+      },
     );
     if (assignmentRows.length > 0) {
-      await tx.insert(reviewAssignments).values(
-        assignmentRows.map((a) => ({
-          ...a,
-          createdAt: a.createdAt ? new Date(a.createdAt) : undefined,
-        })),
-      );
+      await tx.insert(reviewAssignments).values(assignmentRows);
     }
 
     // Everyone with a project in a challenge joined it, from its start.

@@ -1,9 +1,11 @@
 import {
   and,
   arrayContains,
+  asc,
   count,
   desc,
   eq,
+  inArray,
   isNotNull,
   isNull,
   sql,
@@ -13,6 +15,7 @@ import {
   challenges,
   projects,
   projectUpdates,
+  reviewAssignments,
   reviews,
   users,
   votes,
@@ -20,6 +23,7 @@ import {
 } from "@repo/db";
 import { withExtra } from "../counts";
 import { createCannedLinkChecker, type LinkChecker } from "../link-checker";
+import { ASSIGNMENTS_PER_BUILDER } from "../reviews/assignments";
 import { createPrefixStorage, type Storage } from "../storage";
 import type { ProjectEdit, ProjectInput } from "./rules";
 import { createSaving, type EditableResult, type SaveResult } from "./save";
@@ -136,6 +140,31 @@ export type ProfileProject = ProjectSummary & {
   } | null;
 };
 
+/** One of the projects a builder was asked to review (rule 16). */
+export type AssignedProject = ProjectSummary & {
+  /** False once its challenge's deadline has passed (rule 3). */
+  votingOpen: boolean;
+  /** They've reviewed it. */
+  done: boolean;
+};
+
+/** The "Lansat" screen (10): the launch, and the reviews its builder owes. */
+export type LaunchPage = {
+  project: ProjectSummary & {
+    launchedAt: Date;
+    isLate: boolean;
+    challenge: { slug: string; number: number; title: string } | null;
+  };
+  /** In the order they were given, then oldest launch first. */
+  assignments: AssignedProject[];
+  /** How many they're asked for: two in a challenge, none for a project of its own. */
+  expected: number;
+};
+
+export type LaunchPageResult =
+  | { ok: true; page: LaunchPage }
+  | { ok: false; reason: "not_found" | "not_owner" | "not_launched" };
+
 type ListOpts = {
   challengeId: string;
   limit: number;
@@ -175,6 +204,17 @@ export type Projects = {
   edit(userId: string, slug: string, input: ProjectEdit): Promise<SaveResult>;
   /** A project with its edit form's values, for its owner only. */
   editable(slug: string, userId: string): Promise<EditableResult>;
+  /**
+   * The owner's launched project with their review assignments in its
+   * challenge (screen 10). `countsAtLaunch` counts only the votes and reviews
+   * it had when it launched, without fixture extras: the design fixtures show
+   * the moment of the launch (HANDOVER §9.4).
+   */
+  launch(
+    slug: string,
+    viewerId: string,
+    opts?: { countsAtLaunch?: boolean },
+  ): Promise<LaunchPageResult>;
 };
 
 export function createProjects(deps: {
@@ -387,6 +427,94 @@ export function createProjects(deps: {
         challenge: d.challenge?.slug ? d.challenge : null,
         owner: { ...row.owner, city: d.city, launched: launched?.n ?? 0 },
         updates,
+      };
+    },
+
+    launch: async (slug, viewerId, opts = {}) => {
+      const [row] = await select({
+        where: [eq(projects.slug, slug)],
+        orderBy: [],
+        limit: 1,
+        viewerId,
+      });
+      if (!row) return { ok: false, reason: "not_found" };
+      if (row.owner.id !== viewerId) return { ok: false, reason: "not_owner" };
+      if (row.stage !== "launched") {
+        return { ok: false, reason: "not_launched" };
+      }
+      const [details] = await db
+        .select({
+          launchedAt: projects.launchedAt,
+          isLate: projects.isLate,
+          challengeId: projects.challengeId,
+          votes: sql<number>`(select count(*) from ${votes} where ${votes.projectId} = ${row.id} and ${votes.createdAt} <= ${projects.launchedAt})::int`,
+          reviews: sql<number>`(select count(*) from ${reviews} where ${reviews.projectId} = ${row.id} and not ${reviews.isAutomated} and not ${reviews.hidden} and ${reviews.createdAt} <= ${projects.launchedAt})::int`,
+        })
+        .from(projects)
+        .where(eq(projects.id, row.id));
+      const d = details!;
+
+      const given = d.challengeId
+        ? await db
+            .select({
+              projectId: reviewAssignments.projectId,
+              doneAt: reviewAssignments.doneAt,
+            })
+            .from(reviewAssignments)
+            .innerJoin(projects, eq(projects.id, reviewAssignments.projectId))
+            .where(
+              and(
+                eq(reviewAssignments.reviewerId, viewerId),
+                eq(projects.challengeId, d.challengeId),
+              ),
+            )
+            .orderBy(
+              asc(reviewAssignments.createdAt),
+              asc(projects.launchedAt),
+              asc(projects.id),
+            )
+        : [];
+      const rows = given.length
+        ? await select({
+            where: [
+              inArray(
+                projects.id,
+                given.map((g) => g.projectId),
+              ),
+            ],
+            orderBy: [],
+            viewerId,
+          })
+        : [];
+      const assignments = given.flatMap((g) => {
+        const p = rows.find((r) => r.id === g.projectId);
+        if (!p) return [];
+        const { at: _at, challenge: _challenge, ...summary } = p;
+        return [{ ...summary, done: g.doneAt !== null }];
+      });
+
+      const { at: _at, votingOpen: _open, challenge, ...summary } = row;
+      return {
+        ok: true,
+        page: {
+          project: {
+            ...summary,
+            ...(opts.countsAtLaunch && {
+              votes: d.votes,
+              reviews: d.reviews,
+              voted: false,
+            }),
+            launchedAt: d.launchedAt!,
+            isLate: d.isLate,
+            challenge: challenge && {
+              slug: challenge.slug!,
+              number: challenge.number!,
+              title: challenge.title!,
+            },
+          },
+          assignments,
+          expected: d.challengeId ? ASSIGNMENTS_PER_BUILDER : 0,
+        },
       };
     },
 

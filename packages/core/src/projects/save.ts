@@ -10,6 +10,7 @@ import {
 import { challengeStatus, enter } from "../challenges";
 import { withExtra } from "../counts";
 import type { LinkChecker } from "../link-checker";
+import { assignOnLaunch } from "../reviews/assignments";
 import { freeSlug, slugBase } from "../slugs";
 import type { Storage } from "../storage";
 import {
@@ -256,17 +257,28 @@ export function createSaving(deps: {
           .where(or(eq(projects.slug, base), like(projects.slug, `${base}-%`)));
         const slug = freeSlug(base, new Set(taken.map((t) => t.slug)));
         const launched = value.stage === "launched";
-        await tx.insert(projects).values({
-          slug,
-          ownerId,
-          challengeId: target.challenge?.id ?? null,
-          ...columns(value),
-          stage: value.stage,
-          // Only the running challenge takes new projects, so never late.
-          launchedAt: launched ? at : null,
-          createdAt: at,
-        });
+        const [created] = await tx
+          .insert(projects)
+          .values({
+            slug,
+            ownerId,
+            challengeId: target.challenge?.id ?? null,
+            ...columns(value),
+            stage: value.stage,
+            // Only the running challenge takes new projects, so never late.
+            launchedAt: launched ? at : null,
+            createdAt: at,
+          })
+          .returning({ id: projects.id });
         if (target.challenge) await enter(tx, ownerId, target.challenge.id, at);
+        if (launched) {
+          await assignOnLaunch(tx, {
+            projectId: created!.id,
+            ownerId,
+            challengeId: target.challenge?.id ?? null,
+            at,
+          });
+        }
         return { ok: true, slug, stage: value.stage, launched };
       });
     },
@@ -366,6 +378,15 @@ export function createSaving(deps: {
           });
         }
         if (moved && challenge) await enter(tx, userId, challenge.id, at);
+        if (launching) {
+          // A late launch too: reviews stay open after the deadline.
+          await assignOnLaunch(tx, {
+            projectId: current.id,
+            ownerId: userId,
+            challengeId: challenge?.id ?? null,
+            at,
+          });
+        }
         return {
           ok: true,
           slug,
