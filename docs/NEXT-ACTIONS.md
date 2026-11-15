@@ -2,7 +2,7 @@
 
 Things only the product owner can do: accounts, secrets, settings and decisions. Agents: read this to know what isn't set up yet, and don't work around a missing item. Tick items off here (or delete them) as they're done, and record any decision in `DECISIONS.md`.
 
-State on 2026-11-15 (screens 02 and 03 built locally on `screen-02-provocare`, screen 04 on `screen-04-proiect`, branched from it, screen 05 on `screen-05-profil`, branched from that, screen 06 on `screen-06-intra`, branched from that, screen 07 on `screen-07-bun-venit`, branched from that, screen 08 on `screen-08-inscris`, branched from that, screen 09 on `screen-09-lanseaza`, branched from that, screen 10 on `screen-10-lansat`, branched from that): `main` on GitHub (`owdlevi/itstart.ro`) has the M1 foundation: database, Better Auth, composition root and local environment. Sign-in is email and password for now (DECISIONS, "Email and password for now"), so local work needs no outside accounts.
+State on 2026-11-15 (screens 02 and 03 built locally on `screen-02-provocare`, screen 04 on `screen-04-proiect`, branched from it, screen 05 on `screen-05-profil`, branched from that, screen 06 on `screen-06-intra`, branched from that, screen 07 on `screen-07-bun-venit`, branched from that, screen 08 on `screen-08-inscris`, branched from that, screen 09 on `screen-09-lanseaza`, branched from that, screen 10 on `screen-10-lansat`, branched from that, the admin's challenges on `admin-challenges`, branched from that): `main` on GitHub (`owdlevi/itstart.ro`) has the M1 foundation: database, Better Auth, composition root and local environment. Sign-in is email and password for now (DECISIONS, "Email and password for now"), so local work needs no outside accounts.
 
 ## Now
 
@@ -11,6 +11,8 @@ State on 2026-11-15 (screens 02 and 03 built locally on `screen-02-provocare`, s
 - [ ] **GitHub:** once the CI workflow (`.github/workflows/ci.yml`, on the `screen-01-groundwork` branch) is on `main`, protect `main`: require PRs and require the `check` job.
 - [ ] **Review new copy from screen 10** (no reference design): "Scrie a doua părere", "Ai scris părerea" on a reviewed row, the two waiting lines when fewer than two projects could be assigned ("Al doilea proiect îți apare aici…", "Proiectele îți apar aici…"), and "E lansat. Bravo!" without a name. DECISIONS, "Screen 10 build".
 - [ ] **Confirm screen 10's calls** (DECISIONS, "Screen 10 data"): two assignments per builder per challenge (not per launch); ties go to the oldest launch; builders short of two get later launches; none for a project of its own; a late launch gets them too.
+- [ ] **Confirm the admin's challenge calls** (DECISIONS, "Admin: challenges"): the admin picks a month, not dates; one challenge a month; numbers follow the months (no new challenge before the last one); the month and the address fixed once it starts, the text editable always; signed out goes to sign-in, a member gets a 404. The admin pages' copy (`admin` in `ro.json`) is new; it's for the team only.
+- [ ] **Decide: zero counts on a new challenge.** A challenge nobody has joined yet shows "0 oameni · 0 agenți AI · 0 lansări" on Home and "0 oameni construiesc" on its page. Keep them, or hide the counts until someone joins?
 - [x] **Screens 01–09 accepted as built** (owner, 2026-11-15): every copy review and confirmation for them, and each open "keep it or change it" call, settled as the screens are now. DECISIONS, "Owner accepted screens 01–09".
 
 ## Before the first deploy

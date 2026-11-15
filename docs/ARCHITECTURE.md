@@ -30,7 +30,9 @@ src/
     (site)/          full shell (header + footer): /, /provocari/[slug], /lansari, /proiecte/[slug],
                      /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /u/[handle]/editeaza, /lanseaza
     (onboarding)/    bare header: /intra, /intra/confirma, /bun-venit
-    admin/           role = admin, functional styling (no reference design)
+    admin/           role = admin, functional styling (no reference design): /admin/provocari (the list),
+                     /admin/provocari/noua and /admin/provocari/[slug] (ChallengeForm); every page calls
+                     requireAdmin() first
       (site)/lansari/board-params.ts   the board's URL parameters: parse, and build a query without the defaults
     dev/login-as/[handle]/   404 unless DESIGN_FIXTURES=1
     (site)/lanseaza/fixture-draft.ts   the reference's form values, prefilled for ioana-muresan in fixtures mode
@@ -43,19 +45,21 @@ src/
                      onboarding.ts: completeOnboarding, participation.ts: joinChallenge and
                      leaveChallenge; the last three join a challenge and redirect with ?inscris=1;
                      projects.ts: saveProject, which returns where to go rather than redirecting, and
-                     checkLiveUrl, rule 9's check on blur)
+                     checkLiveUrl, rule 9's check on blur; admin-challenges.ts: saveChallenge, which
+                     returns where to go like saveProject)
   components/        the spec components, one file each (button, avatar, vote-button, project-card,
                      launch-row, countdown, filter-chip, field, checkbox, …), the shell (site-header with BareHeader,
                      site-footer), sign-in-form (screen 06), onboarding-form (screen 07), join-button,
                      leave-challenge and flash-banner (screen 08: a status shown once, which drops its query
                      flag), link-tabs (URL tabs on Base UI), and screen 09's project-form (form and sidebar),
                      screenshot-picker, tool-chips, launch-page and launch-row-frame (LaunchRow's layout,
-                     shared with the form's live preview), and screen 10's copy-link; shadcn files, rewritten onto our tokens, in
+                     shared with the form's live preview), and screen 10's copy-link, and the admin's challenge-form; shadcn files, rewritten onto our tokens, in
                      components/ui/ (tabs, alert-dialog)
   i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
   lib/schemas/       zod schemas shared by a form and its server action (review.ts, sign-in.ts, onboarding.ts,
-                     project.ts, which imports core's own launch rules from @repo/core/project-rules)
+                     project.ts, which imports core's own launch rules from @repo/core/project-rules;
+                     challenge.ts, the admin's form, likewise from @repo/core/challenge-rules)
   lib/sign-in-destination.ts   where a sign-in or onboarding goes next (/bun-venit, `next`, the challenge),
                      safeNext(), and joinedHref() with the ?inscris / ?renuntat flags
   lib/auth-client.ts Better Auth's browser client (sign-in calls), magic-link plugin ready
@@ -67,6 +71,8 @@ src/
     session.ts       getSession(): the session in server components, cached per request
     challenge.ts     getRunningChallenge(): core.challenges.running(), cached per request
     joinable.ts      getJoinableChallenge(slug): `?provocare=` if it isn't over, cached per request
+    admin.ts         requireAdmin(path): signed out → /intra?next=path, anyone but an admin → 404; the role
+                     from the database (core.admins), cached per request
     storage.ts       screenshot storage: the local adapter (apps/web/.data/capturi, off Vercel) and sharp → webp;
                      null where nothing can be stored yet
     link-checker.ts  rule 9's real check (https GET, 5 s, private addresses refused at connect time), and
@@ -85,7 +91,7 @@ scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:gener
 - **Copy** comes from `messages/ro.json` through next-intl (no locale in URLs, fixed `ro`). Put no Romanian strings in components.
 - **Forms** use react-hook-form + zod on the client. The server action re-parses with the same schema before calling core.
 - **Uploads** go from the browser straight to Blob through the token route (png/jpg/webp ≤ 5 MB, session checked). Server actions receive only blob paths. Vercel caps a request body at 4.5 MB. _Until the Blob store exists,_ the local adapter takes the file through `POST /api/capturi` (same checks), resizes it and keeps it on disk; the form's `ScreenshotPicker` is where the browser side switches adapters. Core accepts only screenshots `storage.owns()`.
-- **Admin checks** read `role` from the database on each request, in the `admin` layout and in every admin server action, never from Better Auth's cookie cache.
+- **Admin checks** read `role` from the database on each request, never from Better Auth's cookie cache, in two places: every admin page calls `requireAdmin(path)` before anything else, and every admin method in core (`challenges.all/editable/create/edit`) takes the actor's id and refuses `not_admin`. The `admin` layout checks nothing: a layout doesn't stop its page rendering, or keep it out of the RSC payload (Next's authentication guide, "Layouts and auth checks"). Admin server actions pass the session's user id to core and let it decide.
 - **Sign-in, for now,** is email and password (`authClient.signUp.email` / `authClient.signIn.email`); see DECISIONS "Email and password for now". Like every sign-in, it goes through Better Auth's HTTP endpoint, not `auth.api` in a server action, so the per-IP rate limit applies. Once it succeeds, the `/intra` form calls `finishSignIn({ next, challengeSlug })`, which reads the new session and redirects (`signInDestination`): anyone not onboarded (`onboardedAt` null) to `/bun-venit`, carrying `provocare` and `next`. `/bun-venit`'s `completeOnboarding` redirects with the same rules. Both actions join a joinable `challengeSlug` (`core.challenges.join`): `finishSignIn` only for someone onboarded, since core refuses a participant without a name, and `completeOnboarding` always. A join sends them to the challenge with `?inscris=1`, which shows the banner once. `/intra` itself redirects a signed-in visitor the same way, without joining.
 - **Magic link** (configured, not in the UI yet) uses `authClient.signIn.magicLink`. `sendMagicLink` asks `core.signIn.requestLink(email)` first. A refusal comes back as HTTP 429 with `code` `TOO_SOON` or `TOO_MANY` and `retryAfter` in seconds, or 400 `UNDELIVERABLE` for `.invalid` addresses. The `/intra` form maps the code to copy. The e-mail links to `/intra/confirma` with the same query string as Better Auth's verify URL (`token`, `callbackURL`, …).
 - **Better Auth schema:** after changing anything in `createAuth` that affects tables (fields, plugins), run `pnpm --filter web auth:generate`, then `pnpm db:generate`. Never edit `packages/db/src/schema/auth.ts` by hand.
@@ -106,7 +112,8 @@ M1 modules:
 | Module | Covers |
 |---|---|
 | `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
-| `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `started()` (the board's chips), `participants()` (rule 2), `challengeStatus()`, `join()` and `leave()` (rule 2; not after the deadline, not before onboarding), `participation()` and `steps()` ("Pașii tăi") are done. To come: admin create/edit |
+| `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `started()` (the board's chips), `participants()` (rule 2), `challengeStatus()`, `join()` and `leave()` (rule 2; not after the deadline, not before onboarding), `participation()` and `steps()` ("Pașii tăi") are done, and so are the admin's `all()`, `editable()`, `create()` and `edit()` (`challenges/admin.ts`: the month gives the dates, one challenge a month, numbers follow months, the month and slug fixed once it starts; the database-free rules in `challenges/rules.ts`, exported as `@repo/core/challenge-rules`) |
+| `admins` | `isAdmin(userId)`: the role, read from the database on every call |
 | `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`), `bySlug()` (the project page) and `launchedBy()` (a profile's cards) are done, and so are `launch()` (screen 10: the owner's launch and their review assignments, with counts as of the launch for design fixtures), `create()`, `edit()` and `editable()` (screen 09: rules 4 and 6–9, updates, joining the running challenge; `projects/save.ts`, with the database-free rules in `projects/rules.ts`, exported as `@repo/core/project-rules`). To come: the link check over time (M2), hiding (moderation) |
 | `votes` | done (rules 10–14) |
 | `reviews` | `thread()` (automated first, replies, counts: rules 17–18) and `post()` (reviews, the owner's replies, 10 per hour, fulfils an assignment: rules 15–16) are done, and so is assignment picking on launch (rule 16: `reviews/assignments.ts`, `assignOnLaunch(tx, …)`, which `projects.create()` and `edit()` call inside their transaction, like `challenges.enter`). To come: hiding (admin) |
@@ -187,4 +194,6 @@ M1 modules:
 - `redirect()` inside a server action makes the client's `await` reject, so the caller can't tell a save from a failure. Where the form has something to do after a save (screen 09 drops its draft), the action returns `{ ok: true, href }` and the form calls `router.push`.
 - Node's `net.BlockList` matches a plain IPv4 address against an IPv4-mapped IPv6 rule (`::ffff:0:0/96`), so that rule blocks every IPv4 address. Unwrap `::ffff:a.b.c.d` before checking instead (`blocked-addresses.ts`, tested).
 - If port 3000 is held by another project's server, run `DESIGN_FIXTURES=1 BETTER_AUTH_URL=http://localhost:3001 pnpm next dev --port 3001` in `apps/web` and pass `--base http://localhost:3001` to `capture.mjs`.
+- `FlashBanner` drops its query flag on every render, not only on mount: a form that saves and navigates to its own page again (the admin's challenge form) brings the flag back while the banner stays mounted.
+- A form that stays mounted across its own save (an edit page that navigates to itself) can't use a "leaving" flag for its busy state; it never resets. Wrap `router.push` in `useTransition` and use `isPending` (`ChallengeForm`).
 - Better Auth's rate limiter is off unless `NODE_ENV` is `production` (`rateLimit.enabled` defaults to that), so `pnpm dev` never answers 429. To see it, use `next build && next start`, or intercept the request in Playwright.

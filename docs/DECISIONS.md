@@ -83,7 +83,7 @@ _On hold: sign-in is email and password for now; see "2026-11-14 · Email and pa
 
 - **Chosen:** `pnpm --filter @repo/db admin:set <email> admin|member` grants and removes admins against a database's unpooled URL. The person must have signed in once. There's no env list and no admin-management screen.
 - **No jury role:** `role` stays `member | admin`. The jury deliberates outside the product, and an admin enters its pick as the jury recognition.
-- **Removal is immediate:** the `admin` layout and every admin server action read `role` from the database on each request, never from Better Auth's cookie cache.
+- **Removal is immediate:** the `admin` layout and every admin server action read `role` from the database on each request, never from Better Auth's cookie cache. _Since changed: every admin page and every admin core method check it, not the layout (see "Admin: challenges")._
 - **Seed:** the design fixtures include one admin user.
 
 ## 2026-11-13 · Environments, CI and deploys
@@ -585,6 +585,49 @@ Errors, replacing the field's hint (Field spec), or under the button for the las
 
   Comparing element positions in the reference HTML and the app with Playwright at 1280 and 390px, the title, the three rows, both headings, the buttons, the field and "Copiază linkul" match to the pixel (the field and the button sit higher by the hidden image). From the header to the share section's divider, with the thumbnails masked: 0.19% and 0.20% desktop, 0.06% and 0.04% mobile. Screens 01–05 and 09 are unchanged.
 - **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes with the Hungarian sample on every text: no horizontal scroll, nothing clipped but the Tag ellipsis. Keyboard order: the rows (title, tags, vote), the buttons, the field, "Copiază linkul", with the 3px outline on every stop. Tried on `pnpm dev` (Playwright): signed out, Andrei on Ioana's page, Bianca's project in progress, an unknown slug, a real launch through the edit form (Szabó Attila's Foarfeca: Coadă Zero and La Fix, the two with the fewest reviews, and the top-up to the other builders), Ioana writing both reviews from "Scrie prima/a doua părere" ("2 din 2", both rows marked, "Vezi proiectul tău" primary), one assignment short (the waiting line), and a project of her own.
+
+## 2026-11-15 · Admin: challenges
+
+HANDOVER §3, M1: "admin can create a challenge and edit it". No reference design; functional styling on our tokens and components.
+
+**Core** (`challenges/admin.ts`; the rules that need no database in `challenges/rules.ts`, exported as `@repo/core/challenge-rules`):
+
+- **The admin enters a month, not dates.** Rule 1 fixes both ends: a challenge runs from 00:00 on the 1st to its deadline, 23:59 on the last day, in Europe/Bucharest (`monthBounds("2026-12")`). The fixtures already fit this shape. Typing a start or deadline would only allow mistakes, and a native month input is missing from Safari, so the form has a select of months.
+- **One challenge a month** (`month_taken`). That's what makes rule 1's "exactly one running" hold without checking overlaps.
+- **Numbers are the next free one** (highest + 1), given on create and never changed. **They follow the months:** a new challenge must come after every other one, and an upcoming one can't move past a neighbour (`month_out_of_order`). Renumbering was turned down: an upcoming challenge is already public at its address and joinable.
+- **No month that has ended** (`month_past`). This month is allowed, so the very first challenge can start mid-month; it's running as soon as it's saved.
+- **The slug** is the admin's choice (lowercase latin letters, digits and "-", at most 40). Left empty, it's made from the short title, or the title, like a project's (`cafenea`, then `cafenea-2`). A chosen one that's taken is refused (`slug_taken`), not numbered, since the admin picked it on purpose.
+- **Once a challenge has started** (running or ended), its month and slug are fixed (`month_locked`, `slug_locked`). People joined for that deadline, late launches were flagged against it (rule 7, fixed at launch), and the address is shared. Everything else can still change, ended challenges included: the brief's typos, and the jury's note, which comes after the end.
+- **Required:** the title and the month. Everything else is optional and can be filled in while the challenge is upcoming; the public pages already leave out what's empty (DECISIONS "Screen 01 build", "Screen 02 build").
+- **Lists** (`baseLevel`, `stretch`, `launchCriteria`) are typed one item per line; blank lines are dropped and spaces tidied. At most 12 items of 200 characters each. **Tips** are title + text pairs, at most 4 (the 2×2 grid); an empty pair is dropped, half a pair is refused. Other limits are placeholders in `CHALLENGE_LIMITS` (title 120, short title 30, summary 300, scenario 3000, jury note 1000…). The materials link must be https (`isHttpsUrl`, the project rule). It isn't checked for reachability: it's the team's own file.
+- **Admins only, by the database:** `create()`, `edit()`, `all()` and `editable()` take the actor's id and read their role inside the call (`not_admin`). Writes hold one advisory lock, so two saves can't take one month, number or slug.
+- **Not added:** a unique index on `starts_at`. The lock and the check cover it, and it would need a migration for no visible gain.
+
+**App:**
+
+- **Who sees `/admin`:** signed out → `/intra?next=<path>` (an admin whose session ran out gets back in); a member → 404, which doesn't advertise the area. `requireAdmin(path)` does this at the top of every admin page. The layout checks nothing (ARCHITECTURE, "Admin checks"). `/admin` redirects to `/admin/provocari`.
+- **The shell:** the wordmark, one nav link ("Provocări"), "Înapoi pe site", no footer, `noindex`.
+- **The list:** newest month first: "#5 · decembrie 2026", the status chip as on screen 02 ("În desfășurare", "Începe pe 1 decembrie", "Încheiată"), the title, and secondary "Editează" and "Vezi pagina" (hidden "provocarea #5" for screen readers). "Provocare nouă" is the one primary.
+- **The form:** react-hook-form + zod (`lib/schemas/challenge.ts`, shared with `saveChallenge`), validated when a field is left and on submit; errors replace hints in live regions, and the first invalid field gets the focus (a server refusal too: `slug_taken` on the slug, the month refusals on the month). Five panels: De bază (title, short title, slug, month), Pe pagina principală și la înscriere (summary, `builtFor`, `buildingPhrase`), Brief-ul (intro, scenario note, scenario, the three lists, launch note, `launchCheck`, materials), Construiește-l cu AI (the tip cards), Juriul (`juryNote`). Each hint says where the text shows up.
+- **The month select** offers this month to a year ahead, and the challenge's own month. Months other challenges hold are disabled. A new challenge starts on the month after the newest one. Once started, the select holds only its month, and the slug field is read-only; both hints say why.
+- **Tip cards:** "Adaugă un card" moves the focus to the new card's title; "Șterge cardul" (labelled "Șterge cardul 2") moves it to "Adaugă un card".
+- **After saving,** the form goes to `/admin/provocari/<slug>?salvat=1` ("Am salvat provocarea.", `FlashBanner`), with "Vezi pagina provocării" above the form.
+- **New copy** (all of it; no reference design): `admin` in `ro.json`.
+- **Tried on `pnpm dev`** (port 3001; port 3000 held by onepage.ro's server), with Playwright:
+  - signed out (→ `/intra?next=%2Fadmin%2Fprovocari`), Andrei (404 on the list and the edit page), the admin;
+  - an empty submit (title error, focus on it), a non-https materials link and half a tip card;
+  - a taken slug (the server's refusal on the field, focused), then a challenge with every field (→ #5, `pensiune`, December);
+  - moving it to January;
+  - frizerie running: the slug read-only, one month;
+  - saving twice on one page.
+  
+  Public pages, with `pensiune`'s dates moved to November in the local database (frizerie moved out) and reseeded after:
+  - 01: the card's title and summary, the countdown, "Luna asta: o pensiune." and the band;
+  - 02: the brief, the lists, materials, one tip card;
+  - 08: Andrei joining, with the banner;
+  - 09: "Provocarea #5 · …" in the select and "Ai făcut o rezervare de test…" in the checklist.
+- **Manual pass:** 390 and 1280px in both themes: no horizontal scroll. Keyboard order: skip link, wordmark, "Provocări", "Înapoi pe site", "← Provocări", then the fields in visual order, "Adaugă un card", the jury note, the button; the 3px outline on each.
+- **Seen on a fresh challenge, not changed** (screens 01–09 are accepted as built): Home's card reads "0 oameni · 0 agenți AI · 0 lansări" and 02's sidebar "0 oameni construiesc" until people join. NEXT-ACTIONS asks whether a new month should hide zero counts.
 
 ## Verify during M1 setup
 
