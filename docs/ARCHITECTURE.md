@@ -33,21 +33,29 @@ src/
     admin/           role = admin, functional styling (no reference design)
       (site)/lansari/board-params.ts   the board's URL parameters: parse, and build a query without the defaults
     dev/login-as/[handle]/   404 unless DESIGN_FIXTURES=1
-    dev/captura/[name]/      the fixtures' screenshots (transparent SVGs); 404 unless DESIGN_FIXTURES=1
-    api/             Better Auth handler (auth/[...all]), Blob upload-token route, unsubscribe endpoint
+    (site)/lanseaza/fixture-draft.ts   the reference's form values, prefilled for ioana-muresan in fixtures mode
+    dev/captura/[name]/      screenshots uploaded locally (the local storage adapter, off Vercel only), and the
+                             fixtures' screenshots (transparent SVGs) when DESIGN_FIXTURES=1; 404 otherwise
+    api/             Better Auth handler (auth/[...all]), capturi (one screenshot, local adapter; the Blob
+                     upload-token route comes with the Blob adapter), unsubscribe endpoint
     actions/         server actions, one file per area (votes.ts: toggleVote, reviews.ts: postReview,
                      sign-in.ts: finishSignIn, which sends someone on after Better Auth signs them in,
                      onboarding.ts: completeOnboarding, participation.ts: joinChallenge and
-                     leaveChallenge; the last three join a challenge and redirect with ?inscris=1)
+                     leaveChallenge; the last three join a challenge and redirect with ?inscris=1;
+                     projects.ts: saveProject, which returns where to go rather than redirecting, and
+                     checkLiveUrl, rule 9's check on blur)
   components/        the spec components, one file each (button, avatar, vote-button, project-card,
                      launch-row, countdown, filter-chip, field, checkbox, …), the shell (site-header with BareHeader,
                      site-footer), sign-in-form (screen 06), onboarding-form (screen 07), join-button,
                      leave-challenge and flash-banner (screen 08: a status shown once, which drops its query
-                     flag), and link-tabs (URL tabs on Base UI); shadcn files, rewritten onto our tokens, in
+                     flag), link-tabs (URL tabs on Base UI), and screen 09's project-form (form and sidebar),
+                     screenshot-picker, tool-chips, launch-page and launch-row-frame (LaunchRow's layout,
+                     shared with the form's live preview); shadcn files, rewritten onto our tokens, in
                      components/ui/ (tabs, alert-dialog)
   i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
-  lib/schemas/       zod schemas shared by a form and its server action (review.ts, sign-in.ts, onboarding.ts)
+  lib/schemas/       zod schemas shared by a form and its server action (review.ts, sign-in.ts, onboarding.ts,
+                     project.ts, which imports core's own launch rules from @repo/core/project-rules)
   lib/sign-in-destination.ts   where a sign-in or onboarding goes next (/bun-venit, `next`, the challenge),
                      safeNext(), and joinedHref() with the ?inscris / ?renuntat flags
   lib/auth-client.ts Better Auth's browser client (sign-in calls), magic-link plugin ready
@@ -59,6 +67,10 @@ src/
     session.ts       getSession(): the session in server components, cached per request
     challenge.ts     getRunningChallenge(): core.challenges.running(), cached per request
     joinable.ts      getJoinableChallenge(slug): `?provocare=` if it isn't over, cached per request
+    storage.ts       screenshot storage: the local adapter (apps/web/.data/capturi, off Vercel) and sharp → webp;
+                     null where nothing can be stored yet
+    link-checker.ts  rule 9's real check (https GET, 5 s, private addresses refused at connect time), and
+                     withExampleHosts() for design fixtures; blocked-addresses.ts holds the address list
   workflows/         Vercel Workflow: sleep, ask core.notifications, send
   emails/            React Email templates
   lib/dates.ts       daysAgo() ("ieri", "acum 3 zile"), timeAgo() and afterLaunch() (review times), and
@@ -72,7 +84,7 @@ scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:gener
 - **shadcn components** (only Tabs and the leave-challenge confirm) are added with `pnpm dlx shadcn@latest add <name>` in `apps/web` and then rewritten onto our token names. shadcn's `muted`, `accent` and `border` mean different things from ours, so an unedited file compiles with the wrong colours. Everything else is hand-built from the specs in `docs/design/components/`.
 - **Copy** comes from `messages/ro.json` through next-intl (no locale in URLs, fixed `ro`). Put no Romanian strings in components.
 - **Forms** use react-hook-form + zod on the client. The server action re-parses with the same schema before calling core.
-- **Uploads** go from the browser straight to Blob through the token route (png/jpg/webp ≤ 5 MB, session checked). Server actions receive only blob paths. Vercel caps a request body at 4.5 MB.
+- **Uploads** go from the browser straight to Blob through the token route (png/jpg/webp ≤ 5 MB, session checked). Server actions receive only blob paths. Vercel caps a request body at 4.5 MB. _Until the Blob store exists,_ the local adapter takes the file through `POST /api/capturi` (same checks), resizes it and keeps it on disk; the form's `ScreenshotPicker` is where the browser side switches adapters. Core accepts only screenshots `storage.owns()`.
 - **Admin checks** read `role` from the database on each request, in the `admin` layout and in every admin server action, never from Better Auth's cookie cache.
 - **Sign-in, for now,** is email and password (`authClient.signUp.email` / `authClient.signIn.email`); see DECISIONS "Email and password for now". Like every sign-in, it goes through Better Auth's HTTP endpoint, not `auth.api` in a server action, so the per-IP rate limit applies. Once it succeeds, the `/intra` form calls `finishSignIn({ next, challengeSlug })`, which reads the new session and redirects (`signInDestination`): anyone not onboarded (`onboardedAt` null) to `/bun-venit`, carrying `provocare` and `next`. `/bun-venit`'s `completeOnboarding` redirects with the same rules. Both actions join a joinable `challengeSlug` (`core.challenges.join`): `finishSignIn` only for someone onboarded, since core refuses a participant without a name, and `completeOnboarding` always. A join sends them to the challenge with `?inscris=1`, which shows the banner once. `/intra` itself redirects a signed-in visitor the same way, without joining.
 - **Magic link** (configured, not in the UI yet) uses `authClient.signIn.magicLink`. `sendMagicLink` asks `core.signIn.requestLink(email)` first. A refusal comes back as HTTP 429 with `code` `TOO_SOON` or `TOO_MANY` and `retryAfter` in seconds, or 400 `UNDELIVERABLE` for `.invalid` addresses. The `/intra` form maps the code to copy. The e-mail links to `/intra/confirma` with the same query string as Better Auth's verify URL (`token`, `callbackURL`, …).
@@ -95,7 +107,7 @@ M1 modules:
 |---|---|
 | `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
 | `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `started()` (the board's chips), `participants()` (rule 2), `challengeStatus()`, `join()` and `leave()` (rule 2; not after the deadline, not before onboarding), `participation()` and `steps()` ("Pașii tăi") are done. To come: admin create/edit |
-| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`), `bySlug()` (the project page) and `launchedBy()` (a profile's cards) are done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), adding updates |
+| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`), `bySlug()` (the project page) and `launchedBy()` (a profile's cards) are done, and so are `create()`, `edit()` and `editable()` (screen 09: rules 4 and 6–9, updates, joining the running challenge; `projects/save.ts`, with the database-free rules in `projects/rules.ts`, exported as `@repo/core/project-rules`). To come: the link check over time (M2), hiding (moderation) |
 | `votes` | done (rules 10–14) |
 | `reviews` | `thread()` (automated first, replies, counts: rules 17–18) and `post()` (reviews, the owner's replies, 10 per hour, fulfils an assignment: rules 15–16) are done. To come: assignment picking on launch (rule 16), hiding (admin) |
 | `profiles` | `byHandle()` (the public profile: stats, launched projects, the challenges launched in; never the e-mail, rule 23; it reads projects through `projects.launchedBy()`) and `onboard()` (screen 07: name, city, tools, reminders as ticked (rule 22), a handle from the name, once) are done. To come: editing (bio, links, avatar), consent for "Deschis la colaborări" (M3) |
@@ -113,8 +125,10 @@ M1 modules:
   |---|---|---|
   | `clock` | system time | frozen (design fixtures, tests) |
   | `mailer` | Resend + React Email (not built yet: `core.ts` uses the in-memory one and logs each link) | in-memory (`createMemoryMailer()`) |
-  | `storage` | Vercel Blob + sharp | in-memory |
-  | `linkChecker` | `fetch` with a short timeout | canned answers |
+  | `storage` | `owns(url)`: apps/web's adapter (local files now, Vercel Blob later; both resize with sharp) | `createPrefixStorage(prefix)` |
+  | `linkChecker` | one https GET with a short timeout (`server/link-checker.ts`) | `createCannedLinkChecker(answers)` |
+
+  Both fail closed when `createCore` gets none: no link answers, no screenshot is ours.
 
   Pass `db` straight in. Drizzle is already the query interface, so there's no repository layer over it.
 - **Counts** (votes, reviews, participants, launches) are computed from rows with `withExtra()` (`src/counts.ts`), which adds the design fixtures' `fixture_count_extras`. That table is empty outside fixtures mode. Every new count shown in the UI goes through it, so the references' numbers hold (DECISIONS, "Fixture counts").
@@ -169,4 +183,8 @@ M1 modules:
 - `next build` with `withWorkflow()` generates `src/app/.well-known/workflow/`. It's gitignored and skipped by ESLint.
 - Base UI's focus trap (dialogs) moves the focus back from its hidden guard elements asynchronously. A Playwright check that reads `document.activeElement` straight after a Tab sees the guard or `body`; wait a moment first.
 - A query flag shown once (`?inscris`, `?renuntat`) is dropped by `FlashBanner` with `history.replaceState`, which Next's router follows. A `router.refresh()` after that renders the page without the banner.
+- A `"use server"` file may export only async functions. A constant shared by an action and a page (`SAVED_PARAM`) goes in `lib/`.
+- `redirect()` inside a server action makes the client's `await` reject, so the caller can't tell a save from a failure. Where the form has something to do after a save (screen 09 drops its draft), the action returns `{ ok: true, href }` and the form calls `router.push`.
+- Node's `net.BlockList` matches a plain IPv4 address against an IPv4-mapped IPv6 rule (`::ffff:0:0/96`), so that rule blocks every IPv4 address. Unwrap `::ffff:a.b.c.d` before checking instead (`blocked-addresses.ts`, tested).
+- If port 3000 is held by another project's server, run `DESIGN_FIXTURES=1 BETTER_AUTH_URL=http://localhost:3001 pnpm next dev --port 3001` in `apps/web` and pass `--base http://localhost:3001` to `capture.mjs`.
 - Better Auth's rate limiter is off unless `NODE_ENV` is `production` (`rateLimit.enabled` defaults to that), so `pnpm dev` never answers 429. To see it, use `next build && next start`, or intercept the request in Playwright.
