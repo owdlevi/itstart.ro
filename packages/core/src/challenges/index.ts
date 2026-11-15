@@ -18,18 +18,10 @@ import {
   type Db,
 } from "@repo/db";
 import { withExtra } from "../counts";
+import { createChallengeAdmin, type ChallengeAdmin } from "./admin";
+import { challengeStatus, type ChallengeStatus } from "./rules";
 
-export type ChallengeStatus = "upcoming" | "running" | "ended";
-
-/** Rule 1: a challenge runs from its start until its deadline. */
-export function challengeStatus(
-  challenge: { startsAt: Date; endsAt: Date },
-  at: Date,
-): ChallengeStatus {
-  if (at < challenge.startsAt) return "upcoming";
-  if (at > challenge.endsAt) return "ended";
-  return "running";
-}
+export { challengeStatus, type ChallengeStatus };
 
 export type ChallengeCounts = {
   /** People in the challenge now: participations not left, agents excluded (rule 2). */
@@ -154,7 +146,7 @@ export type Challenges = {
   ): Promise<ParticipationResult<LeaveRefusal>>;
   /** What a participant has done in the challenge so far ("Pașii tăi"). */
   steps(challengeId: string, userId: string): Promise<ParticipantSteps>;
-};
+} & ChallengeAdmin; // all(), editable(), create() and edit(): admins only
 
 /**
  * Puts someone in a challenge, with no checks: the callers make them (join(),
@@ -236,6 +228,8 @@ export function createChallenges(deps: {
   };
 
   return {
+    ...createChallengeAdmin({ db, now }),
+
     running: () => {
       const at = now();
       // Exactly one should match (rule 1); if admin data ever overlaps, the

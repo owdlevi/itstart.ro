@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./challenges": "./src/challenges/index.ts",
+    "./challenge-rules": "./src/challenges/rules.ts",
     "./profiles": "./src/profiles/index.ts",
     "./projects": "./src/projects/index.ts",
     "./project-rules": "./src/projects/rules.ts",

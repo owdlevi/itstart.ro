@@ -1,4 +1,5 @@
 import type { Db } from "@repo/db";
+import { createAdmins } from "./admins";
 import { createChallenges } from "./challenges";
 import { createProfiles } from "./profiles";
 import { createProjects } from "./projects";
@@ -25,6 +26,7 @@ export function createCore(deps: CoreDeps) {
     storage: deps.storage,
   });
   return {
+    admins: createAdmins({ db: deps.db }),
     challenges: createChallenges({ db: deps.db, now }),
     profiles: createProfiles({ db: deps.db, now, projects }),
     projects,
@@ -49,6 +51,24 @@ export {
   type ParticipationResult,
   type RunningChallenge,
 } from "./challenges";
+export type {
+  AdminChallengeRow,
+  AdminResult,
+  ChallengeField,
+  ChallengeSaveRefusal,
+  ChallengeSaveResult,
+  EditableChallenge,
+} from "./challenges/admin";
+export {
+  addMonths,
+  CHALLENGE_LIMITS,
+  isMonth,
+  isSlug,
+  monthBounds,
+  monthOf,
+  type ChallengeInput,
+} from "./challenges/rules";
+export type { Admins } from "./admins";
 export {
   CITY_MAX_LENGTH,
   INTEREST_TOOLS,
