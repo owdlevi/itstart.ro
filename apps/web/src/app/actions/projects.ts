@@ -1,7 +1,6 @@
 "use server";
 
 import { isHttpsUrl, type LinkCheck, type SaveResult } from "@repo/core";
-import { RedirectType, redirect } from "next/navigation";
 import { z } from "zod";
 import {
   SAVED_PARAM,
@@ -12,13 +11,16 @@ import { core, linkChecker } from "@/server/core";
 import { getSession } from "@/server/session";
 
 export type SaveProjectResult =
+  /** Where to go next; the form clears its draft and goes. */
+  | { ok: true; href: string }
   | Exclude<SaveResult, { ok: true }>
   | { ok: false; reason: "signed_out" | "invalid" };
 
 /**
  * "Lansează proiectul" / "Salvează" on screen 09: creates a project (slug
  * null) or saves its owner's edit. A launch goes on to screen 10; anything
- * else to the project's page, with the saved status once.
+ * else to the project's page, with the saved status once. The form navigates,
+ * so it knows the save worked before it drops its draft.
  */
 export async function saveProject(input: unknown): Promise<SaveProjectResult> {
   const session = await getSession();
@@ -31,12 +33,12 @@ export async function saveProject(input: unknown): Promise<SaveProjectResult> {
     ? await core.projects.edit(session.user.id, slug, { ...project, update })
     : await core.projects.create(session.user.id, project);
   if (!result.ok) return result;
-  redirect(
-    result.launched
+  return {
+    ok: true,
+    href: result.launched
       ? `/proiecte/${result.slug}/lansat`
       : `/proiecte/${result.slug}?${SAVED_PARAM}=1`,
-    RedirectType.push,
-  );
+  };
 }
 
 /**

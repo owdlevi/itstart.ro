@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, CircleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { checkLiveUrl, saveProject } from "@/app/actions/projects";
@@ -110,6 +111,7 @@ export function ProjectForm({
   draftKey: string | null;
 }) {
   const t = useTranslations("launch");
+  const router = useRouter();
   const id = useId();
   const ids = {
     challenge: `${id}-challenge`,
@@ -211,17 +213,14 @@ export function ProjectForm({
   const onSubmit = handleSubmit(async (fields) => {
     setRefusal(null);
     setDraftStatus(null);
-    // Redirects when it works; the draft has done its job then.
-    let draft: string | null = null;
-    try {
-      draft = draftKey && window.localStorage.getItem(draftKey);
-      if (draftKey) window.localStorage.removeItem(draftKey);
-    } catch {}
     const result = await saveProject({ slug, fields }).catch(() => null);
-    if (draft && draftKey) {
+    if (result?.ok) {
+      // Saved: the draft has done its job.
       try {
-        window.localStorage.setItem(draftKey, draft);
+        if (draftKey) window.localStorage.removeItem(draftKey);
       } catch {}
+      router.push(result.href);
+      return;
     }
     const focus = { shouldFocus: true };
     switch (result?.reason) {

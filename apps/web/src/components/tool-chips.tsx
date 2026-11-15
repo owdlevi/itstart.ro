@@ -64,7 +64,7 @@ export function ToolChips({
           selected={value.includes(tool)}
           onClick={() => toggle(tool)}
         >
-          <span className="min-w-0 truncate">{tool}</span>
+          {tool}
         </FilterChip>
       ))}
       {adding ? (

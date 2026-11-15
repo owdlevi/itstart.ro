@@ -26,7 +26,6 @@ for (const [address, prefix] of [
 }
 for (const [address, prefix] of [
   ["::", 127], // :: and ::1
-  ["::ffff:0:0", 96], // IPv4-mapped
   ["64:ff9b::", 96], // NAT64
   ["fc00::", 7],
   ["fe80::", 10],
@@ -35,7 +34,10 @@ for (const [address, prefix] of [
   blocked.addSubnet(address, prefix, "ipv6");
 }
 
-const isBlocked = (address: string) => {
+const isBlocked = (raw: string) => {
+  // An IPv4-mapped address (::ffff:127.0.0.1) is checked as the IPv4 one. A
+  // `::ffff:0:0/96` rule can't do it: BlockList matches it for every IPv4.
+  const address = raw.replace(/^::ffff:(?=\d+\.\d+\.\d+\.\d+$)/i, "");
   const family = net.isIP(address);
   return family === 0 || blocked.check(address, family === 6 ? "ipv6" : "ipv4");
 };
