@@ -71,7 +71,9 @@ function AlertDialogDescription({
 }
 
 function AlertDialogClose(props: AlertDialogPrimitive.Close.Props) {
-  return <AlertDialogPrimitive.Close data-slot="alert-dialog-close" {...props} />;
+  return (
+    <AlertDialogPrimitive.Close data-slot="alert-dialog-close" {...props} />
+  );
 }
 
 export {

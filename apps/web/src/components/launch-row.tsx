@@ -14,9 +14,12 @@ import { Tag } from "./tag";
 export async function LaunchRow({
   project,
   vote,
+  status,
 }: {
   project: ProjectSummary;
   vote: React.ReactNode;
+  /** Last on the meta row: screen 10's "Ai scris părerea". */
+  status?: React.ReactNode;
 }) {
   const t = await getTranslations("project");
   return (
@@ -54,10 +57,14 @@ export async function LaunchRow({
               <AgentBadge>{t("agentBadge")}</AgentBadge>
             )}
           </span>
-          <span className="inline-flex items-center gap-1 text-[13px] leading-5 text-muted">
-            <MessageSquare size={14} strokeWidth={2.2} aria-hidden />
-            {t("comments", { n: project.reviews })}
-          </span>
+          {/* No reference shows "0 comentarii": screen 10's fresh launch has none. */}
+          {project.reviews > 0 && (
+            <span className="inline-flex items-center gap-1 text-[13px] leading-5 text-muted">
+              <MessageSquare size={14} strokeWidth={2.2} aria-hidden />
+              {t("comments", { n: project.reviews })}
+            </span>
+          )}
+          {status}
         </>
       }
       vote={vote}

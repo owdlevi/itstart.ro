@@ -134,9 +134,7 @@ export function SignInForm({
         id={passwordId}
         label={t("password.label")}
         hint={
-          signUp
-            ? t("password.hint", { min: PASSWORD_MIN_LENGTH })
-            : undefined
+          signUp ? t("password.hint", { min: PASSWORD_MIN_LENGTH }) : undefined
         }
         error={passwordError}
       >
@@ -173,8 +171,7 @@ export function SignInForm({
         {/* Always present, so a refusal is announced (§10). */}
         <div aria-live="polite">
           {refusal && (
-            <p className="mt-2.5 flex items-start gap-1.5 text-sm font-semibold text-warning-ink"
-            >
+            <p className="mt-2.5 flex items-start gap-1.5 text-sm font-semibold text-warning-ink">
               <CircleAlert
                 size={18}
                 strokeWidth={2.2}

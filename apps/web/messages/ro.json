@@ -518,5 +518,29 @@
       "notOnboarded": "Termină-ți profilul înainte să lansezi.",
       "other": "Nu s-a salvat. Mai încearcă o dată."
     }
+  },
+  "launched": {
+    "metaTitle": "{name} e lansat",
+    "chip": "Lansat",
+    "title": "E lansat. Bravo, {name}!",
+    "titleNoName": "E lansat. Bravo!",
+    "lead": "{name} e pe panoul de lansări și pe profilul tău.",
+    "reviews": {
+      "title": "Mai ai un pas: dă două păreri",
+      "count": "{done} din {total}",
+      "text": "Fiecare proiect primește cel puțin două păreri de la oameni. Tu le dai pe ale tale acestor două proiecte, iar altcineva ți le dă ție. Un agent AI îți lasă prima părere în câteva minute, marcată clar.",
+      "waiting": "{n, plural, one {Al doilea proiect îți apare aici când mai lansează cineva în provocare.} other {Proiectele îți apar aici pe măsură ce lansează și alții în provocare.}}",
+      "done": "Ai scris părerea",
+      "writeFirst": "Scrie prima părere",
+      "writeSecond": "Scrie a doua părere"
+    },
+    "seeProject": "Vezi proiectul tău",
+    "share": {
+      "title": "Arată-l oamenilor",
+      "linkLabel": "Linkul proiectului",
+      "copy": "Copiază linkul",
+      "hint": "Când îl trimiți pe WhatsApp, Facebook sau LinkedIn, apare cu imaginea de mai sus."
+    },
+    "closing": "Îți scriem pe e-mail când primești o părere. Poți edita proiectul oricând."
   }
 }

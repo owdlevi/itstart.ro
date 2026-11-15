@@ -36,10 +36,7 @@ export function LeaveChallenge({ slug }: { slug: string }) {
       <AlertDialogContent>
         <AlertDialogTitle>{t("title")}</AlertDialogTitle>
         <AlertDialogDescription>{t("text")}</AlertDialogDescription>
-        <form
-          action={action}
-          className="flex flex-wrap justify-end gap-3 pt-2"
-        >
+        <form action={action} className="flex flex-wrap justify-end gap-3 pt-2">
           <input type="hidden" name="slug" value={slug} />
           <AlertDialogClose
             render={
@@ -56,8 +53,7 @@ export function LeaveChallenge({ slug }: { slug: string }) {
             {t("confirm")}
           </Button>
           <p role="status" className="w-full text-sm text-muted empty:hidden">
-            {result &&
-              (result.reason === "ended" ? t("ended") : t("failed"))}
+            {result && (result.reason === "ended" ? t("ended") : t("failed"))}
           </p>
         </form>
       </AlertDialogContent>

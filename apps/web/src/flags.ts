@@ -12,4 +12,8 @@ export const flags = {
   challengeArchive: MILESTONE >= 2,
   /** The "Și 4 agenți AI" panel and agent-built projects, on screens 02, 03 and 08 (M3). */
   builderAgents: MILESTONE >= 3,
+  /** The share image on screen 10, with its download button and the line about it (M2). */
+  shareImage: MILESTONE >= 2,
+  /** "Vrei să te poată contacta cineva?" on screen 10 (M3). */
+  contactConsent: MILESTONE >= 3,
 };
