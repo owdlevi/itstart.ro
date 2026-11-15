@@ -540,6 +540,52 @@ Errors, replacing the field's hint (Field spec), or under the button for the las
 - **Visual check (`capture.mjs --only 09`, against `pnpm dev`):** all four variants `match` (desktop 0.54% and 0.39%, mobile 1.16% and 0.81%). What's left: the screenshot tiles (placeholder art against flat `tint`, §9.4) and the select's "…frizerie de cartier" (the open title question, "Screen 04 build"). Element positions match the reference HTML to the pixel at 1280 and 390px. Screens 02, 03 and 04 are unchanged by the LaunchRow refactor.
 - **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, with errors showing, a long custom tool and the Hungarian sample on every text: no horizontal scroll, nothing clipped. Keyboard order: the challenge, name, pitch, link, each tile and its remove button, "Adaugă", the description, the tool chips, "+ Alta", the build fields, the stage chips, the two buttons; the 3px outline on every stop. Tried on `pnpm dev` (Playwright): signed out (→ `/intra?next=/lanseaza`), not onboarded (Bianca → `/bun-venit?next=/lanseaza`), an empty submit (three errors, focus on the name), an empty launch (seven), the link on blur (http, `https://127.0.0.1`, an unknown host, a real site, `.example`), a fake png, three uploads, reordering by keyboard and by mouse, removing, "+ Alta", a draft kept across a reload and dropped after the launch, a launch (→ `/lansat`, joined, tools and screenshots stored), a project of its own in progress (→ its page, the saved line), its edit with an update (v1 shown), Andrei on Ioana's edit page (→ her project), Ioana editing launched Tuns la Fix (no stages, one challenge, "v4"), and a late launch (frizerie's deadline moved back in the local database: Szabó Attila's Foarfeca launched with `is_late`, and a new project could only be its own).
 
+## 2026-11-15 · Owner accepted screens 01–09
+
+- **Decided by the owner** ("accept all pages"): screens 01–09 stay as built. That settles, as they are now:
+  - the copy without a reference design from screens 01–09 (each screen's "build" entry lists it), and the password sign-in copy with "Durează un minut.";
+  - Home's heading stays "Cele mai votate săptămâna asta" (§13.1), showing the running challenge's top 3;
+  - "Ești înscris/ă" with no stored gender (§13.3);
+  - the stored challenge title, "…de cartier" included;
+  - the board's fixed tag chips;
+  - the show-password button keeps `aria-pressed` and its changing label;
+  - someone who skips onboarding can still review;
+  - the review rules (only owners reply, owners don't review their own project, 2000 characters);
+  - screen 09's calls (the draft in this browser only, joining on save, the locked challenge, the fixed slug, the placeholder limits) and the owner's "Editează proiectul" on screen 04.
+
+## 2026-11-15 · Screen 10 data
+
+- **Rule 16, when:** inside the transaction that launches a project, in `projects.create()` and `edit()` (`reviews/assignments.ts`, `assignOnLaunch`). A relaunch can't happen (rule 6), so a project launches, and assigns, once. Saving in progress, or editing after the launch, assigns nothing.
+- **Rule 16, which:** launched projects in the same challenge, not the builder's own, not an agent's, not one they've reviewed (any review of theirs, in progress included), not one already assigned to them. Fewest human reviews first, counted like the rows show them (with the fixture extras, so the fixtures pick what the screens suggest); a tie goes to the **oldest launch** (it has waited longest), then the id.
+- **Two per builder per challenge, not per launch.** Assignments belong to the reviewer, not to a launch (`review_assignments` has no launch column). A second launch in the same challenge adds none once they hold two, done or not.
+- **Fewer than two candidates:** they get what there is. Then, when someone else launches in that challenge, every builder there still short of two gets the new launch (it has no reviews yet, so it's the fewest anyway), unless they already reviewed it. So the first launchers of a month aren't left without assignments. A per-challenge advisory lock keeps two launches at once from topping someone past two.
+- **A project of its own** (no challenge) gives no assignments: there's no "same challenge" to pick from.
+- **A late launch** (rule 7) gets assignments like any other: reviews stay open after the deadline, and its builder is still asked to give two.
+- **Agents** get none (they never review, §12), and an agent's launch is given to nobody.
+- **`projects.launch(slug, viewerId)`** is the page's one read: the owner's launched project (summary, launch time, challenge), their assignments in that challenge with `done`, in the order given and then oldest launch first, and `expected` (2, or 0 for a project of its own). Refusals: `not_found`, `not_owner`, `not_launched`.
+- **Counts at the launch (HANDOVER §9.4):** `launch()` takes `countsAtLaunch`, which counts only the votes and human reviews created by `launchedAt`, without fixture extras. Only design fixtures pass it, so screen 10 shows Tuns la Fix with 0 votes and no reviews, as the reference does; everywhere else the page shows the real counts.
+- **Seed:** Ioana's two assignments are a second apart, in fixture order (Scaunul 3, then La Fix), so the page lists them as the reference does. Nobody else in the fixtures holds assignments, so the first launch tried locally is given to every human builder of `frizerie` (the top-up above). Expected; reseed after trying.
+
+## 2026-11-15 · Screen 10 build
+
+- **Who sees `/proiecte/<slug>/lansat`:** only the owner of a launched project, any time (it's where their assignments live; nothing links back to it yet besides the launch itself). Signed out → `/intra?next=…`; someone else, or a project still in progress → the project's page; an unknown slug → 404.
+- **"E lansat. Bravo, {name}!"** calls them as screen 08's banner does (`givenName`, or the name's first word); "E lansat. Bravo!" without a name. The chip, title and line are one `role="status"` block (§10).
+- **The project's row** uses VoteCount "own" (rule 11), "0 voturi · proiectul tău", whatever the deadline.
+- **LaunchRow drops "0 comentarii"** everywhere: no reference shows a zero count, and screen 10's fresh launch has none.
+- **The counter** is "{done} din 2": warning until both are done, then success (§6). Each done row gets a success chip "Ai scris părerea" after the builder (new copy).
+- **Buttons:** primary "Scrie prima părere", or "Scrie a doua părere" once one is done (new copy), to the first open assignment's `#pareri`. When none is open, the button goes and "Vezi proiectul tău" becomes the primary, so the view keeps one. Full width on phones, as in the reference.
+- **Fewer than two assigned:** under the rows, "Al doilea proiect îți apare aici când mai lansează cineva în provocare." or, with none, "Proiectele îți apar aici pe măsură ce lansează și alții în provocare." (new copy).
+- **A project of its own:** no "Mai ai un pas" section; "Vezi proiectul tău" (primary) right under the row.
+- **"Arată-l oamenilor" in M1:** the heading and the copy-link field only. The field shows the address without `https://` (as the reference does), read-only, selected on focus; "Copiază linkul" copies the full link and says screen 04's "Am copiat linkul." in a status line. The address is the request's own host, so locally it reads `localhost:3001/…`. The share image, "Descarcă imaginea" and the hint under the field ("…apare cu imaginea de mai sus") wait for M2 (`flags.shareImage`); "Vrei să te poată contacta cineva?" waits for M3 (`flags.contactConsent`).
+- **The closing line stays** ("Îți scriem pe e-mail când primești o părere…"), word for word, though the new-review e-mail waits for Resend: it's an M1 feature (§11).
+- **Visual check (`capture.mjs --only 10`, against `pnpm dev`):** all four `differs` (40% desktop, 30% mobile), all expected:
+  - the hidden share image, its button and hint (M2) and the contact section (M3): the page is 621px shorter on desktop and 489px on phones, so everything below the share heading is compared against other content;
+  - the link field reads `localhost:3001/proiecte/tuns-la-fix` instead of `itstart.ro/…`;
+  - the thumbnails (flat `tint`, §9.4).
+
+  Comparing element positions in the reference HTML and the app with Playwright at 1280 and 390px, the title, the three rows, both headings, the buttons, the field and "Copiază linkul" match to the pixel (the field and the button sit higher by the hidden image). From the header to the share section's divider, with the thumbnails masked: 0.19% and 0.20% desktop, 0.06% and 0.04% mobile. Screens 01–05 and 09 are unchanged.
+- **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes with the Hungarian sample on every text: no horizontal scroll, nothing clipped but the Tag ellipsis. Keyboard order: the rows (title, tags, vote), the buttons, the field, "Copiază linkul", with the 3px outline on every stop. Tried on `pnpm dev` (Playwright): signed out, Andrei on Ioana's page, Bianca's project in progress, an unknown slug, a real launch through the edit form (Szabó Attila's Foarfeca: Coadă Zero and La Fix, the two with the fewest reviews, and the top-up to the other builders), Ioana writing both reviews from "Scrie prima/a doua părere" ("2 din 2", both rows marked, "Vezi proiectul tău" primary), one assignment short (the waiting line), and a project of her own.
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.
