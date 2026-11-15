@@ -542,5 +542,141 @@
       "hint": "Când îl trimiți pe WhatsApp, Facebook sau LinkedIn, apare cu imaginea de mai sus."
     },
     "closing": "Îți scriem pe e-mail când primești o părere. Poți edita proiectul oricând."
+  },
+  "admin": {
+    "metadataTitle": "Admin · ITStart",
+    "nav": {
+      "label": "Admin",
+      "challenges": "Provocări",
+      "site": "Înapoi pe site"
+    },
+    "challenges": {
+      "title": "Provocări",
+      "lead": "O provocare pe lună. Începe pe 1, la 00:00, și se termină în ultima zi a lunii, la 23:59, ora României.",
+      "new": "Provocare nouă",
+      "empty": "Nicio provocare încă.",
+      "row": "#{number} · {month}",
+      "edit": "Editează",
+      "view": "Vezi pagina",
+      "which": " provocarea #{number}"
+    },
+    "form": {
+      "back": "← Provocări",
+      "newTitle": "Provocare nouă",
+      "editTitle": "Provocarea #{number}",
+      "editLead": "Ce schimbi apare pe pagina provocării imediat ce salvezi.",
+      "newLead": "Primește următorul număr. Până începe, o vede doar cine are linkul.",
+      "saved": "Am salvat provocarea.",
+      "view": "Vezi pagina provocării",
+      "optional": "(opțional)",
+      "sections": {
+        "basics": "De bază",
+        "phrases": "Pe pagina principală și la înscriere",
+        "brief": "Brief-ul",
+        "tips": "Construiește-l cu AI",
+        "jury": "Juriul"
+      },
+      "title": {
+        "label": "Titlul",
+        "hint": "De exemplu: Pagină de programări pentru o frizerie de cartier"
+      },
+      "shortTitle": {
+        "label": "Titlul scurt",
+        "hint": "Pe filtrele de la Lansări: „#4 Frizerie”. Gol, apare titlul întreg."
+      },
+      "slug": {
+        "label": "Adresa",
+        "hint": "itstart.ro/provocari/adresa: litere mici, cifre și „-”. Gol, se face din titlul scurt. Nu se mai schimbă după ce începe.",
+        "locked": "Provocarea a început, așa că adresa nu se mai schimbă."
+      },
+      "month": {
+        "label": "Luna",
+        "hint": "Termenul: ultima zi a lunii, la 23:59, ora României.",
+        "locked": "Provocarea a început, așa că luna nu se mai schimbă."
+      },
+      "summary": {
+        "label": "Rezumatul",
+        "hint": "Pe cardul provocării de pe pagina principală."
+      },
+      "builtFor": {
+        "label": "Pentru cine construim",
+        "hint": "Vine după „pentru”: „o frizerie”. Gol, pagina principală nu arată banda verde."
+      },
+      "buildingPhrase": {
+        "label": "Ce construiesc toți",
+        "hint": "Vine după „construiesc deja”: „pagina frizeriei”."
+      },
+      "intro": {
+        "label": "Introducerea",
+        "hint": "Sub titlu, pe pagina provocării."
+      },
+      "scenarioNote": {
+        "label": "Nota de deasupra scenariului",
+        "hint": "De exemplu: Un scenariu realist, scris de echipa ITStart. Nu e o comandă de la un client."
+      },
+      "scenario": {
+        "label": "Scenariul"
+      },
+      "baseLevel": {
+        "label": "Nivelul de bază",
+        "hint": "Câte un punct pe rând, cel mult 12."
+      },
+      "stretch": {
+        "label": "Dacă vrei mai mult",
+        "hint": "Câte un punct pe rând, cel mult 12."
+      },
+      "launchCriteria": {
+        "label": "Ce înseamnă „lansat”",
+        "hint": "Câte un punct pe rând, cel mult 12."
+      },
+      "launchNote": {
+        "label": "Nota de sub „lansat”"
+      },
+      "launchCheck": {
+        "label": "Testul de la cap la coadă",
+        "hint": "Ultimul rând din „Înainte să lansezi”: „Ai făcut o programare de test, de la cap la coadă.”"
+      },
+      "materialsUrl": {
+        "label": "Linkul la materiale",
+        "hint": "Pentru „Descarcă materialele”. Începe cu https://."
+      },
+      "materialsNote": {
+        "label": "Nota de lângă materiale"
+      },
+      "tips": {
+        "hint": "Cel mult 4 carduri, fiecare cu titlu și text.",
+        "card": "Cardul {n}",
+        "title": "Titlul",
+        "text": "Textul",
+        "add": "Adaugă un card",
+        "remove": "Șterge cardul",
+        "removeLabel": "Șterge cardul {n}"
+      },
+      "juryNote": {
+        "label": "Cine e în juriu și după ce alege",
+        "hint": "Apare cu rezultatele."
+      },
+      "submitNew": "Creează provocarea",
+      "submitEdit": "Salvează",
+      "errors": {
+        "titleEmpty": "Scrie titlul.",
+        "tooLong": "Cel mult {max} de caractere.",
+        "slugInvalid": "Doar litere mici fără diacritice, cifre și „-”, cel mult 40.",
+        "slugTaken": "Adresa e deja a altei provocări.",
+        "monthEmpty": "Alege luna.",
+        "monthTaken": "Luna are deja o provocare. Una pe lună, ca să nu ruleze două deodată.",
+        "monthOutOfOrder": "Provocările merg în ordinea lunilor: alege o lună între provocarea de dinainte și cea de după.",
+        "monthPast": "Luna asta s-a terminat.",
+        "listTooMany": "Cel mult {max} puncte.",
+        "listItemTooLong": "Un punct are cel mult {max} de caractere.",
+        "urlInvalid": "Pune un link care începe cu https://.",
+        "tipTitleEmpty": "Scrie titlul cardului.",
+        "tipTextEmpty": "Scrie textul cardului.",
+        "tips": "Fiecare card are nevoie de titlu și text.",
+        "notAdmin": "Nu mai ai drept de admin.",
+        "notFound": "Provocarea nu mai există.",
+        "other": "Nu s-a salvat. Mai încearcă o dată."
+      }
+    }
   }
 }

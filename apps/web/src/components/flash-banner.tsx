@@ -26,7 +26,9 @@ export function FlashBanner({
     url.searchParams.delete(param);
     // Next.js keeps its router in step with replaceState.
     window.history.replaceState(window.history.state, "", url);
-  }, [param]);
+    // Every render, not just the first: saving again on the same page (the
+    // admin's challenge form) brings the flag back while the banner stays mounted.
+  });
 
   return (
     <div
