@@ -100,14 +100,10 @@ export type JoinRefusal =
   | "ended" // rules 1 and 3: the month is over
   | "not_onboarded"; // no name yet, so nothing to list them by
 
-export type LeaveRefusal =
-  | "not_found"
-  | "not_joined"
-  | "ended"; // rule 3: after the deadline the list is the month's record
+export type LeaveRefusal = "not_found" | "not_joined" | "ended"; // rule 3: after the deadline the list is the month's record
 
 export type ParticipationResult<R> =
-  | { ok: true; slug: string }
-  | { ok: false; reason: R };
+  { ok: true; slug: string } | { ok: false; reason: R };
 
 /** "Pașii tăi" on the challenge page: what a participant has done so far. */
 export type ParticipantSteps = {
@@ -145,10 +141,7 @@ export type Challenges = {
    * changes nothing; joining after leaving rejoins, from now. Throws only for
    * an unknown user.
    */
-  join(
-    userId: string,
-    slug: string,
-  ): Promise<ParticipationResult<JoinRefusal>>;
+  join(userId: string, slug: string): Promise<ParticipationResult<JoinRefusal>>;
   /**
    * Leaves a challenge before its deadline (rule 2): off the participant list
    * and its count, while their projects stay where they are.

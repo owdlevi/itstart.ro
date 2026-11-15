@@ -62,11 +62,7 @@ export type {
   Profile,
   Profiles,
 } from "./profiles";
-export {
-  isHttpsUrl,
-  missingToLaunch,
-  PROJECT_LIMITS,
-} from "./projects";
+export { isHttpsUrl, missingToLaunch, PROJECT_LIMITS } from "./projects";
 export type {
   BuildDuration,
   EditableProject,
