@@ -24,11 +24,7 @@ export async function SiteHeader() {
       label: t("nav.challenge"),
     },
     // A project page belongs to the board (screen 04 shows "Lansări" current).
-    {
-      href: "/lansari",
-      label: t("nav.launches"),
-      also: ["/proiecte", "/lanseaza"],
-    },
+    { href: "/lansari", label: t("nav.launches"), also: ["/proiecte", "/lanseaza"] },
   ];
   const nav = (className: string, linkClassName?: string) => (
     <NavLinks

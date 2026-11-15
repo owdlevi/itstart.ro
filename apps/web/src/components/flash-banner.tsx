@@ -33,19 +33,12 @@ export function FlashBanner({
       role="status"
       className={cn(
         "mt-4 flex items-start gap-2.5 rounded-lg px-4 py-3.5 font-semibold md:mt-6 md:px-5 md:py-4",
-        tone === "success"
-          ? "bg-success-bg text-success-ink"
-          : "bg-tint text-ink",
+        tone === "success" ? "bg-success-bg text-success-ink" : "bg-tint text-ink",
       )}
     >
       {tone === "success" && (
         <span className="inline-flex pt-[3px]">
-          <Check
-            size={18}
-            strokeWidth={2.8}
-            aria-hidden
-            className="flex-none"
-          />
+          <Check size={18} strokeWidth={2.8} aria-hidden className="flex-none" />
         </span>
       )}
       <span>{children}</span>

@@ -167,7 +167,11 @@ export default async function ChallengePage({
       <div className="flex flex-wrap items-start gap-6 pb-10 md:gap-10 md:pb-[72px]">
         <aside className="flex min-w-0 flex-[1_1_320px] flex-col gap-4 min-[984px]:order-last">
           {!ended && (
-            <TimeLeft challenge={challenge} session={session} joined={joined} />
+            <TimeLeft
+              challenge={challenge}
+              session={session}
+              joined={joined}
+            />
           )}
           <People
             challenge={challenge}
@@ -464,7 +468,9 @@ async function Steps({
               aria-hidden
               className={cn(
                 "inline-flex size-[22px] flex-none items-center justify-center rounded-full",
-                done ? "bg-primary text-on-primary" : "border-2 border-border",
+                done
+                  ? "bg-primary text-on-primary"
+                  : "border-2 border-border",
               )}
             >
               {done && (

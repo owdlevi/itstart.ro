@@ -69,11 +69,7 @@ export default async function SignInPage({
   switchQuery.set("cont", mode === "signUp" ? "intra" : "nou");
 
   const steps = [
-    {
-      key: "profile",
-      title: t("next.profile.title"),
-      text: t("next.profile.text"),
-    },
+    { key: "profile", title: t("next.profile.title"), text: t("next.profile.text") },
     ...(challenge
       ? [
           {
@@ -88,11 +84,7 @@ export default async function SignInPage({
           },
         ]
       : []),
-    {
-      key: "launch",
-      title: t("next.launch.title"),
-      text: t("next.launch.text"),
-    },
+    { key: "launch", title: t("next.launch.title"), text: t("next.launch.text") },
   ];
 
   return (
