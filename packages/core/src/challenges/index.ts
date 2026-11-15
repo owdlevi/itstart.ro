@@ -161,6 +161,29 @@ export type Challenges = {
   steps(challengeId: string, userId: string): Promise<ParticipantSteps>;
 };
 
+/**
+ * Puts someone in a challenge, with no checks: the callers make them (join(),
+ * and a project saved for the challenge). One row per person and challenge: a
+ * rejoin clears `leftAt` and starts from `at`; a second join changes nothing.
+ */
+export async function enter(
+  db: Pick<Db, "insert">,
+  userId: string,
+  challengeId: string,
+  at: Date,
+) {
+  await db
+    .insert(participations)
+    .values({ userId, challengeId, joinedAt: at })
+    .onConflictDoUpdate({
+      target: [participations.userId, participations.challengeId],
+      set: {
+        joinedAt: sql`case when ${participations.leftAt} is null then ${participations.joinedAt} else ${at} end`,
+        leftAt: null,
+      },
+    });
+}
+
 export function createChallenges(deps: {
   db: Db;
   now: () => Date;
@@ -349,18 +372,7 @@ export function createChallenges(deps: {
         }
         if (!user.onboardedAt) return { ok: false, reason: "not_onboarded" };
 
-        // One row per person and challenge: a rejoin clears `leftAt` and
-        // starts from now; a second join leaves the row as it is.
-        await tx
-          .insert(participations)
-          .values({ userId, challengeId: challenge.id, joinedAt: at })
-          .onConflictDoUpdate({
-            target: [participations.userId, participations.challengeId],
-            set: {
-              joinedAt: sql`case when ${participations.leftAt} is null then ${participations.joinedAt} else ${at} end`,
-              leftAt: null,
-            },
-          });
+        await enter(tx, userId, challenge.id, at);
         return { ok: true, slug };
       }),
 

@@ -19,6 +19,30 @@ import {
   type Db,
 } from "@repo/db";
 import { withExtra } from "../counts";
+import { createCannedLinkChecker, type LinkChecker } from "../link-checker";
+import { createPrefixStorage, type Storage } from "../storage";
+import {
+  createSaving,
+  type EditableResult,
+  type ProjectEdit,
+  type ProjectInput,
+  type SaveResult,
+} from "./save";
+
+export {
+  isHttpsUrl,
+  missingToLaunch,
+  PROJECT_LIMITS,
+  type BuildDuration,
+  type EditableProject,
+  type EditableResult,
+  type LaunchField,
+  type ProjectEdit,
+  type ProjectInput,
+  type ProjectStage,
+  type SaveRefusal,
+  type SaveResult,
+} from "./save";
 
 export type ProjectUpdate = {
   version: number;
@@ -140,10 +164,37 @@ export type Projects = {
     ownerId: string,
     viewerId?: string | null,
   ): Promise<ProfileProject[]>;
+  /**
+   * A new project (screen 09): "În lucru" with a name, pitch and live link, or
+   * "Lansat" with everything rule 4 asks for. The live link must answer (rule
+   * 9). A project for the running challenge puts its builder in it (rule 2).
+   */
+  create(ownerId: string, input: ProjectInput): Promise<SaveResult>;
+  /**
+   * The owner's changes, launched or not (rule 8), with an optional update as
+   * the next version. Launching sets launchedAt once (rule 6) and flags a
+   * launch after the deadline as late (rule 7).
+   */
+  edit(userId: string, slug: string, input: ProjectEdit): Promise<SaveResult>;
+  /** A project with its edit form's values, for its owner only. */
+  editable(slug: string, userId: string): Promise<EditableResult>;
 };
 
-export function createProjects(deps: { db: Db; now: () => Date }): Projects {
+export function createProjects(deps: {
+  db: Db;
+  now: () => Date;
+  /** Fails closed: without a checker, no link answers. */
+  linkChecker?: LinkChecker;
+  /** Fails closed: without storage, no screenshot is ours. */
+  storage?: Storage;
+}): Projects {
   const { db, now } = deps;
+  const saving = createSaving({
+    db,
+    now,
+    linkChecker: deps.linkChecker ?? createCannedLinkChecker(),
+    storage: deps.storage ?? createPrefixStorage(null),
+  });
 
   const voteCount = withExtra(
     sql`select count(*) from ${votes} where ${votes.projectId} = ${projects.id}`,
@@ -257,6 +308,7 @@ export function createProjects(deps: { db: Db; now: () => Date }): Projects {
   };
 
   return {
+    ...saving,
     // Only launched projects are in the vote (rule 5).
     mostVoted: (opts) =>
       list(opts, "launched", [desc(voteCount), desc(projects.launchedAt)]),

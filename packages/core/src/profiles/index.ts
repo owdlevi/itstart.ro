@@ -1,6 +1,7 @@
 import { eq, like, or, sql } from "drizzle-orm";
 import { users, type Db } from "@repo/db";
 import type { ProfileProject, Projects } from "../projects";
+import { freeSlug, slugBase } from "../slugs";
 
 /** A challenge on a profile's "Provocări terminate": one they launched in. */
 export type FinishedChallenge = {
@@ -77,30 +78,9 @@ export type Profiles = {
   onboard(userId: string, input: OnboardingInput): Promise<OnboardingResult>;
 };
 
-/**
- * The handle a name asks for: diacritics folded, lowercase, words joined by
- * "-", at most 40 characters. "Kovács Réka" → "kovacs-reka".
- */
-export function handleBase(name: string): string {
-  const base = name
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+/, "")
-    .slice(0, 40)
-    .replace(/-+$/, "");
-  // A name with no latin letters or digits at all.
-  return base || "constructor";
-}
-
-/** `base`, or the first of `base-2`, `base-3`… that isn't taken. */
-export function freeHandle(base: string, taken: Set<string>): string {
-  if (!taken.has(base)) return base;
-  let n = 2;
-  while (taken.has(`${base}-${n}`)) n++;
-  return `${base}-${n}`;
-}
+/** The handle a name asks for: "Kovács Réka" → "kovacs-reka" (see slugBase). */
+export const handleBase = (name: string) => slugBase(name, "constructor");
+export const freeHandle = freeSlug;
 
 // Months are counted in Bucharest, like the challenges' deadlines.
 const monthOf = new Intl.DateTimeFormat("en", {

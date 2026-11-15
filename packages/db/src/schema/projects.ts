@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   pgEnum,
@@ -50,7 +51,11 @@ export const projects = pgTable(
     buildHardestPart: text(),
     buildPrompt: text(),
     stage: projectStage().notNull().default("in_progress"),
+    // Set once, when it switches to "Lansat" (rule 6).
     launchedAt: timestamp({ withTimezone: true }),
+    // Launched after its challenge's deadline: "După termen", out of the
+    // recognitions (rule 7). Fixed at the launch, like launchedAt.
+    isLate: boolean().notNull().default(false),
     createdAt: createdAt(),
   },
   (t) => [index().on(t.challengeId)],

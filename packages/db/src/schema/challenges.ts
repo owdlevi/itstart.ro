@@ -39,6 +39,9 @@ export const challenges = pgTable("challenges", {
   launchCriteria: text().array().notNull().default([]),
   // The line under the launch criteria: "E o primă versiune pe care oricine o poate încerca…"
   launchNote: text(),
+  // The brief's end-to-end test, the last line of "Înainte să lansezi" on the
+  // launch form (screen 09): "Ai făcut o programare de test, de la cap la coadă."
+  launchCheck: text(),
   materialsUrl: text(),
   materialsNote: text(),
   // "Construiește-l cu AI": tip cards written for this brief.

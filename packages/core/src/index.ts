@@ -4,17 +4,26 @@ import { createProfiles } from "./profiles";
 import { createProjects } from "./projects";
 import { createReviews } from "./reviews";
 import { createSignIn } from "./sign-in";
+import type { LinkChecker } from "./link-checker";
+import type { Storage } from "./storage";
 import { createVotes } from "./votes";
 
 export type CoreDeps = {
   db: Db;
   now?: () => Date;
+  linkChecker?: LinkChecker;
+  storage?: Storage;
 };
 
 /** Wires every module once. The app's composition root calls this with real adapters. */
 export function createCore(deps: CoreDeps) {
   const now = deps.now ?? (() => new Date());
-  const projects = createProjects({ db: deps.db, now });
+  const projects = createProjects({
+    db: deps.db,
+    now,
+    linkChecker: deps.linkChecker,
+    storage: deps.storage,
+  });
   return {
     challenges: createChallenges({ db: deps.db, now }),
     profiles: createProfiles({ db: deps.db, now, projects }),
@@ -53,7 +62,21 @@ export type {
   Profile,
   Profiles,
 } from "./profiles";
+export {
+  isHttpsUrl,
+  missingToLaunch,
+  PROJECT_LIMITS,
+} from "./projects";
 export type {
+  BuildDuration,
+  EditableProject,
+  EditableResult,
+  LaunchField,
+  ProjectEdit,
+  ProjectInput,
+  ProjectStage,
+  SaveRefusal,
+  SaveResult,
   BoardOpts,
   BoardProject,
   BoardScope,
@@ -74,3 +97,9 @@ export type {
 export type { SignIn, SignInLinkRefusal, SignInLinkResult } from "./sign-in";
 export type { VoteRefusal, VoteResult } from "./votes";
 export { createMemoryMailer, type Email, type Mailer } from "./mailer";
+export {
+  createCannedLinkChecker,
+  type LinkCheck,
+  type LinkChecker,
+} from "./link-checker";
+export { createPrefixStorage, type Storage } from "./storage";
