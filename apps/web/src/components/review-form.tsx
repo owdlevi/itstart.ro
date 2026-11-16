@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CircleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -39,6 +40,8 @@ export function ReviewForm({
   const id = useId();
   const [refusal, setRefusal] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  // The second assigned project, after the first assigned review (rule 16).
+  const [next, setNext] = useState<{ slug: string; name: string } | null>(null);
   const reply = parentId !== null;
   const {
     register,
@@ -53,10 +56,12 @@ export function ReviewForm({
   const onSubmit = handleSubmit(async (values) => {
     setRefusal(null);
     setSent(false);
+    setNext(null);
     const result = await postReview(values);
     if (result.ok) {
       reset();
       setSent(true);
+      setNext(result.nextAssignment ?? null);
       onSent?.();
       return;
     }
@@ -125,6 +130,17 @@ export function ReviewForm({
       </div>
       <p role="status" className={cn("text-sm text-muted", !sent && "sr-only")}>
         {sent && t(reply ? "replySent" : "sent")}
+        {sent && next && (
+          <>
+            {" "}
+            {t.rich("nextAssignment", {
+              name: next.name,
+              link: (chunks) => (
+                <Link href={`/proiecte/${next.slug}#pareri`}>{chunks}</Link>
+              ),
+            })}
+          </>
+        )}
       </p>
       <div className="flex justify-end">
         <Button

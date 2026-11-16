@@ -274,6 +274,7 @@
       "send": "Trimite părerea",
       "signIn": "Intră ca să scrii o părere",
       "sent": "Părerea ta e publicată.",
+      "nextAssignment": "Mai ai o părere de dat: <link>{name}</link>.",
       "reply": "Răspunde",
       "replyLabel": "Răspunsul tău",
       "sendReply": "Trimite răspunsul",

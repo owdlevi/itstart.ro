@@ -244,6 +244,63 @@ describe("reviews.post", () => {
       .where(eq(reviewAssignments.reviewerId, reader.id));
     expect(row!.doneAt).toEqual(new Date("2026-11-11T05:35:00Z"));
   });
+
+  test("names the next open assignment after fulfilling one (rule 16)", async () => {
+    const { db, reviews, reader, owner, project, advance } = await setup();
+    const second = await makeProject(db, {
+      ownerId: owner.id,
+      challengeId: project.challengeId,
+      name: "La Fix",
+    });
+    // Older, but from another month: screen 10 doesn't list it either.
+    const lastMonth = await makeProject(db, {
+      ownerId: owner.id,
+      challengeId: (await makeChallenge(db)).id,
+    });
+    await db.insert(reviewAssignments).values([
+      {
+        reviewerId: reader.id,
+        projectId: lastMonth.id,
+        createdAt: new Date("2026-10-11T05:35:00Z"),
+      },
+      { reviewerId: reader.id, projectId: project.id },
+      { reviewerId: reader.id, projectId: second.id },
+    ]);
+
+    const first = await reviews.post({
+      authorId: reader.id,
+      projectId: project.id,
+      body: "Merge.",
+    });
+    expect(first).toEqual({
+      ok: true,
+      id: expect.any(String),
+      nextAssignment: { slug: second.slug, name: "La Fix" },
+    });
+
+    advance(MINUTE);
+    const last = await reviews.post({
+      authorId: reader.id,
+      projectId: second.id,
+      body: "Merge și ăsta.",
+    });
+    expect(last).toEqual({ ok: true, id: expect.any(String) });
+  });
+
+  test("names no next assignment for a review that fulfils none (rule 16)", async () => {
+    const { db, reviews, reader, owner, project } = await setup();
+    const assigned = await makeProject(db, { ownerId: owner.id });
+    await db
+      .insert(reviewAssignments)
+      .values({ reviewerId: reader.id, projectId: assigned.id });
+
+    const result = await reviews.post({
+      authorId: reader.id,
+      projectId: project.id,
+      body: "Merge.",
+    });
+    expect(result).toEqual({ ok: true, id: expect.any(String) });
+  });
 });
 
 describe("reviews.thread", () => {

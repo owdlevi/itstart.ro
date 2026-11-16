@@ -1,4 +1,4 @@
-import { and, count, eq, gte, isNull, sql } from "drizzle-orm";
+import { and, asc, count, eq, gte, isNull, sql } from "drizzle-orm";
 import { projects, reviewAssignments, reviews, users, type Db } from "@repo/db";
 import { withExtra } from "../counts";
 
@@ -42,7 +42,16 @@ export type ReviewRefusal =
   | "rate_limited";
 
 export type ReviewResult =
-  { ok: true; id: string } | { ok: false; reason: ReviewRefusal };
+  | {
+      ok: true;
+      id: string;
+      /**
+       * Set when the review fulfilled an assignment and another is still open:
+       * the form links straight to it (rule 16).
+       */
+      nextAssignment?: { slug: string; name: string };
+    }
+  | { ok: false; reason: ReviewRefusal };
 
 export type ReviewsConfig = {
   maxLength: number;
@@ -161,7 +170,10 @@ export function createReviews(deps: {
         if (!author) throw new Error(`reviews.post: unknown user ${authorId}`);
 
         const [project] = await tx
-          .select({ ownerId: projects.ownerId })
+          .select({
+            ownerId: projects.ownerId,
+            challengeId: projects.challengeId,
+          })
           .from(projects)
           .where(eq(projects.id, projectId));
         if (!project) return refuse("not_found");
@@ -209,20 +221,45 @@ export function createReviews(deps: {
           .insert(reviews)
           .values({ projectId, authorId, parentId, body: text, createdAt: at })
           .returning({ id: reviews.id });
-        if (!parentId) {
-          // Reviewing an assigned project fulfils the assignment (rule 16).
-          await tx
-            .update(reviewAssignments)
-            .set({ doneAt: at })
-            .where(
-              and(
-                eq(reviewAssignments.reviewerId, authorId),
-                eq(reviewAssignments.projectId, projectId),
-                isNull(reviewAssignments.doneAt),
-              ),
-            );
+        if (parentId) return { ok: true, id: row!.id };
+
+        // Reviewing an assigned project fulfils the assignment (rule 16).
+        const fulfilled = await tx
+          .update(reviewAssignments)
+          .set({ doneAt: at })
+          .where(
+            and(
+              eq(reviewAssignments.reviewerId, authorId),
+              eq(reviewAssignments.projectId, projectId),
+              isNull(reviewAssignments.doneAt),
+            ),
+          )
+          .returning({ projectId: reviewAssignments.projectId });
+        if (fulfilled.length === 0 || !project.challengeId) {
+          return { ok: true, id: row!.id };
         }
-        return { ok: true, id: row!.id };
+
+        // The challenge and order screen 10 lists them in.
+        const [next] = await tx
+          .select({ slug: projects.slug, name: projects.name })
+          .from(reviewAssignments)
+          .innerJoin(projects, eq(projects.id, reviewAssignments.projectId))
+          .where(
+            and(
+              eq(reviewAssignments.reviewerId, authorId),
+              isNull(reviewAssignments.doneAt),
+              eq(projects.challengeId, project.challengeId),
+            ),
+          )
+          .orderBy(
+            asc(reviewAssignments.createdAt),
+            asc(projects.launchedAt),
+            asc(projects.id),
+          )
+          .limit(1);
+        return next
+          ? { ok: true, id: row!.id, nextAssignment: next }
+          : { ok: true, id: row!.id };
       }),
   };
 }
