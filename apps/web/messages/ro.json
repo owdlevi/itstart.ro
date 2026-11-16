@@ -31,13 +31,13 @@
     "minutes": "{n, plural, one {minut} other {minute}}"
   },
   "vote": {
-    "vote": "Votează · {count} voturi",
-    "voted": "Ai votat · {count} voturi",
+    "vote": "Votează · {count, plural, one {# vot} other {# voturi}}",
+    "voted": "Ai votat · {count, plural, one {# vot} other {# voturi}}",
     "wideVote": "Votează · {count}",
     "wideVoted": "Ai votat · {count}",
-    "votes": "voturi",
-    "own": "{count} voturi · proiectul tău",
-    "closed": "{count} voturi · votul s-a încheiat",
+    "votes": "{count, plural, one {vot} other {voturi}}",
+    "own": "{count, plural, one {# vot} other {# voturi}} · proiectul tău",
+    "closed": "{count, plural, one {# vot} other {# voturi}} · votul s-a încheiat",
     "wip": "În lucru, încă nu intră la vot",
     "wipBox": "în<br></br>lucru",
     "refused": {
@@ -46,7 +46,7 @@
       "closed": "Votul pentru această provocare s-a încheiat.",
       "other": "Votul nu a mers. Mai încearcă o dată."
     },
-    "wideVotes": "{count} voturi",
+    "wideVotes": "{count, plural, one {# vot} other {# voturi}}",
     "wideWip": "În lucru"
   },
   "project": {

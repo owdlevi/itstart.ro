@@ -163,7 +163,7 @@ export function VoteCount({
     >
       <span className="font-bold leading-5">{count}</span>
       <span className="text-[11px] font-semibold leading-[14px] text-muted">
-        {t("votes")}
+        {t("votes", { count })}
       </span>
     </div>
   );
