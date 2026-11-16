@@ -348,6 +348,16 @@ await withDb((db) =>
       await tx.insert(projectUpdates).values(updateRows);
     }
 
+    const fixturesNow = new Date(fixtures.now).getTime();
+    const launched = new Map(
+      fixtures.projects.map((p) => [
+        p.slug,
+        p.launchedAt
+          ? new Date(p.launchedAt).getTime()
+          : fixturesNow - 86_400_000,
+      ]),
+    );
+    let votesSeeded = 0;
     const voteRows = [
       ...Object.entries(fixtures.votes),
       ...Object.entries(EXTRA_VOTES),
@@ -355,13 +365,24 @@ await withDb((db) =>
       slugs.map((slug) => ({
         userId: userId.get(handle)!,
         projectId: projectId.get(slug)!,
+        // Votes have no time in the fixtures: halfway between the launch and
+        // the reference moment, a minute apart, so the admin's vote timeline
+        // shows them before the frozen clock (and after the launch, so
+        // screen 10 still counts 0 at launch).
+        createdAt: new Date(
+          (launched.get(slug)! + fixturesNow) / 2 + votesSeeded++ * 60_000,
+        ),
       })),
     );
     if (voteRows.length > 0) {
       await tx.insert(votes).values(voteRows);
-      await tx
-        .insert(voteEvents)
-        .values(voteRows.map((v) => ({ ...v, action: "cast" as const })));
+      await tx.insert(voteEvents).values(
+        voteRows.map(({ createdAt, ...v }) => ({
+          ...v,
+          action: "cast" as const,
+          at: createdAt,
+        })),
+      );
     }
 
     // Reviews in fixture order; replyTo is an index into the same list.
