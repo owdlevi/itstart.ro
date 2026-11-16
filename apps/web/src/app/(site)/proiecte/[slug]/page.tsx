@@ -350,6 +350,10 @@ async function Reviews({
           )}
         </div>
       ))}
+      {/* Without a form below it, the owner's empty section needs a line. */}
+      {isOwner && thread.total === 0 && (
+        <p className="text-muted">{t("reviews.none")}</p>
+      )}
       {/* The owner replies to reviews rather than reviewing their own project. */}
       {!viewerId ? (
         <div className="flex flex-col gap-2.5 rounded-lg border border-line bg-surface p-4 md:p-5">

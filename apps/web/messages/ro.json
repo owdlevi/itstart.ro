@@ -265,6 +265,7 @@
     },
     "reviews": {
       "title": "Păreri · {n}",
+      "none": "Nicio părere încă.",
       "automated": "Părere automată",
       "afterLaunch": "{unit, select, minutes {{n, plural, one {la un minut după lansare} few {la # minute după lansare} other {la # de minute după lansare}}} other {{n, plural, one {la o oră după lansare} few {la # ore după lansare} other {la # de ore după lansare}}}}",
       "ago": "{unit, select, now {chiar acum} minutes {{n, plural, one {acum un minut} few {acum # minute} other {acum # de minute}}} hours {{n, plural, one {acum o oră} few {acum # ore} other {acum # de ore}}} other {{n, plural, one {ieri} few {acum # zile} other {acum # de zile}}}}",

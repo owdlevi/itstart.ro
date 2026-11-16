@@ -674,6 +674,7 @@ Rule 14: "admins can see vote timelines". Every vote and retraction is a row in 
 
 - **No owner answers to apply, no Blob:** nothing in NEXT-ACTIONS was ticked or answered after 2026-11-15, and the Blob store isn't confirmed, so `BLOB_READ_WRITE_TOKEN` stays unused.
 - **Card grids use `auto-fill`,** not the reference's `auto-fit` (Home's top 3 on desktop, a profile's "Proiecte lansate"). With three cards, as in every reference, the two are pixel-identical. With one or two, `auto-fit` stretched a card across the whole row (1,055px wide with a 160px thumbnail on a first launch's profile); `auto-fill` keeps a column's width.
+- **"Nicio părere încă."** (new copy, for the owner to review, like "Niciun proiect lansat încă."): the owner of a project with no reviews saw "Păreri · 0" over an empty section, since they get no form (they reply rather than review, "Screen 04 data"). It shows only to the owner and only when the heading reads 0; everyone else has the form below the heading.
 
 ## Verify during M1 setup
 
