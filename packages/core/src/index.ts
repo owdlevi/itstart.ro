@@ -125,7 +125,17 @@ export type {
   Reviews,
 } from "./reviews";
 export type { SignIn, SignInLinkRefusal, SignInLinkResult } from "./sign-in";
-export type { VoteRefusal, VoteResult } from "./votes";
+export { TIMELINE } from "./votes";
+export type {
+  ProjectVoteActivity,
+  TimelineSubject,
+  VoteActivity,
+  VoteEventRow,
+  VoteRefusal,
+  VoteResult,
+  VoteTimeline,
+  VoterActivity,
+} from "./votes";
 export { createMemoryMailer, type Email, type Mailer } from "./mailer";
 export {
   createCannedLinkChecker,

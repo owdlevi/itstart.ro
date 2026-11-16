@@ -1,6 +1,6 @@
 import { desc, eq, like, max, ne, or, sql } from "drizzle-orm";
 import { challenges, type ChallengeTip, type Db } from "@repo/db";
-import { isAdmin } from "../admins";
+import { isAdmin, type AdminResult } from "../admins";
 import { freeSlug, slugBase } from "../slugs";
 import {
   CHALLENGE_LIMITS,
@@ -50,8 +50,7 @@ export type EditableChallenge = {
   input: ChallengeInput;
 };
 
-export type AdminResult<T> =
-  { ok: true; value: T } | { ok: false; reason: "not_admin" | "not_found" };
+export type { AdminResult };
 
 type Invalid = { ok: false; reason: "invalid"; field: ChallengeField };
 

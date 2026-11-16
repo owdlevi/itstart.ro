@@ -17,6 +17,10 @@ export async function isAdmin(
   return user?.role === "admin";
 }
 
+/** What an admin-only read returns: the value, or why not. */
+export type AdminResult<T> =
+  { ok: true; value: T } | { ok: false; reason: "not_admin" | "not_found" };
+
 export type Admins = { isAdmin(userId: string): Promise<boolean> };
 
 export function createAdmins(deps: { db: Db }): Admins {
