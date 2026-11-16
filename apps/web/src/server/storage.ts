@@ -11,6 +11,9 @@ export const SCREENSHOT_MAX_BYTES = 5 * 1024 * 1024;
 export type SaveScreenshot =
   { ok: true; url: string } | { ok: false; reason: "type" };
 
+/** A screenshot keeps its shape; a profile picture is cropped square. */
+export type ImageShape = "screenshot" | "avatar";
+
 /**
  * Where screenshots are kept: core's storage seam (`owns`) plus saving.
  * Saving resizes to webp with sharp, whatever the adapter.
@@ -18,28 +21,35 @@ export type SaveScreenshot =
 export type ScreenshotStorage = {
   /** "local" takes the bytes through /api/capturi; "blob" (to come) uploads from the browser. */
   kind: "local";
-  save(bytes: Buffer): Promise<SaveScreenshot>;
+  save(bytes: Buffer, shape?: ImageShape): Promise<SaveScreenshot>;
   owns(url: string): boolean;
 };
 
 /**
  * Checks the bytes are really png, jpeg or webp, then resizes: at most 1600px
- * on the long side, EXIF orientation applied and metadata (GPS included)
- * dropped, webp.
+ * on the long side (a profile picture: 400px square, cropped from the
+ * middle), EXIF orientation applied and metadata (GPS included) dropped, webp.
  */
-export async function toWebp(bytes: Buffer): Promise<Buffer | null> {
+export async function toWebp(
+  bytes: Buffer,
+  shape: ImageShape = "screenshot",
+): Promise<Buffer | null> {
   try {
     const image = sharp(bytes);
     const { format } = await image.metadata();
     if (format !== "png" && format !== "jpeg" && format !== "webp") return null;
     return await image
       .rotate()
-      .resize({
-        width: 1600,
-        height: 1600,
-        fit: "inside",
-        withoutEnlargement: true,
-      })
+      .resize(
+        shape === "avatar"
+          ? { width: 400, height: 400, fit: "cover" }
+          : {
+              width: 1600,
+              height: 1600,
+              fit: "inside",
+              withoutEnlargement: true,
+            },
+      )
       .webp({ quality: 80 })
       .toBuffer();
   } catch {
@@ -59,8 +69,8 @@ const LOCAL_NAME = /^[a-z0-9-]{1,80}\.(webp|svg)$/;
 function createLocalStorage(): ScreenshotStorage {
   return {
     kind: "local",
-    save: async (bytes) => {
-      const webp = await toWebp(bytes);
+    save: async (bytes, shape) => {
+      const webp = await toWebp(bytes, shape);
       if (!webp) return { ok: false, reason: "type" };
       const name = `${randomUUID()}.webp`;
       await mkdir(LOCAL_DIR, { recursive: true });

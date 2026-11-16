@@ -1,10 +1,14 @@
+import {
+  INTEREST_TOOLS,
+  INTEREST_UNSURE,
+  PROFILE_LIMITS,
+} from "@repo/core/profile-rules";
 import { z } from "zod";
 
-/** Core's limits and choices (profiles: NAME_MAX_LENGTH, INTEREST_TOOLS…), checked early in the browser. */
-export const NAME_MAX_LENGTH = 60;
-export const CITY_MAX_LENGTH = 60;
-export const INTEREST_TOOLS = ["Claude", "Cursor", "v0", "Lovable", "Bolt"] as const;
-export const INTEREST_UNSURE = "unsure" as const;
+/** Core's limits and choices, checked early in the browser. */
+export const NAME_MAX_LENGTH = PROFILE_LIMITS.name;
+export const CITY_MAX_LENGTH = PROFILE_LIMITS.city;
+export { INTEREST_TOOLS, INTEREST_UNSURE };
 
 /** /bun-venit's fields (screen 07). Parsed in the form and again in the action. */
 export const onboardingSchema = z.object({

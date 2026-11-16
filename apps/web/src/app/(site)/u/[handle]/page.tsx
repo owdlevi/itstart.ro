@@ -8,10 +8,12 @@ import { AgentBadge } from "@/components/agent-badge";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/button";
 import { Container } from "@/components/container";
+import { FlashBanner } from "@/components/flash-banner";
 import { ProjectCard } from "@/components/project-card";
 import { ProjectVote } from "@/components/project-vote";
 import { SectionHeading } from "@/components/section-heading";
 import { StatusChip } from "@/components/status-chip";
+import { PROFILE_SAVED_PARAM } from "@/lib/schemas/profile";
 import { core } from "@/server/core";
 import { getSession } from "@/server/session";
 
@@ -45,8 +47,9 @@ export async function generateMetadata({
 /** Screen 05 · Profil (HANDOVER §6). */
 export default async function ProfilePage({
   params,
+  searchParams,
 }: PageProps<"/u/[handle]">) {
-  const { handle } = await params;
+  const [{ handle }, query] = await Promise.all([params, searchParams]);
   const session = await getSession();
   const viewerId = session?.user.id ?? null;
   const profile = await getProfile(handle, viewerId);
@@ -58,9 +61,15 @@ export default async function ProfilePage({
   ]);
   const month = (at: Date) => format.dateTime(at, { month: "long" });
 
+  const own = profile.id === viewerId;
+
   return (
     <Container>
-      <ProfileHeader profile={profile} own={profile.id === viewerId} />
+      {/* After "Editează profilul" saves, once. */}
+      {own && query[PROFILE_SAVED_PARAM] !== undefined && (
+        <FlashBanner param={PROFILE_SAVED_PARAM}>{t("saved")}</FlashBanner>
+      )}
+      <ProfileHeader profile={profile} own={own} />
 
       <section className="flex flex-col gap-4 pb-8 md:gap-5 md:pb-12">
         <SectionHeading title={t("projects.title")} />

@@ -17,7 +17,8 @@ const answer = (body: UploadAnswer, status = 200) =>
 
 /**
  * POST /api/capturi (multipart, `file`): one screenshot, resized to webp and
- * stored by the local adapter. The Blob adapter will upload from the browser
+ * stored by the local adapter. With `shape=avatar`, a profile picture,
+ * cropped square. The Blob adapter will upload from the browser
  * instead, past Vercel's 4.5 MB body cap (ARCHITECTURE, "Uploads").
  */
 export async function POST(request: Request) {
@@ -30,7 +31,8 @@ export async function POST(request: Request) {
   if (length > SCREENSHOT_MAX_BYTES + 64 * 1024) {
     return answer({ ok: false, reason: "too_large" }, 413);
   }
-  const file = (await request.formData().catch(() => null))?.get("file");
+  const form = await request.formData().catch(() => null);
+  const file = form?.get("file");
   if (!(file instanceof File))
     return answer({ ok: false, reason: "failed" }, 400);
   if (file.size > SCREENSHOT_MAX_BYTES) {
@@ -41,6 +43,7 @@ export async function POST(request: Request) {
   }
   const saved = await screenshotStorage.save(
     Buffer.from(await file.arrayBuffer()),
+    form?.get("shape") === "avatar" ? "avatar" : "screenshot",
   );
   return saved.ok ? answer(saved) : answer(saved, 415);
 }

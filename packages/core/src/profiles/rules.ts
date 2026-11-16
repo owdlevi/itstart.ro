@@ -22,7 +22,7 @@ export const INTEREST_TOOLS = [
   "Bolt",
 ] as const;
 /** "Încă nu știu": stored, so an edit form can show it again; never with a tool. */
-export const INTEREST_UNSURE = "unsure";
+export const INTEREST_UNSURE = "unsure" as const;
 
 /** Every tool is on the list, and "Încă nu știu" goes alone. */
 export function isInterestList(tools: string[]): boolean {

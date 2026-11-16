@@ -303,6 +303,60 @@
     "place": "{city} · în comunitate din {month}",
     "joined": "În comunitate din {month}",
     "edit": "Editează profilul",
+    "saved": "Am salvat profilul.",
+    "form": {
+      "metaTitle": "Editează profilul",
+      "title": "Editează profilul",
+      "lead": "Ce schimbi apare pe profilul tău imediat ce salvezi.",
+      "back": "← Profilul tău",
+      "optional": "(opțional)",
+      "avatar": {
+        "label": "Poza de profil",
+        "hint": "Png, jpg sau webp, cel mult 5 MB. O tăiem pătrat, din mijloc.",
+        "upload": "Încarcă o poză",
+        "replace": "Schimbă poza",
+        "remove": "Scoate poza",
+        "uploading": "Se încarcă…",
+        "uploaded": "Am pus poza. Apare pe profil după ce salvezi.",
+        "removed": "Am scos poza. În locul ei apar inițialele după ce salvezi."
+      },
+      "name": {
+        "label": "Numele tău",
+        "hint": "Adresa profilului rămâne aceeași: /u/{handle}."
+      },
+      "givenName": {
+        "label": "Cum să-ți spunem?",
+        "hint": "Apare în saluturi, de exemplu „Bravo, {name}!”. Gol: primul cuvânt din nume."
+      },
+      "city": {
+        "label": "Orașul"
+      },
+      "bio": {
+        "label": "Despre tine",
+        "hint": "{count} din {max} de caractere. Ce faci, ce construiești."
+      },
+      "links": {
+        "label": "Linkuri",
+        "hint": "Cel mult {max}, fiecare începe cu https://.",
+        "item": "Linkul {n}"
+      },
+      "submit": "Salvează profilul",
+      "cancel": "Renunță",
+      "errors": {
+        "nameEmpty": "Scrie-ți numele.",
+        "tooLong": "Cel mult {max} de caractere.",
+        "linkInvalid": "Pune un link care începe cu https://.",
+        "links": "Verifică linkurile: cel mult {max}, fiecare cu https://.",
+        "tools": "Alege din listă.",
+        "avatarType": "Doar imagini png, jpg sau webp.",
+        "avatarTooLarge": "Poza poate avea cel mult 5 MB.",
+        "avatarUnavailable": "Aici nu se pot încărca imagini încă.",
+        "avatarFailed": "Poza nu s-a încărcat. Mai încearcă o dată.",
+        "avatarUnknown": "Poza nu s-a încărcat cum trebuie. Încarc-o din nou.",
+        "notOnboarded": "Termină-ți profilul de la început, apoi revino aici.",
+        "other": "Nu s-a salvat. Mai încearcă o dată."
+      }
+    },
     "stats": {
       "launched": "{n, plural, one {proiect lansat} few {proiecte lansate} other {proiecte lansate}}",
       "monthsInARow": "{n, plural, one {lună la rând} few {luni la rând} other {luni la rând}}",
