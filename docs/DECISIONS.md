@@ -88,7 +88,7 @@ _On hold: sign-in is email and password for now; see "2026-11-14 · Email and pa
 
 ## 2026-11-13 · Environments, CI and deploys
 
-- **Env vars:** each workspace that needs them has a gitignored `.env.local` and a committed `.env.example` that lists every key, with no values. Vercel's project env holds the Production and Preview values. Neon's Vercel integration injects `DATABASE_URL` and `DATABASE_URL_UNPOOLED` for each preview branch, with branch auto-delete, plus `neondatabase/delete-branch-action` on PR close.
+- **Env vars:** each workspace that needs them has a gitignored `.env.local` and a committed `.env.example` that lists every key, with no values. Vercel's project env holds the Production and Preview values. Neon's Vercel integration injects `DATABASE_URL` and `DATABASE_URL_UNPOOLED` for each preview branch, with branch auto-delete, plus `neondatabase/delete-branch-action` on PR close. _Since changed: the integration's auto-delete only, no GitHub secret (see "Owner accepted the open calls")._
 - **Remote:** GitHub, `owdlevi/itstart.ro` (added 2026-11-14). Vercel's Git integration deploys: a preview for every PR, and `main` to production. GitHub holds no Vercel token and no app secrets.
 - **Checks:** a GitHub Actions workflow runs `pnpm lint`, `pnpm check-types` and `pnpm test` on every PR, and they're required for merging.
 - **`capture.mjs`:** runs locally only, before a PR.
@@ -158,7 +158,7 @@ Judgment calls made while setting up the database, Better Auth and the compositi
   - Google/GitHub won't link to them automatically (`requireLocalEmailVerified`).
   - A magic-link sign-in to one of them deletes their `accounts` rows (the password included) and their sessions (`revokeUnprovenAccountAccess`).
   
-  Decide then whether passwords stay (with verification and reset) or go. Either way, mark existing addresses verified only after they've proven them.
+  Decide then whether passwords stay (with verification and reset) or go. Either way, mark existing addresses verified only after they've proven them. _Decided: they go (see "Owner accepted the open calls")._
 - **Screen 06 (`/intra`):** the reference shows Google, GitHub and the link form, so the password form has no reference design. Its copy is in "Screen 06 copy: password sign-in", and the build in "Screen 06 build". Until sign-in switches back, `capture.mjs` reports `differs` for screen 06.
 
 ## 2026-11-14 · Fixture counts
@@ -686,6 +686,23 @@ Rule 14: "admins can see vote timelines". Every vote and retraction is a row in 
 - **Found, not changed (NEXT-ACTIONS):** after the first review, nothing leads a builder back to `/proiecte/<slug>/lansat` for the second; the month only got there by typing the address. Screen 10's calls are with the owner.
 - **Card grids use `auto-fill`,** not the reference's `auto-fit` (Home's top 3 on desktop, a profile's "Proiecte lansate"). With three cards, as in every reference, the two are pixel-identical. With one or two, `auto-fit` stretched a card across the whole row (1,055px wide with a 160px thumbnail on a first launch's profile); `auto-fill` keeps a column's width.
 - **"Nicio părere încă."** (new copy, for the owner to review, like "Niciun proiect lansat încă."): the owner of a project with no reviews saw "Păreri · 0" over an empty section, since they get no form (they reply rather than review, "Screen 04 data"). It shows only to the owner and only when the heading reads 0; everyone else has the form below the heading.
+
+## 2026-11-16 · Owner accepted the open calls
+
+- **Decided by the owner** ("accept all, if in doubt you can decide"): every review and confirmation open in NEXT-ACTIONS stands as built, and the agent decided the open questions below. That settles, as they are now:
+  - screen 10's new copy and calls ("Screen 10 data", "Screen 10 build");
+  - the admin's challenge calls and copy ("Admin: challenges");
+  - profile editing's fields, the fixed handle, the square crop and the copy ("Profile editing");
+  - the vote timeline's marks, numbers and copy ("Admin: vote timeline");
+  - the M1 pass's copy: "Nicio părere încă." and "1 vot" ("M1 end-to-end pass").
+- **Not settled by this:** the Blob store. Whether `onepage-media` is ITStart's own store is a fact about the owner's account, not a call, and writing ITStart's uploads into another product's store would be hard to undo. It stays unconfirmed; uploads stay local.
+- **A way back to the assignments** (agent's call): when a review fulfils an assignment and another one in the same challenge is still open, the line under the form reads "Părerea ta e publicată. Mai ai o părere de dat: <La Fix>." and links to that project's `#pareri`. One click from the first review to the second, rather than back through screen 10. `reviews.post()` returns it (`nextAssignment`), in screen 10's order. Turned down: a link on the builder's own project page (they're not there after reviewing), and waiting for the 48-hour e-mail (it needs Resend).
+- **Vote abuse** (agent's call): seeing only, in M1. Rule 14 asks for the timelines, which exist. If abuse shows up, the first thing to build is removing one account's votes from a challenge (the counts follow the rows); blocking accounts comes after that.
+- **Zero counts on a new challenge** (agent's call): kept. They're true, they last only until the first people join (the team joins on day one), and hiding them would give Home's card and screen 02's sidebar a second layout for a few hours.
+- **Neon branch cleanup** (agent's call): no GitHub secret. The Neon-Managed integration's "Automatically delete obsolete Neon branches" does it, and GitHub keeps holding no app secrets. `neondatabase/delete-branch-action` isn't added.
+- **Unused screenshots** (agent's call): cleaned up after M1, not before. A month's leftovers are a few megabytes at unlisted addresses; the cleanup needs Blob and a workflow, so it's built with or after the Blob adapter.
+- **OAuth on previews** (agent's call): no Google or GitHub sign-in on preview deploys; the buttons are hidden there (`VERCEL_ENV=preview`), and previews sign in by magic link. Better Auth's `oauth-proxy` was turned down: a plugin and a proxied redirect for a convenience that only previews need. Providers are tried locally and in production.
+- **Passwords, once magic link and OAuth are on** (agent's call): removed. HANDOVER's sign-in is magic link, Google and GitHub; passwords were for building locally ("Email and password for now"), and keeping them would mean building verification and reset. Anyone with a password signs in with a magic link to the same address, which proves it; Better Auth then drops the unproven password row (`revokeUnprovenAccountAccess`), and the user row, profile and projects stay.
 
 ## Verify during M1 setup
 
