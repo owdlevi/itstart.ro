@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/container";
+import { NavLinks } from "@/components/nav-links";
 import { Wordmark } from "@/components/wordmark";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -32,22 +33,14 @@ export default async function AdminLayout({
             >
               <Wordmark className="text-[24px] md:text-[26px]" />
             </Link>
-            <nav aria-label={t("nav.label")} className="flex flex-wrap">
-              {(
-                [
-                  ["/admin/provocari", "challenges"],
-                  ["/admin/voturi", "votes"],
-                ] as const
-              ).map(([href, label]) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="inline-flex min-h-11 items-center rounded-md px-3.5 text-[15px] font-semibold text-ink no-underline hover:bg-tint"
-                >
-                  {t(`nav.${label}`)}
-                </Link>
-              ))}
-            </nav>
+            <NavLinks
+              label={t("nav.label")}
+              className="flex flex-wrap"
+              links={[
+                { href: "/admin/provocari", label: t("nav.challenges") },
+                { href: "/admin/voturi", label: t("nav.votes") },
+              ]}
+            />
           </div>
           <Link
             href="/"
