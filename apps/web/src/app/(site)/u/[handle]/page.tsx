@@ -74,7 +74,8 @@ export default async function ProfilePage({
       <section className="flex flex-col gap-4 pb-8 md:gap-5 md:pb-12">
         <SectionHeading title={t("projects.title")} />
         {profile.projects.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-4 md:gap-6">
+          // auto-fill, not the reference's auto-fit: one or two cards keep a column's width.
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-4 md:gap-6">
             {profile.projects.map((project) => (
               <ProjectCard
                 key={project.id}

@@ -145,7 +145,8 @@ export default async function HomePage() {
             title={t("top.title")}
             link={{ href: "/lansari", label: t("top.all") }}
           />
-          <div className="hidden grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-6 md:grid">
+          {/* auto-fill, not the reference's auto-fit: one or two cards keep a column's width. */}
+          <div className="hidden grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-6 md:grid">
             {top.map((project) => (
               <ProjectCard
                 key={project.id}

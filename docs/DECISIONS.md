@@ -670,6 +670,11 @@ Rule 14: "admins can see vote timelines". Every vote and retraction is a row in 
 - **Seed:** the fixtures' votes had no time, so the seed gave them the seed's own clock, after the frozen moment. They now sit halfway between each project's launch and the reference moment, a minute apart, so fixtures mode shows them (screen 10 still counts 0 at the launch).
 - **Tried on `pnpm dev`:** signed out (→ `/intra?next=…`), Andrei (404), the admin; six toggles a minute apart by Bianca (account made that day) inserted into the local database: "6 din conturi noi", every row marked "Cont nou · 4 ore" and "Rafală"; her own timeline; an unknown slug (404); 390px dark without page scroll. Reseeded after.
 
+## 2026-11-16 · M1 end-to-end pass
+
+- **No owner answers to apply, no Blob:** nothing in NEXT-ACTIONS was ticked or answered after 2026-11-15, and the Blob store isn't confirmed, so `BLOB_READ_WRITE_TOKEN` stays unused.
+- **Card grids use `auto-fill`,** not the reference's `auto-fit` (Home's top 3 on desktop, a profile's "Proiecte lansate"). With three cards, as in every reference, the two are pixel-identical. With one or two, `auto-fit` stretched a card across the whole row (1,055px wide with a 160px thumbnail on a first launch's profile); `auto-fill` keeps a column's width.
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.
