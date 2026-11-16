@@ -629,6 +629,47 @@ HANDOVER §3, M1: "admin can create a challenge and edit it". No reference desig
 - **Manual pass:** 390 and 1280px in both themes: no horizontal scroll. Keyboard order: skip link, wordmark, "Provocări", "Înapoi pe site", "← Provocări", then the fields in visual order, "Adaugă un card", the jury note, the button; the 3px outline on each.
 - **Seen on a fresh challenge, not changed** (screens 01–09 are accepted as built): Home's card reads "0 oameni · 0 agenți AI · 0 lansări" and 02's sidebar "0 oameni construiesc" until people join. NEXT-ACTIONS asks whether a new month should hide zero counts.
 
+## 2026-11-16 · Profile editing
+
+HANDOVER §3 M1 "profile", §4 User, §6 05 "Editează profilul". No reference design; screen 07's components and panel.
+
+**Core** (`profiles.editable()` and `edit()`; the rules that need no database in `profiles/rules.ts`, exported as `@repo/core/profile-rules`, which screen 07's schema now imports too):
+
+- **Fields:** the name (1–60), "Cum să-ți spunem?" (`givenName`, optional, 30), the city (60), the bio (240, §4), up to 3 links (§4), the picture, the tools (screen 07's list, "Încă nu știu" alone) and the reminders, saved exactly as ticked (rule 22). Not on the form: the e-mail (never shown, rule 23; changing it is Better Auth's, with verification, later), "Deschis la colaborări" (M3), `role` and `isAgent`. Core builds the row from these fields only, so extra keys in a request change nothing.
+- **`givenName` is asked here, not on screen 07** (DECISIONS "Screen 07 data"): sentences call people by it ("Bravo, Réka!", the participant line), and without a field a family-name-first user (Hungarian, §1) would be called by their family name for good. Empty means the name's first word, as before.
+- **The handle stays when the name changes,** like a project's slug (DECISIONS "Screen 09 data"): profile links are shared, and a changed handle would break them, or need redirects. The name field's hint says so ("Adresa profilului rămâne aceeași: /u/ioana-muresan.").
+- **Text is tidied** like screen 07 (one line, single spaces); the bio is one paragraph, since the profile shows it as one. Empty optional fields are stored as null.
+- **Links** must be https (`isHttpsUrl`, the project rule), at most 200 characters each (placeholder). Blank ones are dropped and duplicates kept once. They aren't checked for reachability (rule 9 is about a project's live link); the profile already marks them `nofollow ugc`.
+- **The picture** must be a file our storage holds (`storage.owns`, `avatar_unknown`), as for screenshots. A picture they already have is kept on save even if it isn't ours (a provider's picture, once OAuth is back). Null removes it, and the initials on a pastel come back.
+- **Only someone onboarded edits** (`not_onboarded`): `/bun-venit` comes first, since it gives the handle. The known gap (someone who skips onboarding can still review with an empty name; "Screen 07 build", accepted by the owner) is unchanged.
+- **Refusals** are `{ reason: "invalid", field }` like the admin's challenge form, plus `not_onboarded` and `avatar_unknown`.
+
+**App:**
+
+- **`/u/<handle>/editeaza`:** signed out → `/intra?next=…`; someone else's handle → their profile (anyone can see it); not onboarded → `/bun-venit?next=…`; an unknown handle → 404. `noindex`.
+- **The page:** "← Profilul tău", then screen 07's panel (560px rather than 520, for the links) with "Editează profilul" and "Ce schimbi apare pe profilul tău imediat ce salvezi."
+- **The form:** react-hook-form + zod (`lib/schemas/profile.ts`, shared with `saveProfile`), validated when a field is left and on submit; errors replace hints, the first invalid field gets the focus (a server refusal too). Order: picture, name, "Cum să-ți spunem?", city, "Despre tine" (with "N din 240 de caractere", like the pitch on screen 09), the three links (a `fieldset` with "Linkuri"; each input labelled "Linkul 1…3" for screen readers), the tool chips and the reminders sentence, both word for word from screen 07, then primary "Salvează profilul" and secondary "Renunță" (back to the profile).
+- **The picture** (`AvatarPicker`): the avatar at 72px as the profile will show it, "Încarcă o poză" / "Schimbă poza" and "Scoate poza". The file goes through `/api/capturi` with `shape=avatar`: the same checks as a screenshot (png/jpg/webp by the bytes, 5 MB, signed in), then sharp crops it to a 400px square from the middle, as webp, metadata dropped. Nothing is stored on the profile until the form is saved; each change is announced. With Blob, the same browser upload moves to the token route.
+- **After saving,** the form goes to the profile with "Am salvat profilul." once (`?salvat=1`, `FlashBanner`). `saveProfile` calls `refresh()` so the header's avatar and name update too (ARCHITECTURE, gotchas).
+- **New copy, for the owner to review** (all of it: `profile.form` and `profile.saved` in `ro.json`).
+- **Tried on `pnpm dev`** (port 3001; 3000 held by onepage.ro's server), with Playwright: signed out, Andrei on Ioana's edit page (→ her profile), Bianca not onboarded (→ `/bun-venit?next=…`), an unknown handle (404), Ioana prefilled, an http link (error on leaving the field), an empty name (error, focus), a picture uploaded, a new name, given name, bio, link, tool and reminders saved (→ the profile with the banner, the new name, picture and links, the handle unchanged, the header's picture updated). 390px dark and 1280px light: no horizontal scroll.
+
+## 2026-11-16 · Admin: vote timeline
+
+Rule 14: "admins can see vote timelines". Every vote and retraction is a row in `vote_events` ("Vote anti-abuse defaults"). No reference design.
+
+**What an admin needs to spot abuse:** votes from accounts made just for voting, and many votes close together (a group of friends, or one person with several accounts). So:
+
+- **Two marks on every toggle:** "Cont nou" when the account was under 7 days old *at the time of the toggle* (with its age then: "4 ore", "3 zile"), and "Rafală" when it's one of 5 or more toggles on the same timeline within 10 minutes. Placeholders in `TIMELINE` (`votes/timeline.ts`), like the vote limits. The 24-hour minimum (rule 14) already refuses the youngest accounts; a week catches accounts made for one challenge.
+- **`votes.activity(adminId)`** (`/admin/voturi`): the projects and the voters with toggles in the last 7 days, 30 of each, most toggles in the last 24 hours first, then the week. Per project: toggles in 24 hours and 7 days, distinct voters, how many came from new accounts, the last one. Per voter: the account's date, the toggles, distinct projects, the last one.
+- **`votes.timeline(adminId, { project } | { user })`** (`/admin/voturi/proiecte/<slug>`, `/admin/voturi/oameni/<handle>`): toggles newest first (the newest 300), each with its time to the second (Bucharest), "Vot" or "Retras", the voter (or the project) linking to their own timeline, and the marks; above them a summary over every toggle (changes, votes, retractions, people or projects, from new accounts). A voter's agent badge shows, though agents never vote (rule 13): a toggle by one would mean a bug.
+- **Admins only, by the database** (`not_admin`), like `challenges.all()`; `requireAdmin(path)` on every page. "Voturi" joins "Provocări" in the admin nav.
+- **Counts here are rows only,** never the fixtures' extras: the page is about the toggles themselves, not the number a project shows.
+- **Not added:** hiding or removing votes. The timeline is for seeing; what to do about abuse (remove votes, block an account) isn't decided (NEXT-ACTIONS).
+- **Tables** scroll sideways inside their own box on a phone (focusable, labelled by the heading), never the page; on a timeline the marks come right after the time and action, so they show without scrolling.
+- **Seed:** the fixtures' votes had no time, so the seed gave them the seed's own clock, after the frozen moment. They now sit halfway between each project's launch and the reference moment, a minute apart, so fixtures mode shows them (screen 10 still counts 0 at the launch).
+- **Tried on `pnpm dev`:** signed out (→ `/intra?next=…`), Andrei (404), the admin; six toggles a minute apart by Bianca (account made that day) inserted into the local database: "6 din conturi noi", every row marked "Cont nou · 4 ore" and "Rafală"; her own timeline; an unknown slug (404); 390px dark without page scroll. Reseeded after.
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.
