@@ -28,7 +28,12 @@ export function createCore(deps: CoreDeps) {
   return {
     admins: createAdmins({ db: deps.db }),
     challenges: createChallenges({ db: deps.db, now }),
-    profiles: createProfiles({ db: deps.db, now, projects }),
+    profiles: createProfiles({
+      db: deps.db,
+      now,
+      projects,
+      storage: deps.storage,
+    }),
     projects,
     reviews: createReviews({ db: deps.db, now }),
     signIn: createSignIn({ db: deps.db, now }),
@@ -74,12 +79,18 @@ export {
   INTEREST_TOOLS,
   INTEREST_UNSURE,
   NAME_MAX_LENGTH,
+  PROFILE_LIMITS,
 } from "./profiles";
 export type {
+  EditableProfile,
+  EditableProfileResult,
   FinishedChallenge,
   OnboardingInput,
   OnboardingResult,
   Profile,
+  ProfileEditResult,
+  ProfileField,
+  ProfileInput,
   Profiles,
 } from "./profiles";
 export { isHttpsUrl, missingToLaunch, PROJECT_LIMITS } from "./projects";

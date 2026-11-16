@@ -2,6 +2,17 @@ import { eq, like, or, sql } from "drizzle-orm";
 import { users, type Db } from "@repo/db";
 import type { ProfileProject, Projects } from "../projects";
 import { freeSlug, slugBase } from "../slugs";
+import type { Storage } from "../storage";
+import {
+  INTEREST_TOOLS,
+  INTEREST_UNSURE,
+  isHttpsUrl,
+  isInterestList,
+  PROFILE_LIMITS,
+  tidy,
+} from "./rules";
+
+export { INTEREST_TOOLS, INTEREST_UNSURE, PROFILE_LIMITS };
 
 /** A challenge on a profile's "Provocări terminate": one they launched in. */
 export type FinishedChallenge = {
@@ -40,12 +51,8 @@ export type Profile = {
   challenges: FinishedChallenge[];
 };
 
-/** The tools screen 07 offers ("Cu ce vrei să construiești?"). */
-export const INTEREST_TOOLS = ["Claude", "Cursor", "v0", "Lovable", "Bolt"];
-/** "Încă nu știu": stored, so an edit form can show it again; never with a tool. */
-export const INTEREST_UNSURE = "unsure";
-export const NAME_MAX_LENGTH = 60;
-export const CITY_MAX_LENGTH = 60;
+export const NAME_MAX_LENGTH = PROFILE_LIMITS.name;
+export const CITY_MAX_LENGTH = PROFILE_LIMITS.city;
 
 /** What a first sign-in fills in on /bun-venit (screen 07). */
 export type OnboardingInput = {
@@ -68,6 +75,44 @@ export type OnboardingResult =
         | "unknown_tool";
     };
 
+/** What "Editează profilul" (/u/<handle>/editeaza) saves. */
+export type ProfileInput = {
+  name: string;
+  /** What sentences call them ("Bravo, Réka!"); null: the name's first word. */
+  givenName: string | null;
+  city: string | null;
+  /** One paragraph, at most 240 characters (HANDOVER §4). */
+  bio: string | null;
+  /** At most 3, https, in the order given. */
+  links: string[];
+  /** A file our storage holds, the one they have already, or null for initials. */
+  avatarUrl: string | null;
+  toolsInterest: string[];
+  /** Reminder e-mails, exactly as ticked (rule 22). */
+  remindersOptIn: boolean;
+};
+
+/** A field the edit form can mark when core refuses what it holds. */
+export type ProfileField = keyof ProfileInput;
+
+/** A profile as its owner edits it. */
+export type EditableProfile = {
+  id: string;
+  handle: string;
+  avatarFill: string | null;
+  input: ProfileInput;
+};
+
+export type EditableProfileResult =
+  | { ok: true; value: EditableProfile }
+  | { ok: false; reason: "not_found" | "not_owner" | "not_onboarded" };
+
+export type ProfileEditResult =
+  | { ok: true; handle: string }
+  | { ok: false; reason: "not_onboarded" | "avatar_unknown" }
+  /** Empty, too long, or not the right shape; the form checks the same rules first. */
+  | { ok: false; reason: "invalid"; field: ProfileField };
+
 export type Profiles = {
   /** A profile by handle, as the viewer sees it, or null if there's none. */
   byHandle(handle: string, viewerId?: string | null): Promise<Profile | null>;
@@ -76,6 +121,13 @@ export type Profiles = {
    * handle made from the name when they have none yet. Once only.
    */
   onboard(userId: string, input: OnboardingInput): Promise<OnboardingResult>;
+  /** The edit form's prefill: the owner's own profile, once onboarded. */
+  editable(handle: string, userId: string): Promise<EditableProfileResult>;
+  /**
+   * Saves the user's own profile. The handle stays as it is, whatever the
+   * name: profile links are shared (DECISIONS, "Profile editing").
+   */
+  edit(userId: string, input: ProfileInput): Promise<ProfileEditResult>;
 };
 
 /** The handle a name asks for: "Kovács Réka" → "kovacs-reka" (see slugBase). */
@@ -108,12 +160,50 @@ export function monthsInARow(launches: Date[], now: Date): number {
   return run;
 }
 
+type Invalid = { ok: false; reason: "invalid"; field: ProfileField };
+
+function clean(
+  input: ProfileInput,
+): { ok: true; value: ProfileInput } | Invalid {
+  const invalid = (field: ProfileField): Invalid => ({
+    ok: false,
+    reason: "invalid",
+    field,
+  });
+  const L = PROFILE_LIMITS;
+  const value: ProfileInput = {
+    name: tidy(input.name),
+    givenName: tidy(input.givenName ?? "") || null,
+    city: tidy(input.city ?? "") || null,
+    bio: tidy(input.bio ?? "") || null,
+    links: [...new Set(input.links.map((l) => l.trim()).filter(Boolean))],
+    avatarUrl: input.avatarUrl || null,
+    toolsInterest: [...new Set(input.toolsInterest)],
+    remindersOptIn: input.remindersOptIn,
+  };
+  if (!value.name || value.name.length > L.name) return invalid("name");
+  if ((value.givenName?.length ?? 0) > L.givenName) return invalid("givenName");
+  if ((value.city?.length ?? 0) > L.city) return invalid("city");
+  if ((value.bio?.length ?? 0) > L.bio) return invalid("bio");
+  if (
+    value.links.length > L.links ||
+    value.links.some((link) => link.length > L.link || !isHttpsUrl(link))
+  ) {
+    return invalid("links");
+  }
+  if (!isInterestList(value.toolsInterest)) return invalid("toolsInterest");
+  return { ok: true, value };
+}
+
 export function createProfiles(deps: {
   db: Db;
   now: () => Date;
   projects: Projects;
+  storage?: Storage;
 }): Profiles {
   const { db, now, projects } = deps;
+  // Fail closed: without storage no new picture is ours.
+  const owns = (url: string) => deps.storage?.owns(url) ?? false;
 
   return {
     byHandle: async (handle, viewerId) => {
@@ -167,22 +257,17 @@ export function createProfiles(deps: {
     },
 
     onboard: async (userId, input) => {
-      const name = input.name.trim().replace(/\s+/g, " ");
+      const name = tidy(input.name);
       if (!name) return { ok: false, reason: "name_empty" };
       if (name.length > NAME_MAX_LENGTH) {
         return { ok: false, reason: "name_too_long" };
       }
-      const city = input.city?.trim().replace(/\s+/g, " ") || null;
+      const city = tidy(input.city ?? "") || null;
       if (city && city.length > CITY_MAX_LENGTH) {
         return { ok: false, reason: "city_too_long" };
       }
       const tools = [...new Set(input.toolsInterest)];
-      const known = tools.every(
-        (tool) => tool === INTEREST_UNSURE || INTEREST_TOOLS.includes(tool),
-      );
-      if (!known || (tools.includes(INTEREST_UNSURE) && tools.length > 1)) {
-        return { ok: false, reason: "unknown_tool" };
-      }
+      if (!isInterestList(tools)) return { ok: false, reason: "unknown_tool" };
 
       return db.transaction(async (tx) => {
         const [user] = await tx
@@ -219,6 +304,79 @@ export function createProfiles(deps: {
           })
           .where(eq(users.id, userId));
         return { ok: true, handle };
+      });
+    },
+
+    editable: async (handle, userId) => {
+      const [user] = await db
+        .select({
+          id: users.id,
+          handle: users.handle,
+          avatarFill: users.avatarFill,
+          onboardedAt: users.onboardedAt,
+          name: users.name,
+          givenName: users.givenName,
+          city: users.city,
+          bio: users.bio,
+          links: users.links,
+          avatarUrl: users.avatarUrl,
+          toolsInterest: users.toolsInterest,
+          remindersOptIn: users.remindersOptIn,
+        })
+        .from(users)
+        .where(eq(users.handle, handle));
+      if (!user?.handle) return { ok: false, reason: "not_found" };
+      if (user.id !== userId) return { ok: false, reason: "not_owner" };
+      if (!user.onboardedAt) return { ok: false, reason: "not_onboarded" };
+      return {
+        ok: true,
+        value: {
+          id: user.id,
+          handle: user.handle,
+          avatarFill: user.avatarFill,
+          input: {
+            name: user.name,
+            givenName: user.givenName,
+            city: user.city,
+            bio: user.bio,
+            links: user.links,
+            avatarUrl: user.avatarUrl,
+            toolsInterest: user.toolsInterest,
+            remindersOptIn: user.remindersOptIn,
+          },
+        },
+      };
+    },
+
+    edit: async (userId, input) => {
+      const cleaned = clean(input);
+      if (!cleaned.ok) return cleaned;
+      const value = cleaned.value;
+
+      return db.transaction(async (tx) => {
+        const [user] = await tx
+          .select({
+            handle: users.handle,
+            onboardedAt: users.onboardedAt,
+            avatarUrl: users.avatarUrl,
+          })
+          .from(users)
+          .where(eq(users.id, userId))
+          .for("update");
+        if (!user) throw new Error(`Unknown user ${userId}`);
+        if (!user.onboardedAt || !user.handle) {
+          return { ok: false, reason: "not_onboarded" };
+        }
+        // A new picture must be a file we stored; the one they have stays.
+        if (
+          value.avatarUrl !== null &&
+          value.avatarUrl !== user.avatarUrl &&
+          !owns(value.avatarUrl)
+        ) {
+          return { ok: false, reason: "avatar_unknown" };
+        }
+        await tx.update(users).set(value).where(eq(users.id, userId));
+        return { ok: true, handle: user.handle };
       });
     },
   };
