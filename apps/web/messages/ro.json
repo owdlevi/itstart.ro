@@ -602,7 +602,59 @@
     "nav": {
       "label": "Admin",
       "challenges": "Provocări",
+      "votes": "Voturi",
       "site": "Înapoi pe site"
+    },
+    "votes": {
+      "metaTitle": "Voturi · Admin",
+      "title": "Voturi",
+      "lead": "Fiecare vot și fiecare vot retras, cu ora lui. Caută conturi noi și multe voturi în câteva minute.",
+      "signs": "„Cont nou”: contul avea sub {days} zile când a votat. „Rafală”: cel puțin {count} voturi sau retrageri în {minutes} minute.",
+      "back": "← Voturi",
+      "projects": {
+        "title": "Proiecte, în ultimele {days} zile",
+        "empty": "Niciun vot în ultimele {days} zile.",
+        "project": "Proiect",
+        "lastDay": "24 de ore",
+        "lastWeek": "{days} zile",
+        "voters": "Oameni",
+        "fromNewAccounts": "Din conturi noi",
+        "lastAt": "Ultimul"
+      },
+      "voters": {
+        "title": "Cine votează, în ultimele {days} zile",
+        "person": "Cine",
+        "joined": "Cont din",
+        "projects": "Proiecte"
+      },
+      "timeline": {
+        "projectTitle": "Voturile pentru {name}",
+        "projectLead": "Proiectul lui {owner}. <link>Vezi pagina proiectului</link>",
+        "userTitle": "Voturile lui {name}",
+        "userLead": "Cont din {date}. <link>Vezi profilul</link>",
+        "summary": {
+          "toggles": "{n, plural, one {o schimbare} few {# schimbări} other {# de schimbări}}",
+          "casts": "{n, plural, one {un vot} few {# voturi} other {# de voturi}}",
+          "retracts": "{n, plural, one {un vot retras} few {# voturi retrase} other {# de voturi retrase}}",
+          "voters": "{n, plural, one {un om} few {# oameni} other {# de oameni}}",
+          "projects": "{n, plural, one {un proiect} few {# proiecte} other {# de proiecte}}",
+          "fromNewAccounts": "{n, plural, one {una din conturi noi} other {# din conturi noi}}"
+        },
+        "limited": "Arătăm cele mai noi {limit}.",
+        "empty": "Niciun vot încă.",
+        "at": "Când",
+        "action": "Ce",
+        "voter": "Cine",
+        "project": "Proiect",
+        "signs": "Semne",
+        "cast": "Vot",
+        "retract": "Retras",
+        "newAccount": "Cont nou · {age}",
+        "burst": "Rafală",
+        "agent": "Agent AI"
+      },
+      "age": "{hours, plural, one {o oră} few {# ore} other {# de ore}}",
+      "ageDays": "{days, plural, one {o zi} few {# zile} other {# de zile}}"
     },
     "challenges": {
       "title": "Provocări",
