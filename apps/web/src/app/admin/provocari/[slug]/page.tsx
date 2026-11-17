@@ -44,8 +44,13 @@ export default async function EditChallengeRoute({
       title={t("editTitle", { number: challenge.number })}
       lead={t("editLead")}
     >
-      <p className="-mt-3 mb-6">
+      <p className="-mt-3 mb-6 flex flex-wrap gap-x-6">
         <a href={`/provocari/${challenge.slug}`}>{t("view")}</a>
+        {challenge.status === "ended" && (
+          <a href={`/admin/provocari/${challenge.slug}/recunoasteri`}>
+            {t("recognitions")}
+          </a>
+        )}
       </p>
       {query[CHALLENGE_SAVED_PARAM] !== undefined && (
         <div className="-mt-4 mb-6 md:-mt-6">

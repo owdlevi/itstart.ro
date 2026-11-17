@@ -79,6 +79,18 @@ export default async function AdminChallengesRoute() {
                   </h2>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {challenge.status === "ended" && (
+                    <Button
+                      href={`/admin/provocari/${challenge.slug}/recunoasteri`}
+                      variant="secondary"
+                      size="sm"
+                    >
+                      {t("recognitions")}
+                      <span className="sr-only">
+                        {t("which", { number: challenge.number })}
+                      </span>
+                    </Button>
+                  )}
                   <Button
                     href={`/admin/provocari/${challenge.slug}`}
                     variant="secondary"

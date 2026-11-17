@@ -691,6 +691,7 @@
       "title": "Provocări",
       "lead": "O provocare pe lună. Începe pe 1, la 00:00, și se termină în ultima zi a lunii, la 23:59, ora României.",
       "new": "Provocare nouă",
+      "recognitions": "Recunoașteri",
       "empty": "Nicio provocare încă.",
       "row": "#{number} · {month}",
       "edit": "Editează",
@@ -705,6 +706,7 @@
       "newLead": "Primește următorul număr. Până începe, o vede doar cine are linkul.",
       "saved": "Am salvat provocarea.",
       "view": "Vezi pagina provocării",
+      "recognitions": "Recunoașterile",
       "optional": "(opțional)",
       "sections": {
         "basics": "De bază",
@@ -810,6 +812,47 @@
         "tipTitleEmpty": "Scrie titlul cardului.",
         "tipTextEmpty": "Scrie textul cardului.",
         "tips": "Fiecare card are nevoie de titlu și text.",
+        "notAdmin": "Nu mai ai drept de admin.",
+        "notFound": "Provocarea nu mai există.",
+        "other": "Nu s-a salvat. Mai încearcă o dată."
+      }
+    },
+    "recognitions": {
+      "title": "Recunoașterile provocării #{number}",
+      "lead": "Apar pe pagina provocării imediat ce salvezi. Doar proiectele oamenilor lansate până la termen pot primi o recunoaștere, iar un proiect primește cel mult una.",
+      "view": "Vezi pagina provocării",
+      "saved": "Am salvat recunoașterile.",
+      "notEnded": "Recunoașterile se aleg după termen, când voturile sunt finale.",
+      "noCandidates": "Niciun proiect al oamenilor n-a fost lansat până la termen, deci nu e nimic de recunoscut.",
+      "project": "Proiectul",
+      "none": "Niciunul încă",
+      "option": "{name} · {owner} · {votes, plural, one {# vot} few {# voturi} other {# de voturi}}",
+      "reason": {
+        "label": "De ce",
+        "hint": "Un rând sub card, pe pagina provocării."
+      },
+      "community": {
+        "title": "Alegerea comunității",
+        "hint": "Cele mai multe voturi.",
+        "suggestion": "După voturi: {name}, cu {votes, plural, one {# vot} few {# voturi} other {# de voturi}}.",
+        "reason": "Cele mai multe voturi: {votes}."
+      },
+      "jury": {
+        "title": "Alegerea juriului",
+        "hint": "Ce a ales juriul, după criteriile publice."
+      },
+      "firstProject": {
+        "title": "Cel mai bun prim proiect",
+        "hint": "Doar proiecte care sunt prima lansare a constructorului lor."
+      },
+      "submit": "Salvează recunoașterile",
+      "errors": {
+        "reasonEmpty": "Scrie de ce, într-un rând.",
+        "tooLong": "Cel mult {max} de caractere.",
+        "notEligible": "Proiectul nu mai poate primi o recunoaștere: e lansat după termen, e al unui agent sau nu e în provocare.",
+        "notFirstProject": "Constructorul a mai lansat ceva înainte.",
+        "duplicate": "Proiectul are deja o recunoaștere mai sus.",
+        "notEnded": "Provocarea nu s-a încheiat încă.",
         "notAdmin": "Nu mai ai drept de admin.",
         "notFound": "Provocarea nu mai există.",
         "other": "Nu s-a salvat. Mai încearcă o dată."

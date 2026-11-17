@@ -24,6 +24,7 @@ import {
 } from "@repo/db";
 import { withExtra } from "../counts";
 import { createCannedLinkChecker, type LinkChecker } from "../link-checker";
+import type { RecognitionKind } from "../recognitions/rules";
 import { ASSIGNMENTS_PER_BUILDER } from "../reviews/assignments";
 import { createPrefixStorage, type Storage } from "../storage";
 import type { ProjectEdit, ProjectInput } from "./rules";
@@ -140,7 +141,7 @@ export type ProfileProject = ProjectSummary & {
     startsAt: Date;
   } | null;
   /** The recognition it got in its challenge, if any (screen 05's footer). */
-  recognition: "community" | "jury" | "first_project" | null;
+  recognition: RecognitionKind | null;
 };
 
 /** A launched project in an ended challenge's results (screen 11). */

@@ -13,18 +13,17 @@ import { isAdmin, type AdminResult } from "../admins";
 import { challengeStatus } from "../challenges/rules";
 import { withExtra } from "../counts";
 import type { Projects, ResultProject } from "../projects";
+import {
+  RECOGNITION_KINDS,
+  RECOGNITION_REASON_MAX,
+  type RecognitionKind,
+} from "./rules";
 
-export type RecognitionKind = (typeof recognitions.kind.enumValues)[number];
-
-/** In the order screen 11 shows them. */
-export const RECOGNITION_KINDS: readonly RecognitionKind[] = [
-  "community",
-  "jury",
-  "first_project",
-];
-
-/** The one-line reason under the card. */
-export const RECOGNITION_REASON_MAX = 160;
+export {
+  RECOGNITION_KINDS,
+  RECOGNITION_REASON_MAX,
+  type RecognitionKind,
+} from "./rules";
 
 /** What screen 11 shows below the header of an ended challenge. */
 export type ChallengeResults = {
