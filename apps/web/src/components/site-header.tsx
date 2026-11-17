@@ -22,9 +22,15 @@ export async function SiteHeader() {
     {
       href: challenge ? `/provocari/${challenge.slug}` : "/provocari",
       label: t("nav.challenge"),
+      // Every challenge and the archive (screens 11 and 12 show it current).
+      also: ["/provocari"],
     },
     // A project page belongs to the board (screen 04 shows "Lansări" current).
-    { href: "/lansari", label: t("nav.launches"), also: ["/proiecte", "/lanseaza"] },
+    {
+      href: "/lansari",
+      label: t("nav.launches"),
+      also: ["/proiecte", "/lanseaza"],
+    },
   ];
   const nav = (className: string, linkClassName?: string) => (
     <NavLinks

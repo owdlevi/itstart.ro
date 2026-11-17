@@ -201,6 +201,36 @@ const EXTRA_VOTES: Record<string, string[]> = {
   "bianca-radu": ["tuns-la-fix"],
 };
 
+// Not in fixtures.json as projects: screen 12 names #2's and #1's jury picks
+// only as text ("Instalatorul din Florești, de Elena Stan"; `juryPickText`).
+// Loaded as launched projects with a jury recognition, so the archive reads
+// them like any other pick. Their reasons aren't in any reference.
+const JURY_PICKS: {
+  challenge: string;
+  slug: string;
+  name: string;
+  owner: string;
+  pitch: string;
+  reason: string;
+}[] = [
+  {
+    challenge: "mester-local",
+    slug: "instalatorul-din-floresti",
+    name: "Instalatorul din Florești",
+    owner: "elena-stan",
+    pitch: "Lucrări, prețuri și un număr de telefon, pe un singur ecran.",
+    reason: "„Un client găsește numărul de telefon în trei secunde.”",
+  },
+  {
+    challenge: "pagina-personala",
+    slug: "salut-sunt-vlad",
+    name: "Salut, sunt Vlad",
+    owner: "vlad-ionescu",
+    pitch: "Cine sunt și ce fac, pe un singur ecran.",
+    reason: "„Simplă, caldă și citită până la capăt.”",
+  },
+];
+
 if (process.env.VERCEL_ENV === "production") {
   console.error("Refusing to seed design fixtures into production.");
   process.exit(1);
@@ -212,6 +242,24 @@ const fixtures: Fixtures = JSON.parse(
     "utf8",
   ),
 );
+for (const pick of JURY_PICKS) {
+  fixtures.projects.push({
+    slug: pick.slug,
+    name: pick.name,
+    pitch: pick.pitch,
+    owner: pick.owner,
+    challenge: pick.challenge,
+    stage: "launched",
+    tools: [],
+    votes: 0,
+    reviewCount: 0,
+  });
+  const challenge = fixtures.challenges.find((c) => c.slug === pick.challenge)!;
+  challenge.recognitions = [
+    ...(challenge.recognitions ?? []),
+    { kind: "jury", project: pick.slug, reason: pick.reason },
+  ];
+}
 
 await withDb((db) =>
   db.transaction(async (tx) => {

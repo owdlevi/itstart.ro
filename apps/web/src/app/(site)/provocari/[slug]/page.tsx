@@ -128,10 +128,9 @@ export default async function ChallengePage({
               }),
             })}
           </p>
-          {/* The chip shares a line with the M2 link (44px tap target), so it
-              holds that height and the header keeps the reference's rhythm
-              while the link is hidden, on one line or two. */}
-          <span className="flex min-h-11 max-w-full flex-wrap items-center gap-x-3 gap-y-2">
+          {/* The chips wrap as a pair; the "Toate provocările" link (44px)
+              sets the line's height wherever it shares it. */}
+          <span className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-2">
             <ChallengeStatusChip challenge={challenge} />
             {joined && (
               <StatusChip

@@ -473,3 +473,64 @@ describe("challenges.started", () => {
     );
   });
 });
+
+describe("challenges.archive", () => {
+  test("lists started challenges newest first, one of them running, upcoming ones left out (rule 1)", async () => {
+    const { db, challenges } = await setup("2026-11-11T05:35:00Z");
+    await makeChallenge(db, { ...OCTOBER, number: 103, slug: "cafenea" });
+    await makeChallenge(db, { ...NOVEMBER, number: 104, slug: "frizerie" });
+    await makeChallenge(db, { ...DECEMBER, number: 105, slug: "decembrie" });
+
+    const list = await challenges.archive();
+
+    expect(list.map((c) => [c.slug, c.status])).toEqual([
+      ["frizerie", "running"],
+      ["cafenea", "ended"],
+    ]);
+  });
+
+  test("counts each challenge's people, agents and launches, without those who left (rules 1 and 2)", async () => {
+    const { db, challenges } = await setup("2026-11-11T05:35:00Z");
+    const november = await makeChallenge(db, NOVEMBER);
+    const october = await makeChallenge(db, OCTOBER);
+    const ana = await makeUser(db);
+    await join(db, ana.id, november.id);
+    await join(db, (await makeUser(db)).id, november.id, new Date());
+    await join(db, (await makeUser(db, { isAgent: true })).id, november.id);
+    await join(db, ana.id, october.id);
+    await makeProject(db, { ownerId: ana.id, challengeId: november.id });
+    await makeProject(db, {
+      ownerId: ana.id,
+      challengeId: november.id,
+      stage: "in_progress",
+    });
+    await addExtra(db, october.id, "participants", 63);
+    await addExtra(db, october.id, "launched", 41);
+
+    const [running, ended] = await challenges.archive();
+
+    expect(running?.counts).toMatchObject({
+      participants: 1,
+      agents: 1,
+      launched: 1,
+    });
+    expect(ended?.counts).toMatchObject({ participants: 64, launched: 41 });
+  });
+
+  test("turns the running challenge into an ended one at 23:59 Bucharest on its deadline (rule 1)", async () => {
+    const atDeadline = await setup("2026-11-30T21:59:00Z");
+    await makeChallenge(atDeadline.db, NOVEMBER);
+    expect((await atDeadline.challenges.archive())[0]?.status).toBe("running");
+
+    const after = await setup("2026-11-30T21:59:30Z");
+    await makeChallenge(after.db, NOVEMBER);
+    expect((await after.challenges.archive())[0]?.status).toBe("ended");
+  });
+
+  test("is empty before the first challenge starts", async () => {
+    const { db, challenges } = await setup("2026-10-15T10:00:00Z");
+    await makeChallenge(db, NOVEMBER);
+
+    expect(await challenges.archive()).toEqual([]);
+  });
+});
