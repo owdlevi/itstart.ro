@@ -154,7 +154,7 @@ M1 modules, and M2's as they come:
   ```
   docker run -d --name pg-itstart --restart unless-stopped -e POSTGRES_USER=itstart -e POSTGRES_PASSWORD=itstart -e POSTGRES_DB=itstart -p 5432:5432 -v pg-itstart-data:/var/lib/postgresql/data postgres:17
   ```
-- **Deployed:** Vercel's project env holds the Production and Preview values. Neon's Vercel integration gives every preview its own database branch and injects `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED`.
+- **Deployed:** Vercel project `itstart-ro` (team `owd`), configured by `apps/web/vercel.json`. Vercel's project env holds the Production and Preview values. Neon's Vercel integration (`itstart-db`) injects `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED`; whether every preview gets its own database branch is still to check (NEXT-ACTIONS). The build sees only the variables `turbo.json` declares (strict env mode): add any new one the build reads.
 - **Migrations** run in the Vercel build command over the unpooled URL, outside turbo's cache.
 - **Design fixtures:** `DESIGN_FIXTURES=1` freezes core's clock at `2026-11-11T07:35:00+02:00` and turns on `/dev/login-as` (Better Auth's `testUtils`). Better Auth itself keeps real time. `pnpm db:seed:fixtures` loads `docs/design/fixtures.json` plus the admin `echipa-itstart`. It refuses a database that already has users unless you pass `--reset`, which empties it. Fixture users have `.invalid` e-mails, so they sign in only through `/dev/login-as`. `core.ts` ignores the flag when `VERCEL_ENV=production`, and the seed refuses to run there.
 

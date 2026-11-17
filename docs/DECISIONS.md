@@ -731,6 +731,17 @@ M2's first slice: what closes a month. Blob wasn't confirmed (NEXT-ACTIONS), so 
 - **Manual pass (§9.5):** `/provocari/cafenea`, `/provocari/mester-local` (no recognitions entered), Ioana's profile and the admin's page, at 390, 768, 1024 and 1280px in both themes, signed out, as Andrei and as the admin: no horizontal scroll, nothing clipped. With a Hungarian-length sample appended to every text, the "Încheiată" chip pushed a phone's page sideways; fixed (its line is capped, so it truncates). Tried on the admin's page: the suggested pick saved; the same project for two kinds (the jury's select gets the error and the focus); a running challenge (no form).
 - **Keyboard pass:** screen 11 goes skip link, header, each card's title and tags, the best agent, "Vezi pe panou", each row, "Vezi provocarea", footer; every stop shows the 3px outline. Closed counts read "112 voturi · votul s-a încheiat". Headings: H1, then H2 per section, H3 for each recognition's label and each project's name.
 
+## 2026-11-17 · First deploy
+
+The owner created the Vercel project and the Blob store and asked for the database, the push and the merge.
+
+- **Where:** Vercel project `itstart-ro` in the `owd` team; Neon `itstart-db` (Free, `fra1`) through Vercel's Neon integration, Neon Auth off; Blob `itstart-ro-blob` (public, `fra1`). Production is https://itstart-ro.vercel.app until `itstart.ro` is added.
+- **Build config in the repo, not the dashboard:** `apps/web/vercel.json` holds the build command (`cd ../.. && pnpm --filter @repo/db db:migrate && pnpm turbo run build --filter=web`) and `regions: ["fra1"]`, so a change to either is reviewed like code.
+- **Turbo's strict env mode** hid every undeclared variable from the build: the first preview logged "You are using the default secret". `turbo.json`'s `build` now lists `DESIGN_FIXTURES`, `BETTER_AUTH_URL`, `VERCEL` and `VERCEL_ENV` in `env` (they change what's built, so they're hashed) and the secrets and URLs in `passThroughEnv` (`BETTER_AUTH_SECRET`, `DATABASE_URL*`, `BLOB_*`, the OAuth clients). A new variable the build reads goes in one of the two.
+- **`BETTER_AUTH_URL` is set for Production only.** Each preview has its own URL, and Better Auth takes the origin from the request when it's unset.
+- **Merged as one PR** (#1, a merge commit), not a PR per stacked branch: the branches were built and checked in order already, and a merge commit keeps each change's own commit on `main`.
+- **Checked after the merge:** the migrations ran in the build (on the preview first, then production), and neither build logged a secret or base-URL problem. Production answers `/`, `/intra`, `/lansari` and `/api/auth/get-session` with 200, `/admin/provocari` redirects to sign-in, `/provocari/frizerie` is a 404 (no challenges yet), and `/dev/login-as` is a 404 (no fixtures). Nothing was tried signed in.
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.
