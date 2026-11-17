@@ -2,6 +2,7 @@ import {
   SCREENSHOT_MAX_BYTES,
   SCREENSHOT_TYPES,
   screenshotStorage,
+  type ImageShape,
 } from "@/server/storage";
 import { getSession } from "@/server/session";
 
@@ -15,17 +16,33 @@ export type UploadAnswer =
 const answer = (body: UploadAnswer, status = 200) =>
   Response.json(body, { status });
 
+const STATUS = { too_large: 413, type: 415, failed: 400 } as const;
+
 /**
- * POST /api/capturi (multipart, `file`): one screenshot, resized to webp and
- * stored by the local adapter. With `shape=avatar`, a profile picture,
- * cropped square. The Blob adapter will upload from the browser
- * instead, past Vercel's 4.5 MB body cap (ARCHITECTURE, "Uploads").
+ * POST /api/capturi: one screenshot, resized to webp and stored. With
+ * `shape=avatar`, a profile picture, cropped square.
+ * - Local adapter: multipart, `file` and `shape`.
+ * - Blob adapter: JSON `{ url, shape }`, the original the browser uploaded
+ *   through /api/capturi/token, past Vercel's 4.5 MB body cap
+ *   (ARCHITECTURE, "Uploads").
  */
 export async function POST(request: Request) {
   if (!screenshotStorage)
     return answer({ ok: false, reason: "unavailable" }, 503);
   const session = await getSession();
   if (!session) return answer({ ok: false, reason: "signed_out" }, 401);
+
+  if (screenshotStorage.kind === "blob") {
+    const body = (await request.json().catch(() => null)) as {
+      url?: unknown;
+      shape?: unknown;
+    } | null;
+    if (typeof body?.url !== "string")
+      return answer({ ok: false, reason: "failed" }, 400);
+    const saved = await screenshotStorage.finish(body.url, shapeOf(body.shape));
+    return saved.ok ? answer(saved) : answer(saved, STATUS[saved.reason]);
+  }
+
   // The form's overhead on top of the file.
   const length = Number(request.headers.get("content-length") ?? 0);
   if (length > SCREENSHOT_MAX_BYTES + 64 * 1024) {
@@ -43,7 +60,10 @@ export async function POST(request: Request) {
   }
   const saved = await screenshotStorage.save(
     Buffer.from(await file.arrayBuffer()),
-    form?.get("shape") === "avatar" ? "avatar" : "screenshot",
+    shapeOf(form?.get("shape")),
   );
-  return saved.ok ? answer(saved) : answer(saved, 415);
+  return saved.ok ? answer(saved) : answer(saved, STATUS[saved.reason]);
 }
+
+const shapeOf = (value: unknown): ImageShape =>
+  value === "avatar" ? "avatar" : "screenshot";

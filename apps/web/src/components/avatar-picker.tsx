@@ -3,41 +3,28 @@
 import { CircleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import type { UploadAnswer } from "@/app/api/capturi/route";
+import { IMAGE_MAX_BYTES, IMAGE_TYPES, uploadImage } from "@/lib/upload-image";
+import type { UploadVia } from "@/server/storage";
 import { Avatar, type AvatarPerson } from "./avatar";
 import { Button } from "./button";
 import { noteId } from "./field";
 
-/** HANDOVER §6 09's limits, as for screenshots; the server checks them again. */
-const TYPES = ["image/png", "image/jpeg", "image/webp"];
-const MAX_BYTES = 5 * 1024 * 1024;
-
 export type AvatarUploadError = "type" | "too_large" | "unavailable" | "failed";
-
-async function upload(file: File): Promise<UploadAnswer> {
-  const body = new FormData();
-  body.set("file", file);
-  body.set("shape", "avatar");
-  try {
-    const response = await fetch("/api/capturi", { method: "POST", body });
-    return (await response.json()) as UploadAnswer;
-  } catch {
-    return { ok: false, reason: "failed" };
-  }
-}
 
 /**
  * "Poza de profil": the picture as the profile will show it, a button to
- * upload one (cropped square on the server, /api/capturi) and one to remove
+ * upload one (cropped square on the server, `uploadImage`) and one to remove
  * it. Nothing is saved until the form is.
  */
 export function AvatarPicker({
+  uploadVia,
   id,
   person,
   onChange,
   error,
   onError,
 }: {
+  uploadVia: UploadVia;
   id: string;
   /** The person as they'll appear, `avatarUrl` being the form's value. */
   person: AvatarPerson;
@@ -56,10 +43,10 @@ export function AvatarPicker({
     if (!file) return;
     onError(null);
     setAnnouncement("");
-    if (!TYPES.includes(file.type)) return onError("type");
-    if (file.size > MAX_BYTES) return onError("too_large");
+    if (!IMAGE_TYPES.includes(file.type)) return onError("type");
+    if (file.size > IMAGE_MAX_BYTES) return onError("too_large");
     setPending(true);
-    const answer = await upload(file);
+    const answer = await uploadImage(file, "avatar", uploadVia);
     setPending(false);
     if (!answer.ok) {
       return onError(answer.reason === "signed_out" ? "failed" : answer.reason);
@@ -116,7 +103,7 @@ export function AvatarPicker({
         <input
           ref={input}
           type="file"
-          accept={TYPES.join(",")}
+          accept={IMAGE_TYPES.join(",")}
           tabIndex={-1}
           aria-hidden
           className="sr-only"

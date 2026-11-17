@@ -21,6 +21,7 @@ import { Button } from "./button";
 import { Field, Input, noteId, Select, Textarea } from "./field";
 import { FilterChip } from "./filter-chip";
 import { LaunchRowFrame } from "./launch-row-frame";
+import type { UploadVia } from "@/server/storage";
 import { ScreenshotPicker, type UploadError } from "./screenshot-picker";
 import { Tag } from "./tag";
 import { ToolChips } from "./tool-chips";
@@ -94,6 +95,7 @@ export function ProjectForm({
   owner,
   votes,
   draftKey,
+  uploadVia,
 }: {
   slug: string | null;
   defaults: ProjectFields;
@@ -109,6 +111,7 @@ export function ProjectForm({
   votes: number;
   /** Where "Salvează ciorna" keeps the form in this browser; null when editing. */
   draftKey: string | null;
+  uploadVia: UploadVia;
 }) {
   const t = useTranslations("launch");
   const router = useRouter();
@@ -458,6 +461,7 @@ export function ProjectForm({
               name="screenshots"
               render={({ field }) => (
                 <ScreenshotPicker
+                  uploadVia={uploadVia}
                   value={field.value}
                   onChange={(urls) => {
                     field.onChange(urls);

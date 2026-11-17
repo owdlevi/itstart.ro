@@ -14,6 +14,7 @@ import {
   profileSchema,
   type ProfileFields,
 } from "@/lib/schemas/profile";
+import type { UploadVia } from "@/server/storage";
 import { AvatarPicker, type AvatarUploadError } from "./avatar-picker";
 import { Button } from "./button";
 import { Checkbox } from "./checkbox";
@@ -46,11 +47,13 @@ export function ProfileForm({
   person,
   handle,
   defaults,
+  uploadVia,
 }: {
   /** For the picture's preview: initials and fill follow the id and name. */
   person: { id: string; avatarFill: string | null };
   handle: string;
   defaults: ProfileFields;
+  uploadVia: UploadVia;
 }) {
   const t = useTranslations("profile.form");
   const tOnboarding = useTranslations("onboarding");
@@ -146,6 +149,7 @@ export function ProfileForm({
     >
       <div ref={avatarGroup}>
         <AvatarPicker
+          uploadVia={uploadVia}
           id={ids.avatar}
           person={{
             id: person.id,

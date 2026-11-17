@@ -7,6 +7,7 @@ import { emptyProjectFields } from "@/lib/schemas/project";
 import { getRunningChallenge } from "@/server/challenge";
 import { designFixtures } from "@/server/core";
 import { getSession } from "@/server/session";
+import { uploadVia } from "@/server/storage";
 import { FIXTURE_DRAFT, FIXTURE_DRAFT_VIEWER } from "./fixture-draft";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,6 +31,7 @@ export default async function LaunchRoute() {
   return (
     <LaunchPage title={t("title")} lead={t("lead")}>
       <ProjectForm
+        uploadVia={uploadVia}
         slug={null}
         defaults={
           prefilled ? FIXTURE_DRAFT : emptyProjectFields(running?.slug ?? null)
