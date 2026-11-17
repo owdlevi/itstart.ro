@@ -5,7 +5,18 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
+      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"],
+      // Strict mode hides undeclared variables from the build. These change
+      // what's built, so they're in the hash; the secrets only pass through.
+      "env": ["DESIGN_FIXTURES", "BETTER_AUTH_URL", "VERCEL", "VERCEL_ENV"],
+      "passThroughEnv": [
+        "BETTER_AUTH_SECRET",
+        "DATABASE_URL",
+        "DATABASE_URL_UNPOOLED",
+        "BLOB_*",
+        "GOOGLE_CLIENT_*",
+        "GITHUB_CLIENT_*"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
