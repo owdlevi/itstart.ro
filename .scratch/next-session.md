@@ -1,46 +1,83 @@
-# Next session: M2 begins with the month's end (recognitions and screen 11), and Blob if confirmed
+# Next session: screen 12 (the challenge archive), and Blob if confirmed
 
 Paste everything below the line into a fresh session.
 
 ---
 
-M1 is built and accepted, as far as it goes without outside accounts: screens 01–10, the admin's challenges, profile editing, the vote timeline, and an end-to-end pass. Every open call is settled (DECISIONS, "Owner accepted the open calls"); what's left in M1 is accounts only. The first real challenge ends on 30 November, so M2 starts with what closes a month. This session has two parts, in this order:
+M1 is built as far as it goes without outside accounts, and M2 has begun: recognitions and screen 11 are done (DECISIONS, "Screen 11 and recognitions"). This session has two parts, in this order:
 
-1. **The Blob adapter, only if I've confirmed the store** in `docs/NEXT-ACTIONS.md` ("Vercel Blob" ticked): the upload-token route, the browser upload in `ScreenshotPicker` and `AvatarPicker` (both post to `/api/capturi` today; the picture adds `shape=avatar`), sharp → webp after the upload (400px square for a picture), and `owns()` for the store's URL. `BLOB_READ_WRITE_TOKEN` is in `apps/web/.env.local`; don't use it until the item is ticked. If it isn't, skip this part.
-2. **Recognitions and screen 11** (HANDOVER §3 M2, §6 11, rules 7 and 20; `docs/design/screens.json` "11", `fixtures.json` → `challenges[cafenea].recognitions`, `bestAgentProject`, `humansAboveBestAgent`, `displayCounts`):
-   - **Core:** a `recognitions` table (challenge, kind `community | jury | first_project`, project, reason) and its rules: one per kind per challenge, only after the deadline, never an agent's project (rule 20) or a late launch (rule 7), "first project" only for someone's first launch ever; "community" suggested from the most votes (ties: decide and record). Admins only, checked in core like `challenges.edit()`. The best agent shown separately, and how many people's projects beat it.
-   - **Admin:** entering the three recognitions (project + one-line reason) on an ended challenge, under `/admin/provocari/<slug>`; functional styling like the rest of the admin.
-   - **Screen 11:** `/provocari/<slug>` after the deadline replaces today's ended layout (DECISIONS "Screen 02 build", "Ended challenge"): "Încheiată" chip, three stat tiles, "Trei recunoașteri" (ProjectCards with plain counts and the reason), the jury note with its criteria, "Cel mai votat agent AI" (behind `flags.builderAgents`? decide: agents' projects are M3 on 02/03/08, but 11 is about results; record it), "Toate cele N lansări" with "După termen" on late ones, the green band to the running challenge. No ranks anywhere. Screen 05's cards get the recognition in their footer ("Provocarea #3 · Alegerea juriului"), as DECISIONS "Screen 05 build" promised.
-   - **Seed:** load the fixtures' recognitions. Then `capture.mjs --only 11` until every variant is `match` or an expected difference, recorded in DECISIONS like every screen's "Visual check", and a manual pass (§9.5) and keyboard pass.
+1. **The Blob adapter, only if I've confirmed the store** in `docs/NEXT-ACTIONS.md` ("Vercel Blob" ticked). Build:
+   - the upload-token route;
+   - the browser upload in `ScreenshotPicker` and `AvatarPicker`. Both post to `/api/capturi` today, and the picture adds `shape=avatar`;
+   - sharp → webp after the upload (400px square for a picture);
+   - `owns()` for the store's URL.
 
-Read first: `AGENTS.md` and every doc it points to, `docs/NEXT-ACTIONS.md` above all (no Vercel, Neon, OAuth apps or Resend yet: build and test locally only). Every stack decision is final. If something truly isn't decided, decide it, record why in `docs/DECISIONS.md`, and list it for me at the end (the owner said "if in doubt you can decide").
+   `BLOB_READ_WRITE_TOKEN` is in `apps/web/.env.local`; don't use it until the item is ticked. If it isn't, skip this part.
+2. **Screen 12 · Toate provocările** (HANDOVER §3 M2 and §6 12; `docs/design/screens.json` "12"; the reference HTML and PNGs):
+   - **Core:** the list of challenges for the archive, newest first, upcoming ones left out (decide and record):
+     - the running one with its live counts;
+     - each ended one with the jury's pick (`recognitions`: project, builder, reason) and its counts.
 
-## State on 2026-11-16
+     Reuse `challenges.started()` and `recognitions` where they fit. Test the rules it touches (1, 3, 20) with their numbers in the test names.
+   - **Page:** `/provocari`, in a 960px container:
+     - the running row has a 2px `primary` border, its live counts and a primary button;
+     - ended rows show the jury's pick and a secondary "Vezi rezultatele";
+     - the closing line carries "Propune un brief". Prefer a mailto until Resend exists; decide and record.
+
+     No ranks. Its empty state: no challenges yet.
+   - **Turn on "Toate provocările"** on 02, 08 and 11: `flags.challengeArchive`. `flags.ts` ties every flag to one `MILESTONE`, and the other M2 flags (questions, share image) aren't built. So give this flag its own switch, and record it.
+     - Screens 02 and 08 kept their header's height for this link. Check that their captures still line up.
+     - Screen 11's phone capture should lose its 22px gap. Update each screen's "Visual check" in DECISIONS.
+   - **Header nav:** does "Provocarea" stay current on `/provocari`? Check the reference, decide and record.
+   - **Seed:** whatever screen 12's reference shows that the seed doesn't load yet. `fixtures.json` has recognitions only for `cafenea`; if the reference shows a jury's pick for #2 `mester-local` or #1 `pagina-personala`, seed it from the reference HTML (like `JURY_NOTE`) and record it.
+   - **Checks:** `capture.mjs --only 12` until every variant is `match` or an expected difference, recorded in DECISIONS. Then a full `--milestone M1` capture: it must stay at what "M1 end-to-end pass" recorded, except where the link changes 02, 08 and 11. Then a manual pass (§9.5) and a keyboard pass.
+
+Read first: `AGENTS.md` and every doc it points to, and `docs/NEXT-ACTIONS.md` above all (no Vercel, Neon, OAuth apps or Resend yet: build and test locally only). Every stack decision is final. If something truly isn't decided, decide it, record why in `docs/DECISIONS.md`, and list it for me at the end (the owner said "if in doubt you can decide").
+
+## State on 2026-11-17
 
 Branches, all local:
 - `screen-01-groundwork`: CI, next-intl, sessions, the shell and components, screen 01. I'm pushing it by hand (the `gh` token lacks the `workflow` scope). Local `main` was fast-forwarded to it by mistake; don't push `main`.
-- `screen-02-provocare` (02, 03) → `screen-04-proiect` (04) → … → `screen-10-lansat` (10) → `admin-challenges` → `profile-edit` → `m1-pass`, each branched from the one before. Work on a new branch from `m1-pass` (`blob` first if part 1 runs, then `screen-11-incheiata` from it). What `m1-pass` did (DECISIONS, "M1 end-to-end pass" and "Owner accepted the open calls"):
-  - a full capture (every variant as recorded), a real month on the real clock, and a keyboard pass over the newest pages;
-  - fixes: "1 vot", card grids on `auto-fill`, "Nicio părere încă." for an owner, the admin nav's current section;
-  - the way back to the assignments: `reviews.post()` returns `nextAssignment`, and the form says "Mai ai o părere de dat: <project>." with a link. 176 core tests;
-  - the agent's calls on vote abuse, zero counts, Neon cleanup, unused screenshots, OAuth on previews and passwords.
+- `screen-02-provocare` (02, 03) → `screen-04-proiect` (04) → … → `screen-10-lansat` (10) → `admin-challenges` → `profile-edit` → `m1-pass` → `screen-11-incheiata`, each branched from the one before. Work on a new branch from `screen-11-incheiata`: `blob` first if part 1 runs, then `screen-12-provocari` from it.
+
+What `screen-11-incheiata` did (DECISIONS, "Screen 11 and recognitions"):
+- `recognitions` in core, with 14 tests:
+  - one per kind per challenge, a project at most once;
+  - after the deadline only;
+  - never a late launch or an agent's project (rules 7 and 20);
+  - "first project" only for a first launch ever;
+  - the community's pick suggested from the votes.
+- `projects.launchedIn()`, and `recognition` on `launchedBy()`.
+- The admin's form at `/admin/provocari/<slug>/recunoasteri`.
+- Screen 11 replaced the interim ended layout on `/provocari/<slug>`.
+- Screen 05's footer names the recognition.
+- LaunchRow's agent badge wraps on its own.
+- The seed loads the recognitions, a late launch and two new fixture extras: `humans_above_agent`, and a challenge-level `reviews`.
+- Migration `0008_screen_11`. 190 core tests, 10 web.
 
 ## Running it
 
-- Postgres: `orb start`, then `docker start pg-itstart`; run `pnpm db:migrate`, then reseed with `pnpm db:seed:fixtures --reset` (always reseed after trying forms).
-- `DESIGN_FIXTURES=1 pnpm dev` in `apps/web` serves `http://localhost:3000`. If 3000 is taken, look at what holds it (`lsof -nP -iTCP:3000 -sTCP:LISTEN`): a leftover `next dev` or `next-server` from this project can be stopped, anything else, tell me. On 2026-11-15 and 16 it was `~/code/owd/onepage.ro`'s server, so work ran on 3001 (`BETTER_AUTH_URL=http://localhost:3001 pnpm next dev --port 3001`, `--base http://localhost:3001` for `capture.mjs`).
-- Fixtures mode freezes core's clock at 2026-11-11, when `cafenea` (#3) has ended and `frizerie` (#4) runs: screen 11 is `/provocari/cafenea`. Flows with new accounts need the real clock (ARCHITECTURE, gotchas). The admin is `echipa-itstart` (`/dev/login-as/echipa-itstart`); a new account becomes admin with `pnpm --filter @repo/db admin:set <e-mail> admin`.
-- Playwright is a root dev dependency; a `.cjs` script can `require(require.resolve("playwright", { paths: [<repo root>] }))`.
-- Format only the files you touch, and check the diff: prettier reflows lines in files that weren't formatted before; keep only your change.
+- **Database:** `orb start`, then `docker start pg-itstart`. Run `pnpm db:migrate`, then reseed with `pnpm db:seed:fixtures --reset`. Always reseed after trying forms.
+- **Dev server:** `DESIGN_FIXTURES=1 pnpm dev` in `apps/web` serves `http://localhost:3000`. If 3000 is taken, look at what holds it (`lsof -nP -iTCP:3000 -sTCP:LISTEN`): a leftover `next dev` or `next-server` from this project can be stopped; for anything else, tell me. On 2026-11-15 to 17 it was `~/code/owd/onepage.ro`'s server, so work ran on 3001: `BETTER_AUTH_URL=http://localhost:3001 pnpm next dev --port 3001`, and `--base http://localhost:3001` for `capture.mjs`. Run `capture.mjs` from `docs/`: `node tools/capture.mjs app --only 12 --base …`.
+- **Fixtures mode** freezes core's clock at 2026-11-11: `cafenea` (#3) has ended and `frizerie` (#4) runs. Flows with new accounts need the real clock (ARCHITECTURE, gotchas). The admin is `echipa-itstart` (`/dev/login-as/echipa-itstart`); a new account becomes admin with `pnpm --filter @repo/db admin:set <e-mail> admin`.
+- **Playwright** is a root dev dependency. A `.cjs` script can `require(require.resolve("playwright", { paths: [<repo root>] }))`.
+- **Formatting:** format only the files you touch, and check the diff. Prettier reflows lines in files that weren't formatted before (`provocari/[slug]/page.tsx` is one); keep only your change.
 
 ## Still waiting on me (NEXT-ACTIONS)
 
-Accounts only: `gh` scopes and branch protection, the Blob store, Neon, Vercel, Resend, the Google and GitHub OAuth apps, the first real admin, and the legal pages' content.
+Accounts only: `gh` scopes and branch protection, the Blob store, Neon, Vercel, Resend, the Google and GitHub OAuth apps, the first real admin, and the legal pages' content. Also a look over screen 11's calls (nothing waits on it), and #4's recognitions after 30 November.
 
 ## How to work
 
 Work in small commits. Each step is done when `pnpm lint`, `pnpm check-types` and `pnpm test` pass. If context runs low, stop at a step boundary, commit, and rewrite this file for the next session.
 
-Out of scope: magic link, Google and GitHub in the UI, the rest of M2 (screen 12 and the archive, questions and answers, the share image and Open Graph tags, the link checker over time, "Raportează" and moderation; one session each, after this one), M3, the review agent, every e-mail and the Resend adapter, and anything that needs Vercel, Neon, OAuth apps or Resend. Add those to `docs/NEXT-ACTIONS.md` instead.
+Out of scope:
+- magic link, and Google and GitHub in the UI;
+- the rest of M2, one session each after this one: questions and answers, the share image and Open Graph tags, the link checker over time, "Raportează" and moderation;
+- M3 and the review agent;
+- every e-mail, and the Resend adapter;
+- anything that needs Vercel, Neon, OAuth apps or Resend.
+
+Add those to `docs/NEXT-ACTIONS.md` instead.
 
 When done, update `docs/ARCHITECTURE.md` and `docs/DECISIONS.md` if anything changed, tick off what's finished in `docs/NEXT-ACTIONS.md`, rewrite this file for the following session, and tell me what's left.
