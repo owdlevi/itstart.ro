@@ -208,7 +208,7 @@ Judgment calls made while setting up the database, Better Auth and the compositi
 
 ## 2026-11-14 · Screen 02 build
 
-- **Milestone flags** are plain constants in `apps/web/src/flags.ts`, derived from one `MILESTONE` number (1 for now): `questions` (M2), `challengeArchive` (M2), `builderAgents` (M3). No flags vendor.
+- **Milestone flags** are plain constants in `apps/web/src/flags.ts`, derived from one `MILESTONE` number (1 for now): `questions` (M2), `challengeArchive` (M2), `builderAgents` (M3). No flags vendor. _Since changed: `challengeArchive` is on by itself, ahead of the rest of M2 (see "Screen 12")._
 - **Agent-built projects are hidden in M1** (HANDOVER §3, "agent-built projects", M3). Lists on 02 pass `agents: flags.builderAgents` to core. Counts still include them ("Proiecte lansate · 25"). In production M1 there are no agent-built projects, so lists and counts agree; only the fixtures show the gap.
 - **Launched rows are the four with the most votes** (ties: latest launch first). The reference's order (Tuns la Fix, Scaunul 3, Frizerie Simplă, Brici) puts the agent's 38 votes above Brici's 81, which no rule produces. Screen 03's reference shuffles agent rows the same way. With agents hidden, 02 shows Tuns la Fix, Scaunul 3, Brici, La Fix.
 - **"În lucru" rows** are the four most recently updated (or created, before the first update). The update line reads "v2 · ieri: …" in Bucharest calendar days ("azi", "ieri", "acum 3 zile").
@@ -231,6 +231,8 @@ Judgment calls made while setting up the database, Better Auth and the compositi
   - 7 participant avatars, not 8 (Bianca hasn't joined).
   
   Diffing the aligned regions instead (each section against its shifted counterpart, the thumbnail column left out): desktop 0.36–0.60%, mobile 0.01–0.57%, all under the tool's 0.61% self-test baseline.
+
+  _Since changed (2026-11-17, "Screen 12"): "Toate provocările" shows. Same status, percentages and height gaps (423/861px): the link takes the 44px line the chip held for it. The chip's own 44px holder is gone._
 - **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, with and without the Hungarian sample appended to every text: no horizontal scroll and nothing clipped except the tag ellipsis above. Keyboard order follows the visual order (except the sidebar on desktop, above), and every stop shows the 3px outline. Ended (`cafenea`) and upcoming (dates moved in the local database) both render cleanly. Signed in as `andrei-popescu`: "Ai votat" on Tuns la Fix, "96 voturi · proiectul tău" on Scaunul 3 (rule 11).
 
 ## 2026-11-14 · Screen 03 data
@@ -487,7 +489,9 @@ Errors, replacing the field's hint (Field spec), or under the button for the las
   - "Pune linkul când merge ceva · făcut": Bianca's seeded "Rând la Tuns" is in progress, so the step is done, and on desktop it wraps to two lines (22px);
   - the avatars' order (BR after SA, "Screen 08 data").
 
-  Comparing element positions in the reference HTML and the app with Playwright at 1280 and 390px, the banner, the eyebrow, the title, "Timp rămas", "Pașii tăi" and each step, the buttons and the people panel match to the pixel, apart from the shifts above. Aligned regions: desktop 0.15–0.30% (header, banner, the sidebar down to the steps, the main column), 0.84% around the done step, 0.15% for the people sentence; mobile 0.00–0.03%, and 1.23% around the done step. Avatar rows: 10.9% and 12.1% (the swap).
+  Comparing element positions in the reference HTML and the app with Playwright at 1280 and 390px, the banner, the eyebrow, the title, "Timp rămas", "Pașii tăi" and each step, the buttons and the people panel match to the pixel, apart from the shifts above.
+
+  _Since changed (2026-11-17, "Screen 12"): "Toate provocările" shows. On phones the page is now 861px shorter, 02's gap (it was 897: the 36px line the hidden link left is gone), and mobile is 21.1% and 19.4%. Desktop is unchanged (423px, 16.7% and 15.9%). The header lines up with the reference to the pixel at 390px._ Aligned regions: desktop 0.15–0.30% (header, banner, the sidebar down to the steps, the main column), 0.84% around the done step, 0.15% for the people sentence; mobile 0.00–0.03%, and 1.23% around the done step. Avatar rows: 10.9% and 12.1% (the swap).
 - **Other screens after the seed change:** 01 mobile 0.47% → 0.57% ("87"), 02 unchanged in size and percentages (15–22%), 03–05 unchanged, 06 5.2% desktop, 07 still `match`.
 - **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, as Bianca, with the Hungarian sample on every text: no horizontal scroll after the chip fix, nothing clipped except the chip ellipsis. Keyboard: the dialog is `role="alertdialog"` with `aria-labelledby` and `aria-describedby`; Tab and Shift+Tab stay inside it (Base UI's focus guards move the focus back asynchronously); Escape returns the focus to "Renunță la provocare". Tried on `pnpm dev` (Playwright):
   - signed out (link to `/intra?provocare=frizerie`, note, 87);
@@ -728,8 +732,49 @@ M2's first slice: what closes a month. Blob wasn't confirmed (NEXT-ACTIONS), so 
   - the band's line (above).
 
   The full `--milestone M1` capture after this work is what the M1 pass recorded: 10/40 `match`, the same percentages and height gaps.
+
+  _Since changed (2026-11-17, "Screen 12"): "Toate provocările" shows. Desktop is unchanged (`check` 4.4% and 3.3%). On phones the header lines up with the reference to the pixel, and the page is 8px taller (16 device pixels), from the late row ("După termen" at 13px against the reference's 12px chip, above). Mobile is now `differs` 9.5% and 7.5%, from 20.9% and 17.9%._
 - **Manual pass (§9.5):** `/provocari/cafenea`, `/provocari/mester-local` (no recognitions entered), Ioana's profile and the admin's page, at 390, 768, 1024 and 1280px in both themes, signed out, as Andrei and as the admin: no horizontal scroll, nothing clipped. With a Hungarian-length sample appended to every text, the "Încheiată" chip pushed a phone's page sideways; fixed (its line is capped, so it truncates). Tried on the admin's page: the suggested pick saved; the same project for two kinds (the jury's select gets the error and the focus); a running challenge (no form).
 - **Keyboard pass:** screen 11 goes skip link, header, each card's title and tags, the best agent, "Vezi pe panou", each row, "Vezi provocarea", footer; every stop shows the 3px outline. Closed counts read "112 voturi · votul s-a încheiat". Headings: H1, then H2 per section, H3 for each recognition's label and each project's name.
+
+## 2026-11-17 · Screen 12 · Toate provocările
+
+HANDOVER §3 M2 and §6 12. Built ahead of the rest of M2: questions, the share image, the link checker and moderation are next, one session each.
+
+**Core:**
+
+- **`challenges.archive()`:** the challenges that have started, newest first, with the same counts as `running()` (people, agents, launches: fixture extras included, people who left not counted, rule 2). The running one is live (rule 1); the ended ones are what they closed at. It shares `started()`'s rule ("started by now"). **Upcoming challenges are left out** until they start: a brief announced early would sit at the top with no counts and nothing to open but the brief. The closing line names the next month instead.
+- **`recognitions.juryPicks(challengeIds)`:** each ended challenge's jury pick, as the project (slug, name), the builder (handle, name) and the reason. **Only once the challenge has ended** (rule 3), and **never a late launch or an agent's** (rules 7 and 20), even if a row says otherwise (rows written outside `save()`, like the seed's). The screen shows project and builder; the reason stays for later use.
+- 7 tests: rule 1 (newest first, one running, upcoming left out; the switch at 23:59 on the deadline; empty before the first), rules 1 and 2 (the counts), rule 3 (no pick while running), rules 7 and 20 (no late or agent pick).
+
+**Page (`/provocari`):**
+
+- **Rows, as in the reference:** the number badge (decorative; the title carries a hidden "Provocarea #4: "), the month, the status (the running chip, or the outlined "Încheiată"), the title as an H2, and the counts line. The running row has a 2px `primary` border and a primary "Vezi provocarea". Ended rows have a secondary "Vezi rezultatele" (screen 11). On phones the button takes the row's full width. Each button is described by its row's title (`aria-describedby`), since three of them read "Vezi rezultatele". `Button` now passes `aria-describedby` on to a link.
+- **Counts:** running: "86 de oameni · 4 agenți AI · 25 de lansări · mai sunt 19 zile" (screen 11's band counts the days the same way; new copy for the last days: "mai e o zi", "mai e mai puțin de o zi"). Ended: people and launches, without agents, as in the reference, then " · alegerea juriului: Meniu la Minut, de Ioana Mureșan". Without a pick yet, the line ends at the launches. **No ranks.**
+- **The lead's month** is the first challenge's ("din august 2026"). With none, it reads "Câte una pe lună." (new copy).
+- **Closing line:** "Urmează: provocarea din decembrie se anunță pe 1 decembrie." counts on a challenge every month: the month after the latest one, on its 1st. It's left out once that date has passed with nothing new started (between challenges). Then comes "Ai o idee de scenariu? Propune un brief."
+- **"Propune un brief" is a mailto** to `echipa@itstart.ro` with the subject "Propunere de brief pentru ITStart" (HANDOVER allows a mailto or a simple form). A form would need somewhere to send to, and e-mail waits for Resend. The address is the agent's pick: the owner confirms the mailbox (NEXT-ACTIONS).
+- **Empty state:** "Nicio provocare încă." (new copy), body `muted`, then the brief line.
+- **"Provocarea" is the current header link across `/provocari`:** on the archive and on any challenge's page, the ended ones included, as the references for 11 and 12 show. Before this, an ended challenge's page marked no link current, since the link points at the running challenge.
+
+**"Toate provocările" on 02, 08 and 11:**
+
+- **`flags.challengeArchive` is `true` on its own**, not `MILESTONE >= 2`. Raising `MILESTONE` would also turn on questions and the share image, which aren't built. The other flags still follow `MILESTONE`. Turned down: a second number (one switch per milestone was the point of `flags.ts`), and an env variable (it's a build fact, not a deployment setting).
+- **The chips' 44px line is gone.** It kept the header's height while the link was hidden ("Screen 02 build"). With the link back, it set the line's height wherever it was shared, and on phones, where the link wraps to its own line, the chips' line kept 44px instead of the reference's 28 (08) or 22 (11). Each screen's "Visual check" above has a "Since changed" note.
+
+**Seed:** the fixtures name #2's and #1's jury picks only as text (`juryPickText`: "Instalatorul din Florești, de Elena Stan", "Salut, sunt Vlad, de Vlad Ionescu"). The seed adds them as launched projects of Elena and Vlad in those challenges, with a jury recognition each (`JURY_PICKS`, like `JURY_NOTE`). Pitches and reasons aren't in any reference; the seed's are placeholders. **The references contradict each other here:** with a launch in September, Elena's Espresso Simplu (October) isn't her first launch, yet screen 11 shows it as "Cel mai bun prim proiect". The seed loads both as the references show. In fixtures mode, saving #3's recognitions from the admin's form would drop that pick (core's rule). Nothing captured changes: 05 is Ioana's profile.
+
+**Visual check (`capture.mjs --only 12`, against `pnpm dev`, port 3001):** all four `match` (0.27–0.36%), the same height as the reference. What's left is the two known differences: #4's stored title has "de cartier" ("Screen 04 build"), and "87 de oameni" counts Bianca's seeded join ("Screen 08 data").
+
+**Full `--milestone M1` capture:** 10/40 `match`, as "M1 end-to-end pass" recorded, with the same height gaps. The one change is 08 on phones (861px, was 897) and its percentages, from the link above.
+
+**Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, with the Hungarian sample appended to every text once the page had hydrated: no horizontal scroll, nothing clipped; titles and buttons wrap, chips cut with an ellipsis. The empty state rendered with no challenges in the local database (reseeded after).
+
+**Keyboard pass (1280px):** skip link, wordmark, "Provocarea" (`aria-current="page"`), "Lansări", "Lansează un proiect", the profile, "Vezi provocarea", the three "Vezi rezultatele" (each described by "Provocarea #N: …"), "Propune un brief", the footer. Every stop shows the 3px outline.
+
+**New copy, for the owner to review:** "Câte una pe lună." (no challenges yet), "mai e o zi" / "mai e mai puțin de o zi", "Nicio provocare încă.", the mail subject "Propunere de brief pentru ITStart", and the screen-reader prefix "Provocarea #N: ".
+
+**Also:** core's tests have a 20 s timeout (`packages/core/vitest.config.ts`). Each test builds a PGlite database with every migration, and the rule 1 test, which builds two, went over vitest's 5 s on CI twice on 2026-11-17 (once on `main`).
 
 ## 2026-11-17 · First deploy
 

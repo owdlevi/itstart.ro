@@ -27,7 +27,7 @@ src/
     providers.tsx    next-themes (data-theme on <html>)
     fonts.ts, fonts/ Bricolage Grotesque + Inter via next/font/local
     globals.css      design tokens; the only colours, radii and shadows Tailwind knows
-    (site)/          full shell (header + footer): /, /provocari/[slug], /lansari, /proiecte/[slug],
+    (site)/          full shell (header + footer): /, /provocari (the archive), /provocari/[slug], /lansari, /proiecte/[slug],
                      /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /u/[handle]/editeaza, /lanseaza
     (onboarding)/    bare header: /intra, /intra/confirma, /bun-venit
     admin/           role = admin, functional styling (no reference design): /admin/provocari (the list),
@@ -90,7 +90,8 @@ src/
   emails/            React Email templates
   lib/dates.ts       daysAgo() ("ieri", "acum 3 zile"), timeAgo() and afterLaunch() (review times), and
                      weekOf()/weeksAgo()/weekDays() (Monday–Sunday weeks), in Bucharest
-  flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number; M1 screens must look right with them off
+  flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number, except `challengeArchive`, on by itself
+                     (screen 12 is built); M1 screens must look right with the others off
 messages/ro.json     all copy, keys grouped by screen or component; e-mail copy under "emails"
 scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:generate`
 ```
@@ -124,12 +125,12 @@ M1 modules, and M2's as they come:
 | Module | Covers |
 |---|---|
 | `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
-| `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `started()` (the board's chips), `participants()` (rule 2), `challengeStatus()`, `join()` and `leave()` (rule 2; not after the deadline, not before onboarding), `participation()` and `steps()` ("Pașii tăi") are done, and so are the admin's `all()`, `editable()`, `create()` and `edit()` (`challenges/admin.ts`: the month gives the dates, one challenge a month, numbers follow months, the month and slug fixed once it starts; the database-free rules in `challenges/rules.ts`, exported as `@repo/core/challenge-rules`) |
+| `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `started()` (the board's chips), `archive()` (screen 12: the started challenges with their counts, newest first), `participants()` (rule 2), `challengeStatus()`, `join()` and `leave()` (rule 2; not after the deadline, not before onboarding), `participation()` and `steps()` ("Pașii tăi") are done, and so are the admin's `all()`, `editable()`, `create()` and `edit()` (`challenges/admin.ts`: the month gives the dates, one challenge a month, numbers follow months, the month and slug fixed once it starts; the database-free rules in `challenges/rules.ts`, exported as `@repo/core/challenge-rules`) |
 | `admins` | `isAdmin(userId)`: the role, read from the database on every call |
 | `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`), `bySlug()` (the project page) and `launchedBy()` (a profile's cards) are done, and so are `launch()` (screen 10: the owner's launch and their review assignments, with counts as of the launch for design fixtures), `create()`, `edit()` and `editable()` (screen 09: rules 4 and 6–9, updates, joining the running challenge; `projects/save.ts`, with the database-free rules in `projects/rules.ts`, exported as `@repo/core/project-rules`). To come: the link check over time (M2), hiding (moderation) |
 | `votes` | done (rules 10–14): `toggle()`, and the admin's `activity()` and `timeline()` (rule 14's timelines, `votes/timeline.ts`: new accounts and bursts marked, `TIMELINE` holds the placeholder numbers) |
 | `reviews` | `thread()` (automated first, replies, counts: rules 17–18) and `post()` (reviews, the owner's replies, 10 per hour, fulfils an assignment: rules 15–16) are done, and so is assignment picking on launch (rule 16: `reviews/assignments.ts`, `assignOnLaunch(tx, …)`, which `projects.create()` and `edit()` call inside their transaction, like `challenges.enter`). To come: hiding (admin) |
-| `recognitions` | M2, done: `results()` (screen 11: the recognitions, the best agent apart with how many people's projects beat it (rule 20), every other launch, the challenge's review count), `of()` (which recognition a project got), and the admin's `editor()` and `save()` (one per kind per challenge, a project at most once, after the deadline only, never a late launch or an agent's (rules 7 and 20), "first project" only for a builder's first launch ever; the database-free rules in `recognitions/rules.ts`, exported as `@repo/core/recognition-rules`). `projects.launchedIn()` gives it the launches, and `launchedBy()` names each card's recognition |
+| `recognitions` | M2, done: `results()` (screen 11: the recognitions, the best agent apart with how many people's projects beat it (rule 20), every other launch, the challenge's review count), `of()` (which recognition a project got), `juryPicks()` (screen 12: each ended challenge's jury pick, never late or an agent's), and the admin's `editor()` and `save()` (one per kind per challenge, a project at most once, after the deadline only, never a late launch or an agent's (rules 7 and 20), "first project" only for a builder's first launch ever; the database-free rules in `recognitions/rules.ts`, exported as `@repo/core/recognition-rules`). `projects.launchedIn()` gives it the launches, and `launchedBy()` names each card's recognition |
 | `profiles` | `byHandle()` (the public profile: stats, launched projects, the challenges launched in; never the e-mail, rule 23; it reads projects through `projects.launchedBy()`), `onboard()` (screen 07: name, city, tools, reminders as ticked (rule 22), a handle from the name, once), `editable()` and `edit()` ("Editează profilul": the handle stays, a picture only from storage; the database-free rules in `profiles/rules.ts`, exported as `@repo/core/profile-rules`) are done. To come: consent for "Deschis la colaborări" (M3) |
 | `notifications` | who gets which e-mail when (§11) |
 
