@@ -3,6 +3,7 @@ import { createAdmins } from "./admins";
 import { createChallenges } from "./challenges";
 import { createProfiles } from "./profiles";
 import { createProjects } from "./projects";
+import { createQuestions } from "./questions";
 import { createRecognitions } from "./recognitions";
 import { createReviews } from "./reviews";
 import { createSignIn } from "./sign-in";
@@ -36,6 +37,7 @@ export function createCore(deps: CoreDeps) {
       storage: deps.storage,
     }),
     projects,
+    questions: createQuestions({ db: deps.db, now }),
     recognitions: createRecognitions({ db: deps.db, now, projects }),
     reviews: createReviews({ db: deps.db, now }),
     signIn: createSignIn({ db: deps.db, now }),
@@ -120,6 +122,18 @@ export type {
   Projects,
   ResultProject,
 } from "./projects";
+export {
+  QUESTION_LIMITS,
+  type Answer,
+  type AnswerResult,
+  type AskResult,
+  type QuestionAuthor,
+  type QuestionPage,
+  type QuestionRefusal,
+  type QuestionRow,
+  type Questions,
+  type SolveResult,
+} from "./questions";
 export {
   RECOGNITION_KINDS,
   RECOGNITION_REASON_MAX,

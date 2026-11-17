@@ -4,6 +4,7 @@ import {
   participations,
   projectUpdates,
   projects,
+  questions,
   reviews,
   users,
   votes,
@@ -118,4 +119,24 @@ export async function addExtra(
   n: number,
 ) {
   await db.insert(fixtureCountExtras).values({ subjectId, metric, n });
+}
+
+export async function ask(
+  db: Db,
+  challengeId: string,
+  fields: Partial<typeof questions.$inferInsert> = {},
+) {
+  const author = fields.authorId ? null : await makeUser(db);
+  const slug = crypto.randomUUID();
+  const [row] = await db
+    .insert(questions)
+    .values({
+      challengeId,
+      authorId: author?.id ?? fields.authorId!,
+      slug,
+      title: slug,
+      ...fields,
+    })
+    .returning();
+  return row!;
 }
