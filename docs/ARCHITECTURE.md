@@ -41,8 +41,9 @@ src/
     (site)/lanseaza/fixture-draft.ts   the reference's form values, prefilled for ioana-muresan in fixtures mode
     dev/captura/[name]/      screenshots uploaded locally (the local storage adapter, off Vercel only), and the
                              fixtures' screenshots (transparent SVGs) when DESIGN_FIXTURES=1; 404 otherwise
-    api/             Better Auth handler (auth/[...all]), capturi (one screenshot, local adapter; the Blob
-                     upload-token route comes with the Blob adapter), unsubscribe endpoint
+    api/             Better Auth handler (auth/[...all]), capturi (one picture: the local adapter's bytes, or
+                     the Blob adapter's original by URL), capturi/token (Blob's client-upload token),
+                     unsubscribe endpoint
     actions/         server actions, one file per area (votes.ts: toggleVote, reviews.ts: postReview,
                      sign-in.ts: finishSignIn, which sends someone on after Better Auth signs them in,
                      onboarding.ts: completeOnboarding, participation.ts: joinChallenge and
@@ -61,6 +62,8 @@ src/
                      components/ui/ (tabs, alert-dialog)
   i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
+  lib/upload-image.ts   the pickers' upload: the bytes to /api/capturi (local), or the original to Blob and
+                     its URL to /api/capturi (blob); pages pass `uploadVia` from storage.ts
   lib/schemas/       zod schemas shared by a form and its server action (review.ts, sign-in.ts, onboarding.ts,
                      project.ts, which imports core's own launch rules from @repo/core/project-rules;
                      challenge.ts, the admin's form, likewise from @repo/core/challenge-rules; profile.ts and
@@ -78,9 +81,9 @@ src/
     joinable.ts      getJoinableChallenge(slug): `?provocare=` if it isn't over, cached per request
     admin.ts         requireAdmin(path): signed out → /intra?next=path, anyone but an admin → 404; the role
                      from the database (core.admins), cached per request
-    storage.ts       screenshot storage: the local adapter (apps/web/.data/capturi, off Vercel) and sharp → webp
-                     (a profile picture, `shape=avatar` on /api/capturi: 400px square); null where nothing can be
-                     stored yet
+    storage.ts       screenshot storage and sharp → webp (a profile picture: 400px square): Vercel Blob on
+                     Vercel, the local adapter (apps/web/.data/capturi) off it; null on Vercel without a token.
+                     blob-paths.ts says which URLs are the store's (tested)
     link-checker.ts  rule 9's real check (https GET, 5 s, private addresses refused at connect time), and
                      withExampleHosts() for design fixtures; blocked-addresses.ts holds the address list
   workflows/         Vercel Workflow: sleep, ask core.notifications, send
@@ -96,7 +99,10 @@ scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:gener
 - **shadcn components** (only Tabs and the leave-challenge confirm) are added with `pnpm dlx shadcn@latest add <name>` in `apps/web` and then rewritten onto our token names. shadcn's `muted`, `accent` and `border` mean different things from ours, so an unedited file compiles with the wrong colours. Everything else is hand-built from the specs in `docs/design/components/`.
 - **Copy** comes from `messages/ro.json` through next-intl (no locale in URLs, fixed `ro`). Put no Romanian strings in components.
 - **Forms** use react-hook-form + zod on the client. The server action re-parses with the same schema before calling core.
-- **Uploads** go from the browser straight to Blob through the token route (png/jpg/webp ≤ 5 MB, session checked). Server actions receive only blob paths. Vercel caps a request body at 4.5 MB. _Until the Blob store exists,_ the local adapter takes the file through `POST /api/capturi` (same checks), resizes it and keeps it on disk; the form's `ScreenshotPicker` is where the browser side switches adapters. Core accepts only screenshots `storage.owns()`.
+- **Uploads** (`uploadImage`, used by `ScreenshotPicker` and `AvatarPicker`):
+  - **On Vercel,** the browser uploads the original straight to Blob under `incoming/`, with a token from `POST /api/capturi/token` (signed in, png/jpg/webp, ≤ 5 MB, deleted after a day), past Vercel's 4.5 MB body cap. It then posts the blob's URL to `POST /api/capturi`, which fetches it, resizes it with sharp, puts the webp under `capturi/<uuid>.webp` and deletes the original.
+  - **Off Vercel,** the local adapter takes the bytes through `POST /api/capturi` (same checks), resizes them and keeps them on disk. The store refuses a local machine's writes (it's connected for Production and Preview only), so `.env.local`'s token doesn't switch it.
+  - Server actions receive only the finished URLs, and core accepts only pictures `storage.owns()`: `capturi/<uuid>.webp` in our store, or the local adapter's files.
 - **Admin checks** read `role` from the database on each request, never from Better Auth's cookie cache, in two places: every admin page calls `requireAdmin(path)` before anything else, and every admin method in core (`challenges.all/editable/create/edit`, `votes.activity/timeline`) takes the actor's id and refuses `not_admin`. The `admin` layout checks nothing: a layout doesn't stop its page rendering, or keep it out of the RSC payload (Next's authentication guide, "Layouts and auth checks"). Admin server actions pass the session's user id to core and let it decide.
 - **Sign-in, for now,** is email and password (`authClient.signUp.email` / `authClient.signIn.email`); see DECISIONS "Email and password for now". Like every sign-in, it goes through Better Auth's HTTP endpoint, not `auth.api` in a server action, so the per-IP rate limit applies. Once it succeeds, the `/intra` form calls `finishSignIn({ next, challengeSlug })`, which reads the new session and redirects (`signInDestination`): anyone not onboarded (`onboardedAt` null) to `/bun-venit`, carrying `provocare` and `next`. `/bun-venit`'s `completeOnboarding` redirects with the same rules. Both actions join a joinable `challengeSlug` (`core.challenges.join`): `finishSignIn` only for someone onboarded, since core refuses a participant without a name, and `completeOnboarding` always. A join sends them to the challenge with `?inscris=1`, which shows the banner once. `/intra` itself redirects a signed-in visitor the same way, without joining.
 - **Magic link** (configured, not in the UI yet) uses `authClient.signIn.magicLink`. `sendMagicLink` asks `core.signIn.requestLink(email)` first. A refusal comes back as HTTP 429 with `code` `TOO_SOON` or `TOO_MANY` and `retryAfter` in seconds, or 400 `UNDELIVERABLE` for `.invalid` addresses. The `/intra` form maps the code to copy. The e-mail links to `/intra/confirma` with the same query string as Better Auth's verify URL (`token`, `callbackURL`, …).
@@ -139,7 +145,7 @@ M1 modules, and M2's as they come:
   |---|---|---|
   | `clock` | system time | frozen (design fixtures, tests) |
   | `mailer` | Resend + React Email (not built yet: `core.ts` uses the in-memory one and logs each link) | in-memory (`createMemoryMailer()`) |
-  | `storage` | `owns(url)`: apps/web's adapter (local files now, Vercel Blob later; both resize with sharp) | `createPrefixStorage(prefix)` |
+  | `storage` | `owns(url)`: apps/web's adapter (Vercel Blob on Vercel, local files off it; both resize with sharp) | `createPrefixStorage(prefix)` |
   | `linkChecker` | one https GET with a short timeout (`server/link-checker.ts`) | `createCannedLinkChecker(answers)` |
 
   Both fail closed when `createCore` gets none: no link answers, no screenshot is ours.
@@ -154,7 +160,7 @@ M1 modules, and M2's as they come:
   ```
   docker run -d --name pg-itstart --restart unless-stopped -e POSTGRES_USER=itstart -e POSTGRES_PASSWORD=itstart -e POSTGRES_DB=itstart -p 5432:5432 -v pg-itstart-data:/var/lib/postgresql/data postgres:17
   ```
-- **Deployed:** Vercel project `itstart-ro` (team `owd`), configured by `apps/web/vercel.json`. Vercel's project env holds the Production and Preview values. Neon's Vercel integration (`itstart-db`) injects `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED`; whether every preview gets its own database branch is still to check (NEXT-ACTIONS). The build sees only the variables `turbo.json` declares (strict env mode): add any new one the build reads.
+- **Deployed:** Vercel project `itstart-ro` (team `owd`), configured by `apps/web/vercel.json`. Vercel's project env holds the Production and Preview values. Neon's Vercel integration (`itstart-db`) injects `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED`; **previews don't get their own branch:** one `DATABASE_URL` serves Production, Preview and Development, so a preview reads and writes production's data, and a PR's migration runs on production when its preview builds (NEXT-ACTIONS). The build sees only the variables `turbo.json` declares (strict env mode): add any new one the build reads.
 - **Migrations** run in the Vercel build command over the unpooled URL, outside turbo's cache.
 - **Design fixtures:** `DESIGN_FIXTURES=1` freezes core's clock at `2026-11-11T07:35:00+02:00` and turns on `/dev/login-as` (Better Auth's `testUtils`). Better Auth itself keeps real time. `pnpm db:seed:fixtures` loads `docs/design/fixtures.json` plus the admin `echipa-itstart`. It refuses a database that already has users unless you pass `--reset`, which empties it. Fixture users have `.invalid` e-mails, so they sign in only through `/dev/login-as`. `core.ts` ignores the flag when `VERCEL_ENV=production`, and the seed refuses to run there.
 

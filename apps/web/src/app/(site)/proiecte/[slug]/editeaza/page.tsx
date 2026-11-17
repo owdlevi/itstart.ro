@@ -8,6 +8,7 @@ import { toProjectFields } from "@/lib/schemas/project";
 import { getRunningChallenge } from "@/server/challenge";
 import { core } from "@/server/core";
 import { getSession } from "@/server/session";
+import { uploadVia } from "@/server/storage";
 
 const getEditable = cache((slug: string, userId: string) =>
   core.projects.editable(slug, userId),
@@ -72,6 +73,7 @@ export default async function EditProjectRoute({
   return (
     <LaunchPage title={t("editTitle")} lead={t("editLead")}>
       <ProjectForm
+        uploadVia={uploadVia}
         slug={project.slug}
         defaults={toProjectFields(project.input)}
         challenges={choices}

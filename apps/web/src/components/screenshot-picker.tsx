@@ -3,28 +3,15 @@
 import { Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
-import type { UploadAnswer } from "@/app/api/capturi/route";
+import { IMAGE_MAX_BYTES, IMAGE_TYPES, uploadImage } from "@/lib/upload-image";
 import { cn } from "@/lib/utils";
+import type { UploadVia } from "@/server/storage";
 
-/** HANDOVER §6 09; the server checks them again (/api/capturi). */
-const TYPES = ["image/png", "image/jpeg", "image/webp"];
-const MAX_BYTES = 5 * 1024 * 1024;
 const MAX = 4;
 /** A touch must rest this long before it drags, so a swipe still scrolls. */
 const HOLD_MS = 250;
 
 export type UploadError = "type" | "too_large" | "unavailable" | "failed";
-
-async function upload(file: File): Promise<UploadAnswer> {
-  const body = new FormData();
-  body.set("file", file);
-  try {
-    const response = await fetch("/api/capturi", { method: "POST", body });
-    return (await response.json()) as UploadAnswer;
-  } catch {
-    return { ok: false, reason: "failed" };
-  }
-}
 
 const move = <T,>(list: T[], from: number, to: number) => {
   const next = [...list];
@@ -37,9 +24,10 @@ const move = <T,>(list: T[], from: number, to: number) => {
  * "Capturi de ecran" (screen 09): 2–4 tiles, the first is the thumbnail.
  * Reorder by dragging (mouse at once, touch after a short hold) or, focused,
  * with the arrow keys; each move is announced. Uploads go through
- * /api/capturi, which resizes to webp on the server.
+ * `uploadImage`, and the server resizes them to webp.
  */
 export function ScreenshotPicker({
+  uploadVia,
   value,
   onChange,
   onUploadError,
@@ -48,6 +36,7 @@ export function ScreenshotPicker({
   describedBy,
   invalid,
 }: {
+  uploadVia: UploadVia;
   value: string[];
   onChange: (urls: string[]) => void;
   /** Null clears it. */
@@ -111,12 +100,12 @@ export function ScreenshotPicker({
     onUploadError(null);
     const picked = [...files].slice(0, Math.max(free, 0));
     for (const file of picked) {
-      if (!TYPES.includes(file.type)) return onUploadError("type");
-      if (file.size > MAX_BYTES) return onUploadError("too_large");
+      if (!IMAGE_TYPES.includes(file.type)) return onUploadError("type");
+      if (file.size > IMAGE_MAX_BYTES) return onUploadError("too_large");
     }
     setPending((n) => n + picked.length);
     for (const file of picked) {
-      const answer = await upload(file);
+      const answer = await uploadImage(file, "screenshot", uploadVia);
       setPending((n) => n - 1);
       if (answer.ok) {
         onChange([...latest.current, answer.url]);
@@ -308,7 +297,7 @@ export function ScreenshotPicker({
       <input
         ref={fileInput}
         type="file"
-        accept={TYPES.join(",")}
+        accept={IMAGE_TYPES.join(",")}
         multiple
         hidden
         onChange={(event) => {

@@ -742,11 +742,26 @@ The owner created the Vercel project and the Blob store and asked for the databa
 - **Merged as one PR** (#1, a merge commit), not a PR per stacked branch: the branches were built and checked in order already, and a merge commit keeps each change's own commit on `main`.
 - **Checked after the merge:** the migrations ran in the build (on the preview first, then production), and neither build logged a secret or base-URL problem. Production answers `/`, `/intra`, `/lansari` and `/api/auth/get-session` with 200, `/admin/provocari` redirects to sign-in, `/provocari/frizerie` is a 404 (no challenges yet), and `/dev/login-as` is a 404 (no fixtures). Nothing was tried signed in.
 
+## 2026-11-17 · Blob adapter
+
+The store is `itstart-ro-blob` (public, `fra1`, NEXT-ACTIONS). ARCHITECTURE, "Uploads", has the flow.
+
+- **Two steps, not `onUploadCompleted`:** the browser uploads the original to `incoming/` with a client token, then posts its URL to `/api/capturi`, which runs sharp → webp, puts the result under `capturi/<uuid>.webp` and deletes the original. Blob's `onUploadCompleted` is a webhook. It comes after the browser already has a URL, never reaches `localhost`, and the browser would have to wait for it. A second request keeps "the form gets the resized URL" exactly as with the local adapter.
+- **The token** (`/api/capturi/token`, Blob's `handleUpload`): signed in, a pathname under `incoming/`, png/jpg/webp, at most 5 MB, a random suffix, and `ttlDays: 1`. If the second step never comes (a closed tab), the original is deleted the next day anyway.
+- **`/api/capturi` only fetches from our store** (`blobPaths().isIncoming`: our host, `incoming/`, written exactly as Blob writes URLs). It never fetches an address someone sends it. It checks 5 MB again on the bytes, and the original is deleted whether the resize works or not.
+- **Not tied to a user:** an original's URL isn't bound to the account that uploaded it. The client chooses the pathname and doesn't know its user id, and the random suffix makes the URL unguessable for the day it exists. Turned down: sending the user id to the browser to put in the path.
+- **`owns()`** accepts only `https://<store>.public.blob.vercel-storage.com/capturi/<uuid>.webp`, with no query, fragment or `..` (`blob-paths.test.ts`). Profile pictures share `capturi/`, as they share the local adapter's folder.
+- **Blob on Vercel only; the local adapter off it, token or not.** The store is connected for Production and Preview, and refuses a local machine's writes ("OIDC is enabled for this project, but not for the development environment"). Local work also never writes into the store production uses.
+- **Files are immutable:** each upload gets a new name, so `cacheControlMaxAge` is a year.
+- **The browser learns the adapter from the page** (`uploadVia`, passed from the three form pages to the forms and pickers), not by trying one route and falling back.
+- **Tried on PR #3's preview** with a new password account: two screenshots (one a 4.8 MB png, past the 4.5 MB body cap), saved in a project, shown on its page, then a profile picture (900×600 jpg → 400×400 webp) on the profile. Afterwards the store held the three webp files and nothing under `incoming/`. Locally, the same flow ran through the local adapter.
+- **Found: previews share production's database.** The test account ("Test Blob", `/u/test-blob`) and its project in progress ("Blob 64989") are on production now, along with their three pictures. The agent wasn't allowed to delete production rows; they're listed in NEXT-ACTIONS.
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.
 
 - **Resend:** one test send. Does DKIM cover the `List-Unsubscribe` headers? Do ă/â/î/ș/ț render correctly in Gmail, Outlook and Apple Mail? Set `lang="ro"`, add a UTF-8 charset meta, and send a text part.
-- **sharp:** confirm memory and time for a 5 MB image on a preview deploy.
-- **Neon previews:** do preview database URLs exist at build time, so migrations can run? Do preview branches reset on later pushes?
+- **sharp:** confirm memory and time for a 5 MB image on a preview deploy. _Checked 2026-11-17 on PR #3's preview: a 4.8 MB noisy png (the worst case for its size) went up and came back as a 1.1 MB webp in one ordinary request; time and memory weren't measured._
+- **Neon previews:** do preview database URLs exist at build time, so migrations can run? Do preview branches reset on later pushes? _Found 2026-11-17: there are no preview branches. A new account made on a preview showed up on production, and `DATABASE_URL` is one variable for all three environments. See "Blob adapter" and NEXT-ACTIONS._
 - **Base UI:** confirm `role="alertdialog"` and the focus trap in the leave-challenge confirm (screen 08). That confirm has no reference design, so record its copy and backdrop here. _Checked locally on 2026-11-14 with Base UI 1.9: `role="alertdialog"`, labelled and described, the focus trapped (Tab and Shift+Tab), and Escape returning the focus to the trigger. Copy and backdrop are in "Screen 08 build". Check once more on a preview deploy._

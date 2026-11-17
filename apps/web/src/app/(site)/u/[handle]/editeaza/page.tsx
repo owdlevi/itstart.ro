@@ -7,6 +7,7 @@ import { ProfileForm } from "@/components/profile-form";
 import { toProfileFields } from "@/lib/schemas/profile";
 import { core } from "@/server/core";
 import { getSession } from "@/server/session";
+import { uploadVia } from "@/server/storage";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("profile.form");
@@ -52,6 +53,7 @@ export default async function EditProfileRoute({
             </h1>
             <p className="text-muted">{t("lead")}</p>
             <ProfileForm
+              uploadVia={uploadVia}
               person={{ id: profile.id, avatarFill: profile.avatarFill }}
               handle={profile.handle}
               defaults={toProfileFields(profile.input)}
