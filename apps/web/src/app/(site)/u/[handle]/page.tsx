@@ -80,14 +80,19 @@ export default async function ProfilePage({
               <ProjectCard
                 key={project.id}
                 project={project}
-                // M2: a recognition replaces the month ("Provocarea #3 · Alegerea juriului").
+                // A recognition replaces the month ("Provocarea #3 · Alegerea juriului").
                 meta={
-                  project.challenge
-                    ? t("projects.challenge", {
+                  project.challenge && project.recognition
+                    ? t("projects.recognition", {
                         number: project.challenge.number,
-                        month: month(project.challenge.startsAt),
+                        kind: project.recognition,
                       })
-                    : t("projects.own")
+                    : project.challenge
+                      ? t("projects.challenge", {
+                          number: project.challenge.number,
+                          month: month(project.challenge.startsAt),
+                        })
+                      : t("projects.own")
                 }
                 vote={
                   <ProjectVote

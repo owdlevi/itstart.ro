@@ -396,6 +396,7 @@
       "title": "Proiecte lansate",
       "empty": "Niciun proiect lansat încă.",
       "challenge": "Provocarea #{number} · {month}",
+      "recognition": "Provocarea #{number} · {kind, select, community {Alegerea comunității} jury {Alegerea juriului} other {Cel mai bun prim proiect}}",
       "own": "Proiect propriu"
     },
     "challenges": {

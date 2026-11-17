@@ -15,6 +15,7 @@ import {
   challenges,
   projects,
   projectUpdates,
+  recognitions,
   reviewAssignments,
   reviews,
   users,
@@ -138,6 +139,8 @@ export type ProfileProject = ProjectSummary & {
     title: string;
     startsAt: Date;
   } | null;
+  /** The recognition it got in its challenge, if any (screen 05's footer). */
+  recognition: "community" | "jury" | "first_project" | null;
 };
 
 /** A launched project in an ended challenge's results (screen 11). */
@@ -555,7 +558,25 @@ export function createProjects(deps: {
         orderBy: [desc(at), desc(projects.id)],
         viewerId,
       });
-      return rows.map(({ at, ...p }) => ({ ...p, launchedAt: at }));
+      const given = rows.length
+        ? await db
+            .select({
+              projectId: recognitions.projectId,
+              kind: recognitions.kind,
+            })
+            .from(recognitions)
+            .where(
+              inArray(
+                recognitions.projectId,
+                rows.map((r) => r.id),
+              ),
+            )
+        : [];
+      return rows.map(({ at, ...p }) => ({
+        ...p,
+        launchedAt: at,
+        recognition: given.find((g) => g.projectId === p.id)?.kind ?? null,
+      }));
     },
 
     board: ({ scope, stage, sort, tool, viewerId, agents }) =>

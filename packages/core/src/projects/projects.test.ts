@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { votes } from "@repo/db";
+import { recognitions, votes } from "@repo/db";
 import { createTestDb } from "@repo/db/testing";
 import {
   addExtra,
@@ -407,6 +407,31 @@ describe("projects.board", () => {
 
     expect(hidden.map((p) => p.name)).toEqual(["Om"]);
     expect(await projects.board(opts)).toHaveLength(2);
+  });
+});
+
+describe("projects.launchedBy", () => {
+  test("names the recognition each project got", async () => {
+    const { db, projects, challenge, owner, make } = await setup();
+    const recognized = await make({ name: "Recunoscut" });
+    await make({ name: "Altul" });
+    await db.insert(recognitions).values({
+      challengeId: challenge.id,
+      kind: "jury",
+      projectId: recognized.id,
+      reason: "Curat.",
+    });
+
+    const list = await projects.launchedBy(owner.id);
+
+    expect(
+      list
+        .map((p) => [p.name, p.recognition])
+        .sort(([a], [b]) => (a! < b! ? -1 : 1)),
+    ).toEqual([
+      ["Altul", null],
+      ["Recunoscut", "jury"],
+    ]);
   });
 });
 
