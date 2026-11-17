@@ -231,6 +231,60 @@
       }
     }
   },
+  "questions": {
+    "metaTitle": "Întrebări și ajutor · {title}",
+    "section": {
+      "title": "Întrebări și ajutor · {n}",
+      "titleEmpty": "Întrebări și ajutor",
+      "all": "Vezi toate",
+      "none": "Nicio întrebare încă. Dacă te-ai blocat, întreabă aici."
+    },
+    "row": {
+      "answers": "{n, plural, one {# răspuns} few {# răspunsuri} other {# de răspunsuri}}",
+      "solved": "Rezolvat"
+    },
+    "list": {
+      "title": "Întrebări și ajutor",
+      "lead": "Provocarea #{number}: {title}. Întreabă dacă te-ai blocat, răspunde dacă știi.",
+      "back": "Înapoi la provocare",
+      "closed": "Provocarea s-a încheiat. Întrebările rămân aici de citit."
+    },
+    "ask": {
+      "button": "Pune o întrebare",
+      "title": "Întrebarea ta",
+      "titleHint": "O frază, cel mult {max} de caractere.",
+      "body": "Detalii",
+      "optional": "(opțional)",
+      "bodyHint": "Ce ai încercat și ce n-a mers.",
+      "send": "Trimite întrebarea",
+      "cancel": "Renunță"
+    },
+    "page": {
+      "eyebrow": "Provocarea #{number} · Întrebări",
+      "back": "Toate întrebările",
+      "asked": "{name} a întrebat {when}",
+      "answersTitle": "{n, plural, =0 {Niciun răspuns încă} one {Un răspuns} few {# răspunsuri} other {# de răspunsuri}}",
+      "solution": "Soluția",
+      "markSolution": "Asta a rezolvat-o",
+      "unmarkSolution": "Nu mai e soluția",
+      "solutionHint": "Ai primit răspunsul care te-a ajutat? Marchează-l, ca să-l găsească și ceilalți.",
+      "answer": "Răspunsul tău",
+      "send": "Trimite răspunsul",
+      "sent": "Răspunsul tău e publicat.",
+      "signIn": "Intră ca să răspunzi",
+      "closed": "Provocarea s-a încheiat, așa că nu se mai pot da răspunsuri."
+    },
+    "errors": {
+      "title_empty": "Scrie întrebarea înainte să trimiți.",
+      "title_too_long": "Cel mult {max} de caractere.",
+      "body_too_long": "Cel mult {max} de caractere.",
+      "empty": "Scrie ceva înainte să trimiți.",
+      "too_long": "Cel mult {max} de caractere.",
+      "rate_limited": "Ai scris multe întrebări și răspunsuri în ultima oră. Mai încearcă puțin mai târziu.",
+      "closed": "Provocarea s-a încheiat între timp.",
+      "other": "Nu s-a trimis. Mai încearcă o dată."
+    }
+  },
   "archive": {
     "metaTitle": "Toate provocările",
     "title": "Provocări",

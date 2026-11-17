@@ -3,6 +3,7 @@ import { Check, Download } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
+import { AskEntry } from "@/components/ask-entry";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/button";
 import { Container } from "@/components/container";
@@ -12,6 +13,7 @@ import { JoinButton } from "@/components/join-button";
 import { LaunchRow } from "@/components/launch-row";
 import { LeaveChallenge } from "@/components/leave-challenge";
 import { ProjectVote } from "@/components/project-vote";
+import { QuestionRow } from "@/components/question-row";
 import { SectionHeading } from "@/components/section-heading";
 import { StatusChip } from "@/components/status-chip";
 import { flags } from "@/flags";
@@ -29,6 +31,7 @@ const sideH2 = "font-sans text-base font-bold";
 const small = "text-sm text-muted";
 
 const LIST_LIMIT = 4;
+const QUESTIONS = 3;
 const AVATARS = 8;
 const NAMED = 3;
 const DAY = 86_400_000;
@@ -206,7 +209,9 @@ export default async function ChallengePage({
             </section>
           )}
 
-          {/* M2 (flags.questions): "Întrebări și ajutor" goes here. */}
+          {flags.questions && (
+            <Questions challenge={challenge} session={session} />
+          )}
 
           {launched.length > 0 && (
             <section className="flex flex-col gap-4">
@@ -266,6 +271,48 @@ export default async function ChallengePage({
         </div>
       </div>
     </Container>
+  );
+}
+
+/** "Întrebări și ajutor": the latest three, and asking. */
+async function Questions({
+  challenge,
+  session,
+}: {
+  challenge: Challenge;
+  session: Session | null;
+}) {
+  const [t, { questions, total }] = await Promise.all([
+    getTranslations("questions.section"),
+    core.questions.list(challenge.id, { limit: QUESTIONS }),
+  ]);
+  const href = `/provocari/${challenge.slug}/intrebari`;
+  return (
+    <section id="intrebari" className="flex scroll-mt-6 flex-col gap-4">
+      <SectionHeading
+        title={total > 0 ? t("title", { n: total }) : t("titleEmpty")}
+        link={total > 0 ? { href, label: t("all") } : undefined}
+      />
+      {questions.length > 0 ? (
+        <ul className="flex flex-col gap-2.5">
+          {questions.map((question) => (
+            <QuestionRow
+              key={question.id}
+              question={question}
+              href={`${href}/${question.slug}`}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="text-muted">{t("none")}</p>
+      )}
+      <AskEntry
+        challengeId={challenge.id}
+        challengeSlug={challenge.slug}
+        session={session}
+        returnTo={`/provocari/${challenge.slug}#intrebari`}
+      />
+    </section>
   );
 }
 
@@ -465,9 +512,7 @@ async function Steps({
               aria-hidden
               className={cn(
                 "inline-flex size-[22px] flex-none items-center justify-center rounded-full",
-                done
-                  ? "bg-primary text-on-primary"
-                  : "border-2 border-border",
+                done ? "bg-primary text-on-primary" : "border-2 border-border",
               )}
             >
               {done && (
