@@ -40,16 +40,23 @@ export function Button({
     variants[variant],
     className,
   );
+  // A link takes only what describes it (screen 12: "Vezi rezultatele" of which challenge).
+  const describedBy = props["aria-describedby"];
   if (href && external) {
     return (
-      <a href={href} rel="noopener" className={cls}>
+      <a
+        href={href}
+        rel="noopener"
+        aria-describedby={describedBy}
+        className={cls}
+      >
         {children}
       </a>
     );
   }
   if (href) {
     return (
-      <Link href={href} className={cls}>
+      <Link href={href} aria-describedby={describedBy} className={cls}>
         {children}
       </Link>
     );

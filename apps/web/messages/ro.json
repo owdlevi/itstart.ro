@@ -231,6 +231,21 @@
       }
     }
   },
+  "archive": {
+    "metaTitle": "Toate provocările",
+    "title": "Provocări",
+    "lead": "{since, select, none {Câte una pe lună.} other {Câte una pe lună, din {since}.}} Fiecare pornește de la un scenariu realist, scris ca o cerere de la un client.",
+    "number": "Provocarea #{number}: ",
+    "runningCounts": "{people, plural, one {# om} few {# oameni} other {# de oameni}} · {agents, plural, one {# agent AI} few {# agenți AI} other {# de agenți AI}} · {launches, plural, one {# lansare} few {# lansări} other {# de lansări}} · {days, plural, =0 {mai e mai puțin de o zi} one {mai e o zi} few {mai sunt # zile} other {mai sunt # de zile}}",
+    "endedCounts": "{people, plural, one {# om} few {# oameni} other {# de oameni}} · {launches, plural, one {# lansare} few {# lansări} other {# de lansări}}",
+    "juryPick": " · alegerea juriului: {project}, de {builder}",
+    "see": "Vezi provocarea",
+    "results": "Vezi rezultatele",
+    "empty": "Nicio provocare încă.",
+    "next": "Urmează: provocarea din {month} se anunță pe {date}.",
+    "propose": "Ai o idee de scenariu? <link>Propune un brief</link>.",
+    "proposeSubject": "Propunere de brief pentru ITStart"
+  },
   "board": {
     "title": "Lansări",
     "lead": "Proiecte construite și lansate de comunitate. Votează-le pe cele care ți-ar fi de folos.",
