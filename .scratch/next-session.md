@@ -36,8 +36,8 @@ Read first: `AGENTS.md` and every doc it points to, and `docs/NEXT-ACTIONS.md` a
 
 ## State on 2026-11-17
 
-Branches, all local:
-- `screen-01-groundwork`: CI, next-intl, sessions, the shell and components, screen 01. I'm pushing it by hand (the `gh` token lacks the `workflow` scope). Local `main` was fast-forwarded to it by mistake; don't push `main`.
+Branches (no Vercel project exists for ITStart yet; only `main` is on GitHub):
+- `screen-01-groundwork`: CI, next-intl, sessions, the shell and components, screen 01. It's on GitHub's `main` (`owdlevi/itstart.ro`), and CI passed there. Everything after it is local only. Don't push anything unless I ask; I'll decide how the stack goes up (NEXT-ACTIONS, "Push the rest").
 - `screen-02-provocare` (02, 03) → `screen-04-proiect` (04) → … → `screen-10-lansat` (10) → `admin-challenges` → `profile-edit` → `m1-pass` → `screen-11-incheiata`, each branched from the one before. Work on a new branch from `screen-11-incheiata`: `blob` first if part 1 runs, then `screen-12-provocari` from it.
 
 What `screen-11-incheiata` did (DECISIONS, "Screen 11 and recognitions"):
@@ -65,7 +65,7 @@ What `screen-11-incheiata` did (DECISIONS, "Screen 11 and recognitions"):
 
 ## Still waiting on me (NEXT-ACTIONS)
 
-Accounts only: `gh` scopes and branch protection, the Blob store, Neon, Vercel, Resend, the Google and GitHub OAuth apps, the first real admin, and the legal pages' content. Also a look over screen 11's calls (nothing waits on it), and #4's recognitions after 30 November.
+Accounts only: pushing the local stack and protecting `main`, the Blob store, Neon, Vercel, Resend, the Google and GitHub OAuth apps, the first real admin, and the legal pages' content. Also a look over screen 11's calls (nothing waits on it), and #4's recognitions after 30 November.
 
 ## How to work
 
