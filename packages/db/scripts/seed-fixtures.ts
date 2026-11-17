@@ -13,6 +13,7 @@ import {
   projectUpdates,
   reviewAssignments,
   projects,
+  recognitions,
   reviews,
   users,
   voteEvents,
@@ -57,7 +58,15 @@ type Fixtures = {
       agents?: number;
       launched: number;
       inProgress?: number;
+      reviews?: number;
     };
+    recognitions?: {
+      kind: "community" | "jury" | "first_project";
+      project: string;
+      reason: string;
+    }[];
+    bestAgentProject?: string;
+    humansAboveBestAgent?: number;
     agentStatus?: Record<string, string>;
   }[];
   projects: {
@@ -73,6 +82,7 @@ type Fixtures = {
     toolsAll?: string[];
     votes: number;
     reviewCount: number;
+    late?: boolean;
     updates?: { version: number; date: string; text: string }[];
     description?: string[];
     build?: { duration: string; hardestPart: string; prompt?: string };
@@ -207,7 +217,7 @@ await withDb((db) =>
   db.transaction(async (tx) => {
     if (reset) {
       await tx.execute(
-        sql`truncate ${users}, ${challenges}, ${participations}, ${projects}, ${projectUpdates}, ${votes}, ${voteEvents}, ${reviews}, ${reviewAssignments}, ${fixtureCountExtras} cascade`,
+        sql`truncate ${users}, ${challenges}, ${participations}, ${projects}, ${projectUpdates}, ${votes}, ${voteEvents}, ${reviews}, ${reviewAssignments}, ${recognitions}, ${fixtureCountExtras} cascade`,
       );
     } else {
       const [existing] = await tx.select({ n: count() }).from(users);
@@ -256,6 +266,9 @@ await withDb((db) =>
     const isAgent = new Set(
       fixtures.users.filter((u) => u.isAgent).map((u) => u.handle),
     );
+
+    // A late launch: a day after its challenge's deadline (rule 7).
+    const LATE_BY = 86_400_000;
 
     const challengeRows = await tx
       .insert(challenges)
@@ -319,15 +332,20 @@ await withDb((db) =>
           buildHardestPart: p.build?.hardestPart ?? null,
           buildPrompt: p.build?.prompt ?? null,
           stage: p.stage,
-          // Past challenges' projects have no launch time in the fixtures: use their deadline.
+          // Past challenges' projects have no launch time in the fixtures: use
+          // their deadline, or a day after it for a late one.
           launchedAt:
             p.stage !== "launched"
               ? null
               : p.launchedAt
                 ? new Date(p.launchedAt)
                 : p.challenge
-                  ? deadline.get(p.challenge)!
+                  ? new Date(
+                      deadline.get(p.challenge)!.getTime() +
+                        (p.late ? LATE_BY : 0),
+                    )
                   : null,
+          isLate: p.late ?? false,
         })),
       )
       .returning({ id: projects.id });
@@ -518,6 +536,27 @@ await withDb((db) =>
         shown.inProgress,
         own.filter((p) => p.stage === "in_progress").length,
       );
+      // "386 păreri date": what the projects' own counts add up to, below.
+      extra(
+        id,
+        "reviews",
+        shown.reviews,
+        own.reduce((n, p) => n + p.reviewCount, 0),
+      );
+      // "27 de proiecte făcute de oameni au primit mai multe voturi…"
+      const best = own.find((p) => p.slug === c.bestAgentProject);
+      extra(
+        id,
+        "humans_above_agent",
+        best && c.humansAboveBestAgent,
+        own.filter(
+          (p) =>
+            best &&
+            p.stage === "launched" &&
+            !isAgent.has(p.owner) &&
+            p.votes > best.votes,
+        ).length,
+      );
     }
     for (const p of fixtures.projects) {
       const id = projectId.get(p.slug)!;
@@ -530,6 +569,18 @@ await withDb((db) =>
     }
     if (extras.length > 0) await tx.insert(fixtureCountExtras).values(extras);
 
+    const recognitionRows = fixtures.challenges.flatMap((c) =>
+      (c.recognitions ?? []).map((r) => ({
+        challengeId: challengeId.get(c.slug)!,
+        kind: r.kind,
+        projectId: projectId.get(r.project)!,
+        reason: r.reason,
+      })),
+    );
+    if (recognitionRows.length > 0) {
+      await tx.insert(recognitions).values(recognitionRows);
+    }
+
     // After the extras, so her join adds one to what the references show.
     await tx.insert(participations).values({
       userId: userId.get(JUST_JOINED.handle)!,
@@ -538,7 +589,7 @@ await withDb((db) =>
     });
 
     console.log(
-      `Seeded ${userRows.length} users (admin: ${ADMIN.handle}), ${challengeRows.length} challenges, ${participationRows.length + 1} participations, ${projectRows.length} projects, ${updateRows.length} project updates, ${voteRows.length} votes, ${reviewCount} reviews, ${assignmentRows.length} review assignments, ${extras.length} fixture count extras.`,
+      `Seeded ${userRows.length} users (admin: ${ADMIN.handle}), ${challengeRows.length} challenges, ${participationRows.length + 1} participations, ${projectRows.length} projects, ${updateRows.length} project updates, ${voteRows.length} votes, ${reviewCount} reviews, ${assignmentRows.length} review assignments, ${recognitionRows.length} recognitions, ${extras.length} fixture count extras.`,
     );
   }),
 );
