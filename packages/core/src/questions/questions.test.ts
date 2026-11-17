@@ -75,6 +75,17 @@ describe("questions.ask", () => {
     });
   });
 
+  test("keeps up to 60 characters of the title in the slug", async () => {
+    const s = await setup();
+    const { slug } = await asked(
+      s,
+      "Cum fac să nu se suprapună două programări în același minut?",
+    );
+    expect(slug).toBe(
+      "cum-fac-sa-nu-se-suprapuna-doua-programari-in-acelasi-minut",
+    );
+  });
+
   test("trims the title and details and refuses them empty or too long", async () => {
     const s = await setup();
     const input = { authorId: s.asker.id, challengeId: s.challenge.id };

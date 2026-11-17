@@ -5,14 +5,16 @@
 // go into fixture_count_extras (DECISIONS, "Fixture counts").
 // Refuses a database that already has users, unless --reset (which empties it).
 import { readFileSync } from "node:fs";
-import { count, sql } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
 import {
+  answers,
   challenges,
   fixtureCountExtras,
   participations,
   projectUpdates,
   reviewAssignments,
   projects,
+  questions,
   recognitions,
   reviews,
   users,
@@ -59,6 +61,7 @@ type Fixtures = {
       launched: number;
       inProgress?: number;
       reviews?: number;
+      questions?: number;
     };
     recognitions?: {
       kind: "community" | "jury" | "first_project";
@@ -99,6 +102,10 @@ type Fixtures = {
     }[]
   >;
   reviewAssignments: Record<string, string[]>;
+  questions: Record<
+    string,
+    { title: string; author: string; answers: number; solved: boolean }[]
+  >;
 };
 
 // Not in fixtures.json, so it can't change what any reference screen shows.
@@ -231,6 +238,105 @@ const JURY_PICKS: {
   },
 ];
 
+// What the questions on screens 02 and 08 hold beyond fixtures.json's titles,
+// authors and counts: the details, when they were asked, and the answers, so
+// each question's page has something to show. `solution` marks the answer the
+// asker picked. Times put the rows in the reference's order (latest activity
+// first) and after Bianca's account (11 November).
+const QUESTION_THREADS: Record<
+  string,
+  {
+    slug: string;
+    at: string;
+    body: string;
+    answers: { author: string; at: string; body: string; solution?: true }[];
+  }
+> = {
+  "Cum trimit SMS fără să plătesc?": {
+    slug: "cum-trimit-sms-fara-sa-platesc",
+    at: "2026-11-10T20:05:00+02:00",
+    body: "Vreau ca Nea Gică să primească un SMS la fiecare programare nouă. Twilio cere card de la început. Există ceva gratuit pentru o lună de test?",
+    answers: [
+      {
+        author: "ioana-muresan",
+        at: "2026-11-10T20:40:00+02:00",
+        body: "Twilio are cont de test cu credit gratuit, dar trimite doar la numere verificate. Pentru demo e destul: verifici numărul tău și pe al lui Nea Gică.",
+        solution: true,
+      },
+      {
+        author: "kovacs-reka",
+        at: "2026-11-10T21:15:00+02:00",
+        body: "Eu am trimis e-mail în loc de SMS. Pentru brief e la fel de bine, și Resend sau Brevo au planuri gratuite.",
+      },
+      {
+        author: "szabo-attila",
+        at: "2026-11-10T22:02:00+02:00",
+        body: "Dacă ai un telefon Android vechi, sunt aplicații care trimit SMS prin el, cu un API mic. Merge, dar nu l-aș lăsa așa într-o frizerie adevărată.",
+      },
+      {
+        author: "mihai-dumitrescu",
+        at: "2026-11-11T07:30:00+02:00",
+        body: "Atenție la diacritice: un SMS cu ș și ț trece pe alt set de caractere și încap mai puține litere în el.",
+      },
+    ],
+  },
+  "Supabase sau Firebase pentru programări?": {
+    slug: "supabase-sau-firebase-pentru-programari",
+    at: "2026-11-11T06:10:00+02:00",
+    body: "N-am mai folosit niciuna. Am nevoie de o listă de programări și de un login pentru frizer. Ce e mai simplu de pus pe picioare cu AI?",
+    answers: [
+      {
+        author: "andrei-popescu",
+        at: "2026-11-11T06:22:00+02:00",
+        body: "Supabase. E Postgres, iar Claude și Cursor scriu SQL foarte bine. Programările sunt un tabel cu oră de început și de sfârșit.",
+      },
+      {
+        author: "ioana-muresan",
+        at: "2026-11-11T06:31:00+02:00",
+        body: "Tot Supabase. Login-ul pentru frizer îl ai gata, și poți pune o regulă ca doar el să vadă lista.",
+      },
+      {
+        author: "elena-stan",
+        at: "2026-11-11T06:40:00+02:00",
+        body: "Am făcut #2 cu Firebase și a mers, dar căutările după dată au fost mai greu de scris. Pentru programări aș alege Supabase.",
+      },
+      {
+        author: "vlad-ionescu",
+        at: "2026-11-11T06:52:00+02:00",
+        body: "Dacă folosești Lovable, are Supabase legat din start. Nu mai configurezi nimic.",
+      },
+      {
+        author: "kovacs-reka",
+        at: "2026-11-11T07:05:00+02:00",
+        body: "Oricare, sincer. Contează mai mult să pornești azi decât să alegi perfect.",
+      },
+      {
+        author: "szabo-attila",
+        at: "2026-11-11T07:20:00+02:00",
+        body: "Supabase, și ține fusul orar în minte: salvează orele în UTC și afișează-le în ora României.",
+      },
+    ],
+  },
+  "Cum fac să nu se suprapună două programări?": {
+    slug: "cum-fac-sa-nu-se-suprapuna-doua-programari",
+    at: "2026-11-08T18:30:00+02:00",
+    body: "Dacă doi clienți apasă în același timp pe 10:00, amândoi primesc confirmare. Cum opresc asta?",
+    answers: [
+      {
+        author: "ioana-muresan",
+        at: "2026-11-08T19:10:00+02:00",
+        body: "Verifică din nou pe server înainte să salvezi, nu doar în pagină. Pagina poate fi veche de câteva secunde.",
+      },
+      {
+        author: "andrei-popescu",
+        at: "2026-11-09T09:45:00+02:00",
+        body: "Pune o constrângere unică în baza de date pe frizer și ora de început. A doua programare e refuzată acolo, oricât de repede ar apăsa amândoi.",
+        solution: true,
+      },
+    ],
+  },
+};
+
 if (process.env.VERCEL_ENV === "production") {
   console.error("Refusing to seed design fixtures into production.");
   process.exit(1);
@@ -265,7 +371,7 @@ await withDb((db) =>
   db.transaction(async (tx) => {
     if (reset) {
       await tx.execute(
-        sql`truncate ${users}, ${challenges}, ${participations}, ${projects}, ${projectUpdates}, ${votes}, ${voteEvents}, ${reviews}, ${reviewAssignments}, ${recognitions}, ${fixtureCountExtras} cascade`,
+        sql`truncate ${users}, ${challenges}, ${participations}, ${projects}, ${projectUpdates}, ${votes}, ${voteEvents}, ${reviews}, ${reviewAssignments}, ${recognitions}, ${questions}, ${answers}, ${fixtureCountExtras} cascade`,
       );
     } else {
       const [existing] = await tx.select({ n: count() }).from(users);
@@ -472,6 +578,53 @@ await withDb((db) =>
       }
     }
 
+    // Questions with their answers; the solution is set once its answer exists.
+    let answerCount = 0;
+    const questionRows: { id: string; shown: number; rows: number }[] = [];
+    for (const [slug, list] of Object.entries(fixtures.questions)) {
+      for (const q of list) {
+        const thread = QUESTION_THREADS[q.title];
+        if (!thread) throw new Error(`No thread for "${q.title}"`);
+        const [question] = await tx
+          .insert(questions)
+          .values({
+            challengeId: challengeId.get(slug)!,
+            authorId: userId.get(q.author)!,
+            slug: thread.slug,
+            title: q.title,
+            body: thread.body,
+            createdAt: new Date(thread.at),
+          })
+          .returning({ id: questions.id });
+        for (const a of thread.answers) {
+          const [answer] = await tx
+            .insert(answers)
+            .values({
+              questionId: question!.id,
+              authorId: userId.get(a.author)!,
+              body: a.body,
+              createdAt: new Date(a.at),
+            })
+            .returning({ id: answers.id });
+          if (a.solution) {
+            await tx
+              .update(questions)
+              .set({ solvedAnswerId: answer!.id })
+              .where(eq(questions.id, question!.id));
+          }
+          answerCount++;
+        }
+        if (q.solved !== thread.answers.some((a) => a.solution)) {
+          throw new Error(`"${q.title}": solved doesn't match the fixtures`);
+        }
+        questionRows.push({
+          id: question!.id,
+          shown: q.answers,
+          rows: thread.answers.length,
+        });
+      }
+    }
+
     // Assigned when the reviewer launched, a second apart so screen 10 lists
     // them in fixture order; none is done yet ("0 din 2").
     const assignmentRows = Object.entries(fixtures.reviewAssignments).flatMap(
@@ -591,6 +744,13 @@ await withDb((db) =>
         shown.reviews,
         own.reduce((n, p) => n + p.reviewCount, 0),
       );
+      // "Întrebări și ajutor · 14"
+      extra(
+        id,
+        "questions",
+        shown.questions,
+        fixtures.questions[c.slug]?.length ?? 0,
+      );
       // "27 de proiecte făcute de oameni au primit mai multe voturi…"
       const best = own.find((p) => p.slug === c.bestAgentProject);
       extra(
@@ -615,6 +775,7 @@ await withDb((db) =>
       if (p.stage === "launched") extra(id, "votes", p.votes, voters);
       extra(id, "reviews", p.reviewCount, humanReviews);
     }
+    for (const q of questionRows) extra(q.id, "answers", q.shown, q.rows);
     if (extras.length > 0) await tx.insert(fixtureCountExtras).values(extras);
 
     const recognitionRows = fixtures.challenges.flatMap((c) =>
@@ -637,7 +798,7 @@ await withDb((db) =>
     });
 
     console.log(
-      `Seeded ${userRows.length} users (admin: ${ADMIN.handle}), ${challengeRows.length} challenges, ${participationRows.length + 1} participations, ${projectRows.length} projects, ${updateRows.length} project updates, ${voteRows.length} votes, ${reviewCount} reviews, ${assignmentRows.length} review assignments, ${recognitionRows.length} recognitions, ${extras.length} fixture count extras.`,
+      `Seeded ${userRows.length} users (admin: ${ADMIN.handle}), ${challengeRows.length} challenges, ${participationRows.length + 1} participations, ${projectRows.length} projects, ${updateRows.length} project updates, ${voteRows.length} votes, ${reviewCount} reviews, ${assignmentRows.length} review assignments, ${recognitionRows.length} recognitions, ${questionRows.length} questions, ${answerCount} answers, ${extras.length} fixture count extras.`,
     );
   }),
 );

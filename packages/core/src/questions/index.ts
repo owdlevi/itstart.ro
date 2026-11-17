@@ -299,7 +299,8 @@ export function createQuestions(deps: {
         await tx.execute(
           sql`select pg_advisory_xact_lock(hashtext(${`questions:${challengeId}`}))`,
         );
-        const base = slugBase(heading, "intrebare");
+        // Longer than a handle's 40: titles are sentences.
+        const base = slugBase(heading, "intrebare", 60);
         const taken = await tx
           .select({ slug: questions.slug })
           .from(questions)
