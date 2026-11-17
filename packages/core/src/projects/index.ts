@@ -140,6 +140,13 @@ export type ProfileProject = ProjectSummary & {
   } | null;
 };
 
+/** A launched project in an ended challenge's results (screen 11). */
+export type ResultProject = ProjectSummary & {
+  /** Launched after the deadline: "După termen", out of the recognitions (rule 7). */
+  isLate: boolean;
+  launchedAt: Date;
+};
+
 /** One of the projects a builder was asked to review (rule 16). */
 export type AssignedProject = ProjectSummary & {
   /** False once its challenge's deadline has passed (rule 3). */
@@ -176,6 +183,11 @@ type ListOpts = {
 export type Projects = {
   /** A challenge's launched projects with the most votes, most votes first. */
   mostVoted(opts: ListOpts): Promise<ProjectSummary[]>;
+  /**
+   * Every launched project in a challenge, most votes first, then earliest
+   * launch: the results of an ended challenge (screen 11).
+   */
+  launchedIn(opts: Omit<ListOpts, "limit">): Promise<ResultProject[]>;
   /** A challenge's projects "În lucru", most recently updated first. */
   inProgress(opts: ListOpts): Promise<ProjectSummary[]>;
   /**
@@ -282,6 +294,7 @@ export function createProjects(deps: {
         tools: projects.tools,
         screenshots: projects.screenshots,
         stage: projects.stage,
+        isLate: projects.isLate,
         owner: {
           id: users.id,
           handle: users.handle,
@@ -350,6 +363,24 @@ export function createProjects(deps: {
     mostVoted: (opts) =>
       list(opts, "launched", [desc(voteCount), desc(projects.launchedAt)]),
     inProgress: (opts) => list(opts, "in_progress", [desc(lastActive)]),
+
+    launchedIn: async ({ challengeId, viewerId, agents }) => {
+      const rows = await select({
+        where: [
+          eq(projects.challengeId, challengeId),
+          eq(projects.stage, "launched"),
+        ],
+        orderBy: [desc(voteCount), asc(at), asc(projects.id)],
+        viewerId,
+        agents,
+      });
+      return rows.map(
+        ({ at, votingOpen: _open, challenge: _challenge, ...p }) => ({
+          ...p,
+          launchedAt: at,
+        }),
+      );
+    },
 
     bySlug: async (slug, viewerId) => {
       const [row] = await select({

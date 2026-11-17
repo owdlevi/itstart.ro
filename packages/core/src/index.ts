@@ -3,6 +3,7 @@ import { createAdmins } from "./admins";
 import { createChallenges } from "./challenges";
 import { createProfiles } from "./profiles";
 import { createProjects } from "./projects";
+import { createRecognitions } from "./recognitions";
 import { createReviews } from "./reviews";
 import { createSignIn } from "./sign-in";
 import type { LinkChecker } from "./link-checker";
@@ -35,6 +36,7 @@ export function createCore(deps: CoreDeps) {
       storage: deps.storage,
     }),
     projects,
+    recognitions: createRecognitions({ db: deps.db, now, projects }),
     reviews: createReviews({ db: deps.db, now }),
     signIn: createSignIn({ db: deps.db, now }),
     votes: createVotes({ db: deps.db, now }),
@@ -115,7 +117,20 @@ export type {
   ProjectSummary,
   ProjectUpdate,
   Projects,
+  ResultProject,
 } from "./projects";
+export {
+  RECOGNITION_KINDS,
+  RECOGNITION_REASON_MAX,
+  type ChallengeResults,
+  type RecognitionCandidate,
+  type RecognitionEditor,
+  type RecognitionEntry,
+  type RecognitionKind,
+  type RecognitionProblem,
+  type RecognitionSaveResult,
+  type Recognitions,
+} from "./recognitions";
 export type {
   Review,
   ReviewAuthor,
