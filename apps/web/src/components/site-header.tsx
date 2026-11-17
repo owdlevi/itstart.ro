@@ -23,7 +23,8 @@ export async function SiteHeader() {
       href: challenge ? `/provocari/${challenge.slug}` : "/provocari",
       label: t("nav.challenge"),
     },
-    { href: "/lansari", label: t("nav.launches") },
+    // A project page belongs to the board (screen 04 shows "Lansări" current).
+    { href: "/lansari", label: t("nav.launches"), also: ["/proiecte", "/lanseaza"] },
   ];
   const nav = (className: string, linkClassName?: string) => (
     <NavLinks
@@ -41,9 +42,15 @@ export async function SiteHeader() {
         {t("launchProject")}
       </Button>
       <Link
-        // No handle until onboarding finishes.
-        href={user.handle ? `/u/${user.handle}` : "/bun-venit"}
-        aria-label={t("profileLabel", { name: user.name })}
+        // Until onboarding is done there's no profile, and maybe no name yet.
+        href={
+          user.onboardedAt && user.handle ? `/u/${user.handle}` : "/bun-venit"
+        }
+        aria-label={
+          user.onboardedAt
+            ? t("profileLabel", { name: user.name })
+            : t("finishProfile")
+        }
         className="inline-flex size-11 items-center justify-center rounded-full no-underline"
       >
         <Avatar
@@ -81,6 +88,26 @@ export async function SiteHeader() {
           {right}
         </div>
         {nav("flex gap-2 pb-2 md:hidden", "flex-1")}
+      </Container>
+    </header>
+  );
+}
+
+/** The wordmark alone, for sign-in and onboarding (screens 06 and 07). */
+export async function BareHeader() {
+  const t = await getTranslations("shell");
+  return (
+    <header className="border-b border-line bg-surface">
+      <Container>
+        <div className="flex min-h-14 items-center md:min-h-[72px]">
+          <Link
+            href="/"
+            aria-label={t("homeLabel")}
+            className="inline-flex min-h-11 items-center no-underline"
+          >
+            <Wordmark className="text-[24px] md:text-[26px]" />
+          </Link>
+        </div>
       </Container>
     </header>
   );

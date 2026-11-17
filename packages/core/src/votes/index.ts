@@ -8,6 +8,18 @@ import {
   type Db,
 } from "@repo/db";
 import { withExtra } from "../counts";
+import { createVoteTimeline, type VoteTimelines } from "./timeline";
+
+export {
+  burstFlags,
+  TIMELINE,
+  type ProjectVoteActivity,
+  type TimelineSubject,
+  type VoteActivity,
+  type VoteEventRow,
+  type VoteTimeline,
+  type VoterActivity,
+} from "./timeline";
 
 export type VoteRefusal =
   | "not_found"
@@ -39,7 +51,7 @@ export type Votes = {
    * Throws only if `userId` does not exist, which means a broken session.
    */
   toggle(userId: string, projectId: string): Promise<VoteResult>;
-};
+} & VoteTimelines;
 
 const HOUR = 3_600_000;
 const MINUTE = 60_000;
@@ -53,6 +65,7 @@ export function createVotes(deps: {
   const config = deps.config ?? defaultVotesConfig;
 
   return {
+    ...createVoteTimeline({ db, now }),
     toggle: (userId, projectId) =>
       db.transaction(async (tx) => {
         const at = now();

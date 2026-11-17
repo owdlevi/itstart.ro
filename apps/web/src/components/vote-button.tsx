@@ -2,7 +2,7 @@
 
 import { ArrowUp, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toggleVote } from "@/app/actions/votes";
 import { cn } from "@/lib/utils";
@@ -29,7 +29,6 @@ export function VoteButton({
 }: VoteButtonProps) {
   const t = useTranslations("vote");
   const router = useRouter();
-  const pathname = usePathname();
   const [state, setState] = useState({
     count: initialCount,
     voted: signedIn && initialVoted,
@@ -37,9 +36,15 @@ export function VoteButton({
   const [message, setMessage] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
+  // Back to this exact page after sign-in, query included (a filtered board).
+  const signIn = () =>
+    router.push(
+      `/intra?next=${encodeURIComponent(location.pathname + location.search)}`,
+    );
+
   const onClick = () => {
     if (!signedIn) {
-      router.push(`/intra?next=${encodeURIComponent(pathname)}`);
+      signIn();
       return;
     }
     const before = state;
@@ -56,7 +61,7 @@ export function VoteButton({
       }
       setState(before);
       if (result.reason === "signed_out") {
-        router.push(`/intra?next=${encodeURIComponent(pathname)}`);
+        signIn();
         return;
       }
       setMessage(
@@ -71,7 +76,9 @@ export function VoteButton({
 
   const { count, voted } = state;
   return (
-    <span className="relative shrink-0">
+    // Wide, it may take a row of its own on a phone; capped there so a longer
+    // (Hungarian) label wraps instead of widening the page.
+    <span className={cn("relative shrink-0", wide && "max-w-full")}>
       <button
         type="button"
         aria-pressed={voted}
@@ -97,7 +104,9 @@ export function VoteButton({
       <span
         role="status"
         className={cn(
-          "absolute right-0 top-full z-10 mt-2 w-60 rounded-md border border-line bg-surface p-3 text-sm text-ink shadow-raised",
+          // Wide starts its row on phones, so there its message opens rightwards.
+          wide ? "left-0 md:left-auto md:right-0" : "right-0",
+          "absolute top-full z-10 mt-2 w-60 max-w-[calc(100vw-32px)] rounded-md border border-line bg-surface p-3 text-sm text-ink shadow-raised",
           !message && "sr-only",
         )}
       >
@@ -111,9 +120,12 @@ export function VoteButton({
 export function VoteCount({
   count,
   reason,
+  wide,
 }: {
   count: number;
   reason: "own" | "closed" | "wip";
+  /** The row shape, beside "Deschide proiectul" on the project page. */
+  wide?: boolean;
 }) {
   const t = useTranslations("vote");
   if (reason === "wip") {
@@ -121,9 +133,25 @@ export function VoteCount({
       <div
         role="img"
         aria-label={t("wip")}
-        className="flex min-h-[60px] w-14 shrink-0 items-center justify-center rounded-md bg-warning-bg text-center text-xs font-bold leading-[15px] text-warning-ink"
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-md bg-warning-bg text-center font-bold text-warning-ink",
+          wide
+            ? "min-h-12 px-5 leading-5"
+            : "min-h-[60px] w-14 text-xs leading-[15px]",
+        )}
       >
-        {t.rich("wipBox", { br: () => <br /> })}
+        {wide ? t("wideWip") : t.rich("wipBox", { br: () => <br /> })}
+      </div>
+    );
+  }
+  if (wide) {
+    return (
+      <div
+        role="img"
+        aria-label={t(reason, { count })}
+        className="flex min-h-12 shrink-0 items-center justify-center rounded-md bg-tint px-5 font-bold leading-5 tabular-nums"
+      >
+        {t("wideVotes", { count })}
       </div>
     );
   }
@@ -135,7 +163,7 @@ export function VoteCount({
     >
       <span className="font-bold leading-5">{count}</span>
       <span className="text-[11px] font-semibold leading-[14px] text-muted">
-        {t("votes")}
+        {t("votes", { count })}
       </span>
     </div>
   );

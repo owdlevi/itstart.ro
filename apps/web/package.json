@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint --max-warnings 0",
     "check-types": "next typegen && tsc --noEmit",
-    "auth:generate": "pnpm dlx auth@1.7.22 generate --config scripts/auth-generate.ts --output ../../packages/db/src/schema/auth.ts --yes && prettier --write ../../packages/db/src/schema/auth.ts"
+    "auth:generate": "pnpm dlx auth@1.7.22 generate --config scripts/auth-generate.ts --output ../../packages/db/src/schema/auth.ts --yes && prettier --write ../../packages/db/src/schema/auth.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
@@ -48,6 +49,7 @@
     "eslint": "10.9.1",
     "shadcn": "4.23.0",
     "tailwindcss": "4.3.5",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
   }
 }

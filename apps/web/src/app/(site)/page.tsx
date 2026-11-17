@@ -1,6 +1,5 @@
 import type { RunningChallenge } from "@repo/core";
 import { Clock } from "lucide-react";
-import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { Button } from "@/components/button";
 import { Container } from "@/components/container";
@@ -8,6 +7,7 @@ import { Countdown } from "@/components/countdown";
 import { LaunchRow } from "@/components/launch-row";
 import { ProjectCard } from "@/components/project-card";
 import { ProjectVote } from "@/components/project-vote";
+import { SectionHeading } from "@/components/section-heading";
 import { StatusChip } from "@/components/status-chip";
 import { getRunningChallenge } from "@/server/challenge";
 import { core, now } from "@/server/core";
@@ -145,7 +145,8 @@ export default async function HomePage() {
             title={t("top.title")}
             link={{ href: "/lansari", label: t("top.all") }}
           />
-          <div className="hidden grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-6 md:grid">
+          {/* auto-fill, not the reference's auto-fit: one or two cards keep a column's width. */}
+          <div className="hidden grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-6 md:grid">
             {top.map((project) => (
               <ProjectCard
                 key={project.id}
@@ -239,27 +240,5 @@ async function ChallengeCard({
         {t("readBrief")}
       </Button>
     </section>
-  );
-}
-
-function SectionHeading({
-  title,
-  link,
-}: {
-  title: string;
-  link?: { href: string; label: string };
-}) {
-  return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-      <h2 className={h2}>{title}</h2>
-      {link && (
-        <Link
-          href={link.href}
-          className="inline-flex min-h-11 items-center text-[15px] font-semibold"
-        >
-          {link.label}
-        </Link>
-      )}
-    </div>
   );
 }

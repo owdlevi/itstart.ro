@@ -6,7 +6,12 @@
   "exports": {
     ".": "./src/index.ts",
     "./challenges": "./src/challenges/index.ts",
+    "./challenge-rules": "./src/challenges/rules.ts",
+    "./profiles": "./src/profiles/index.ts",
+    "./profile-rules": "./src/profiles/rules.ts",
     "./projects": "./src/projects/index.ts",
+    "./project-rules": "./src/projects/rules.ts",
+    "./recognition-rules": "./src/recognitions/rules.ts",
     "./sign-in": "./src/sign-in/index.ts",
     "./votes": "./src/votes/index.ts"
   },

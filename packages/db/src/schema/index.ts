@@ -6,3 +6,4 @@ export * from "./projects";
 export * from "./votes";
 export * from "./reviews";
 export * from "./fixture-counts";
+export * from "./recognitions";

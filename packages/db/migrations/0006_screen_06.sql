@@ -1,0 +1,1 @@
+ALTER TABLE "challenges" ADD COLUMN "building_phrase" text;

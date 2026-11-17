@@ -11,8 +11,10 @@ export const fixtureCountMetric = pgEnum("fixture_count_metric", [
   "agents", // agents in a challenge
   "launched", // launched projects in a challenge
   "in_progress", // projects "În lucru" in a challenge
+  "launchers", // humans in a challenge with a launched project in it ("23 au lansat deja")
   "votes", // votes on a project
-  "reviews", // human reviews and replies on a project
+  "reviews", // human reviews and replies on a project, or in a challenge ("386 păreri date")
+  "humans_above_agent", // people's projects in a challenge with more votes than its best agent's
 ]);
 
 /**

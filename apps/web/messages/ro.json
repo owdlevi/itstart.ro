@@ -15,6 +15,7 @@
     "signInShort": "Intră",
     "launchProject": "Lansează un proiect",
     "profileLabel": "Profilul tău, {name}",
+    "finishProfile": "Termină-ți profilul",
     "footer": {
       "tagline": "Construiești. Lansezi. Rămâi cu ceva real.",
       "navLabel": "Subsol",
@@ -30,13 +31,13 @@
     "minutes": "{n, plural, one {minut} other {minute}}"
   },
   "vote": {
-    "vote": "Votează · {count} voturi",
-    "voted": "Ai votat · {count} voturi",
+    "vote": "Votează · {count, plural, one {# vot} other {# voturi}}",
+    "voted": "Ai votat · {count, plural, one {# vot} other {# voturi}}",
     "wideVote": "Votează · {count}",
     "wideVoted": "Ai votat · {count}",
-    "votes": "voturi",
-    "own": "{count} voturi · proiectul tău",
-    "closed": "{count} voturi · votul s-a încheiat",
+    "votes": "{count, plural, one {vot} other {voturi}}",
+    "own": "{count, plural, one {# vot} other {# voturi}} · proiectul tău",
+    "closed": "{count, plural, one {# vot} other {# voturi}} · votul s-a încheiat",
     "wip": "În lucru, încă nu intră la vot",
     "wipBox": "în<br></br>lucru",
     "refused": {
@@ -44,11 +45,14 @@
       "rate_limited": "Ai votat de multe ori în ultimele minute. Mai încearcă puțin mai târziu.",
       "closed": "Votul pentru această provocare s-a încheiat.",
       "other": "Votul nu a mers. Mai încearcă o dată."
-    }
+    },
+    "wideVotes": "{count, plural, one {# vot} other {# voturi}}",
+    "wideWip": "În lucru"
   },
   "project": {
     "comments": "{n, plural, one {# comentariu} few {# comentarii} other {# de comentarii}}",
-    "agentBadge": "Agent AI"
+    "agentBadge": "Agent AI",
+    "update": "v{version} · {days, plural, =0 {azi} =1 {ieri} one {acum # zi} few {acum # zile} other {acum # de zile}}: {text}"
   },
   "home": {
     "hero": {
@@ -107,6 +111,752 @@
       "title": "Luna asta construim pentru {builtFor}. Vii?",
       "text": "Nu trebuie să știi să programezi. Trebuie doar să începi.",
       "join": "Intră în provocare"
+    }
+  },
+  "challenge": {
+    "eyebrow": "Provocarea #{number} · {month}",
+    "status": {
+      "running": "În desfășurare",
+      "ended": "Încheiată",
+      "upcoming": "Începe pe {date}"
+    },
+    "allChallenges": "Toate provocările",
+    "brief": {
+      "title": "Brief-ul",
+      "baseLevel": "Nivelul de bază",
+      "stretch": "Dacă vrei mai mult",
+      "launchCriteria": "Ce înseamnă „lansat”",
+      "materials": "Descarcă materialele"
+    },
+    "tips": {
+      "title": "Construiește-l cu AI"
+    },
+    "launched": {
+      "title": "Proiecte lansate · {n}",
+      "all": "Vezi toate"
+    },
+    "inProgress": {
+      "title": "În lucru · {n}",
+      "all": "Vezi toate",
+      "text": "Pui linkul de îndată ce merge ceva și îl îmbunătățești la aceeași adresă. Primești păreri din mers. Când ești mulțumit, îl marchezi ca lansat și intră la vot."
+    },
+    "timeLeft": {
+      "title": "Timp rămas",
+      "deadline": "Termen: {date}, ora {time}. Poți lansa și după, dar în afara clasamentului.",
+      "join": "Intră în provocare",
+      "joinNote": "Durează un minut.",
+      "addProject": "Adaugă proiectul"
+    },
+    "steps": {
+      "title": "Pașii tăi",
+      "joined": "Te-ai înscris",
+      "posted": "Pune linkul când merge ceva",
+      "launched": "Marchează-l ca lansat până pe {date}",
+      "done": "{step} · făcut"
+    },
+    "participation": {
+      "chip": "Ești înscris/ă",
+      "joined": {
+        "greeting": "Ești în provocare, {name}.",
+        "greetingNoName": "Ești în provocare.",
+        "daysLeft": "{n, plural, =0 {Ai mai puțin de o zi să construiești și să lansezi.} one {Ai o zi să construiești și să lansezi.} few {Ai # zile să construiești și să lansezi.} other {Ai # de zile să construiești și să lansezi.}}",
+        "startsOn": "Începe pe {date}. Până atunci, citește brief-ul."
+      },
+      "left": "Ai ieșit din provocare. Proiectele tale rămân publice.",
+      "refused": {
+        "ended": "Provocarea s-a încheiat între timp.",
+        "other": "Nu a mers. Mai încearcă o dată."
+      },
+      "leave": {
+        "button": "Renunță la provocare",
+        "title": "Renunți la provocare?",
+        "text": "Ieși din lista participanților. Proiectele tale rămân publice, iar până la termen poți intra din nou oricând.",
+        "stay": "Rămân",
+        "confirm": "Da, renunț",
+        "ended": "Provocarea s-a încheiat între timp.",
+        "failed": "Nu a mers. Mai încearcă o dată."
+      }
+    },
+    "people": {
+      "title": "{n, plural, one {# om construiește} few {# oameni construiesc} other {# de oameni construiesc}}",
+      "avatarsLabel": "Câțiva dintre participanți",
+      "you": "Tu",
+      "more": "încă {n}",
+      "launchers": "{n, plural, =0 {Nimeni n-a lansat încă.} one {# a lansat deja.} other {# au lansat deja.}}"
+    },
+    "recognitions": {
+      "title": "Trei recunoașteri la final",
+      "community": {
+        "name": "Alegerea comunității.",
+        "text": "Cele mai multe voturi."
+      },
+      "jury": {
+        "name": "Alegerea juriului.",
+        "text": "Echipa ITStart și doi invitați, după criterii publice."
+      },
+      "firstProject": {
+        "name": "Cel mai bun prim proiect.",
+        "text": "Pentru cine lansează prima dată."
+      },
+      "note": "Votul se închide odată cu provocarea."
+    },
+    "ended": {
+      "lead": "Provocarea s-a încheiat pe {date}. Votul e închis, proiectele rămân.",
+      "stats": {
+        "participants": "{n, plural, one {s-a înscris} other {s-au înscris}}",
+        "launched": "{n, plural, one {a lansat} other {au lansat}}",
+        "reviews": "{n, plural, one {părere dată} other {păreri date}}"
+      },
+      "recognitions": {
+        "title": "Trei recunoașteri",
+        "community": "Alegerea comunității",
+        "jury": "Alegerea juriului",
+        "firstProject": "Cel mai bun prim proiect",
+        "pending": "Juriul alege recunoașterile în zilele de după termen. Le găsești aici."
+      },
+      "bestAgent": {
+        "title": "Cel mai votat agent AI",
+        "badge": "În afara clasamentului",
+        "humansAbove": "{n, plural, =0 {Niciun proiect făcut de oameni n-a primit mai multe voturi decât cel mai bun agent.} one {Un proiect făcut de oameni a primit mai multe voturi decât cel mai bun agent.} few {# proiecte făcute de oameni au primit mai multe voturi decât cel mai bun agent.} other {# de proiecte făcute de oameni au primit mai multe voturi decât cel mai bun agent.}}"
+      },
+      "launches": {
+        "title": "{n, plural, one {Singura lansare} few {Toate cele # lansări} other {Toate cele # de lansări}}",
+        "board": "Vezi pe panou",
+        "late": "După termen"
+      },
+      "band": {
+        "title": "Provocarea din {month} e în desfășurare.",
+        "text": "{title}. {n, plural, =0 {Mai e mai puțin de o zi.} one {Mai e o zi.} few {Mai sunt # zile.} other {Mai sunt # de zile.}}",
+        "cta": "Vezi provocarea"
+      }
+    }
+  },
+  "board": {
+    "title": "Lansări",
+    "lead": "Proiecte construite și lansate de comunitate. Votează-le pe cele care ți-ar fi de folos.",
+    "tabsLabel": "Tip de lansare",
+    "tabs": {
+      "challenges": "Din provocări",
+      "own": "Proiecte proprii"
+    },
+    "filters": {
+      "challenge": "Provocare",
+      "tags": "Etichete",
+      "stage": "Stadiu",
+      "all": "Toate",
+      "challengeChip": "#{number} {title}",
+      "launched": "Lansate",
+      "inProgress": "În lucru"
+    },
+    "sort": {
+      "label": "Sortare",
+      "newest": "Cele mai noi",
+      "votes": "Cele mai votate"
+    },
+    "week": {
+      "this": "Săptămâna aceasta",
+      "last": "Săptămâna trecută",
+      "count": "{stage, select, in_progress {{n, plural, one {# proiect} few {# proiecte} other {# de proiecte}}} other {{n, plural, one {# lansare} few {# lansări} other {# de lansări}}}}",
+      "meta": "{range} · {count}"
+    },
+    "empty": "Nicio lansare aici încă.",
+    "clear": "Șterge filtrele"
+  },
+  "projectPage": {
+    "metaTitle": "ITStart · {name}",
+    "back": "Lansări",
+    "challengeTag": "Provocarea #{number}",
+    "open": "Deschide proiectul",
+    "share": "Distribuie",
+    "copied": "Am copiat linkul.",
+    "screenshots": {
+      "label": "Capturi de ecran",
+      "alt": "Captură de ecran din {name}",
+      "thumb": "Captura {n}"
+    },
+    "about": "Despre proiect",
+    "build": {
+      "title": "Cum l-am construit",
+      "duration": "Cât a durat",
+      "durations": {
+        "under_10h": "Sub 10 ore",
+        "10_30h": "Între 10 și 30 de ore",
+        "over_30h": "Peste 30 de ore"
+      },
+      "hardestPart": "Ce a fost cel mai greu",
+      "prompt": "Un prompt care a mers bine",
+      "quoted": "„{text}”"
+    },
+    "updates": {
+      "title": "Actualizări",
+      "label": "v{version} · {date}"
+    },
+    "reviews": {
+      "title": "Păreri · {n}",
+      "none": "Nicio părere încă.",
+      "automated": "Părere automată",
+      "afterLaunch": "{unit, select, minutes {{n, plural, one {la un minut după lansare} few {la # minute după lansare} other {la # de minute după lansare}}} other {{n, plural, one {la o oră după lansare} few {la # ore după lansare} other {la # de ore după lansare}}}}",
+      "ago": "{unit, select, now {chiar acum} minutes {{n, plural, one {acum un minut} few {acum # minute} other {acum # de minute}}} hours {{n, plural, one {acum o oră} few {acum # ore} other {acum # de ore}}} other {{n, plural, one {ieri} few {acum # zile} other {acum # de zile}}}}",
+      "write": "Scrie o părere",
+      "placeholder": "Ce merge bine? Ce ai schimba?",
+      "send": "Trimite părerea",
+      "signIn": "Intră ca să scrii o părere",
+      "sent": "Părerea ta e publicată.",
+      "nextAssignment": "Mai ai o părere de dat: <link>{name}</link>.",
+      "reply": "Răspunde",
+      "replyLabel": "Răspunsul tău",
+      "sendReply": "Trimite răspunsul",
+      "replySent": "Răspunsul tău e publicat.",
+      "errors": {
+        "empty": "Scrie ceva înainte să trimiți.",
+        "too_long": "Cel mult {max} de caractere.",
+        "rate_limited": "Ai scris multe păreri în ultima oră. Mai încearcă puțin mai târziu.",
+        "other": "Nu s-a trimis. Mai încearcă o dată."
+      }
+    },
+    "builtBy": {
+      "title": "Construit de",
+      "launched": "{n, plural, one {# proiect lansat} few {# proiecte lansate} other {# de proiecte lansate}}",
+      "profile": "Vezi profilul"
+    },
+    "tools": "Unelte folosite",
+    "madeFor": {
+      "title": "Făcut pentru",
+      "challenge": "Provocarea #{number} · {title}",
+      "launched": "Lansat {date}"
+    },
+    "edit": "Editează proiectul",
+    "saved": "Am salvat proiectul."
+  },
+  "profile": {
+    "metaTitle": "ITStart · {name}",
+    "place": "{city} · în comunitate din {month}",
+    "joined": "În comunitate din {month}",
+    "edit": "Editează profilul",
+    "saved": "Am salvat profilul.",
+    "form": {
+      "metaTitle": "Editează profilul",
+      "title": "Editează profilul",
+      "lead": "Ce schimbi apare pe profilul tău imediat ce salvezi.",
+      "back": "← Profilul tău",
+      "optional": "(opțional)",
+      "avatar": {
+        "label": "Poza de profil",
+        "hint": "Png, jpg sau webp, cel mult 5 MB. O tăiem pătrat, din mijloc.",
+        "upload": "Încarcă o poză",
+        "replace": "Schimbă poza",
+        "remove": "Scoate poza",
+        "uploading": "Se încarcă…",
+        "uploaded": "Am pus poza. Apare pe profil după ce salvezi.",
+        "removed": "Am scos poza. În locul ei apar inițialele după ce salvezi."
+      },
+      "name": {
+        "label": "Numele tău",
+        "hint": "Adresa profilului rămâne aceeași: /u/{handle}."
+      },
+      "givenName": {
+        "label": "Cum să-ți spunem?",
+        "hint": "Apare în saluturi, de exemplu „Bravo, {name}!”. Gol: primul cuvânt din nume."
+      },
+      "city": {
+        "label": "Orașul"
+      },
+      "bio": {
+        "label": "Despre tine",
+        "hint": "{count} din {max} de caractere. Ce faci, ce construiești."
+      },
+      "links": {
+        "label": "Linkuri",
+        "hint": "Cel mult {max}, fiecare începe cu https://.",
+        "item": "Linkul {n}"
+      },
+      "submit": "Salvează profilul",
+      "cancel": "Renunță",
+      "errors": {
+        "nameEmpty": "Scrie-ți numele.",
+        "tooLong": "Cel mult {max} de caractere.",
+        "linkInvalid": "Pune un link care începe cu https://.",
+        "links": "Verifică linkurile: cel mult {max}, fiecare cu https://.",
+        "tools": "Alege din listă.",
+        "avatarType": "Doar imagini png, jpg sau webp.",
+        "avatarTooLarge": "Poza poate avea cel mult 5 MB.",
+        "avatarUnavailable": "Aici nu se pot încărca imagini încă.",
+        "avatarFailed": "Poza nu s-a încărcat. Mai încearcă o dată.",
+        "avatarUnknown": "Poza nu s-a încărcat cum trebuie. Încarc-o din nou.",
+        "notOnboarded": "Termină-ți profilul de la început, apoi revino aici.",
+        "other": "Nu s-a salvat. Mai încearcă o dată."
+      }
+    },
+    "stats": {
+      "launched": "{n, plural, one {proiect lansat} few {proiecte lansate} other {proiecte lansate}}",
+      "monthsInARow": "{n, plural, one {lună la rând} few {luni la rând} other {luni la rând}}",
+      "votes": "{n, plural, one {vot primit} few {voturi primite} other {voturi primite}}"
+    },
+    "projects": {
+      "title": "Proiecte lansate",
+      "empty": "Niciun proiect lansat încă.",
+      "challenge": "Provocarea #{number} · {month}",
+      "recognition": "Provocarea #{number} · {kind, select, community {Alegerea comunității} jury {Alegerea juriului} other {Cel mai bun prim proiect}}",
+      "own": "Proiect propriu"
+    },
+    "challenges": {
+      "title": "Provocări terminate",
+      "number": "Provocarea #{number}",
+      "line": "{month} · {n, plural, one {proiect} other {proiecte}}: {names}",
+      "finished": "Terminată"
+    }
+  },
+  "signIn": {
+    "metaTitle": "{context, select, challenge {Intră în provocare} other {Intră în comunitate}}",
+    "eyebrow": "Provocarea #{number} · {month}",
+    "title": "{context, select, challenge {Intră în provocare} other {Intră în comunitate}}",
+    "lead": "Un cont și ești înăuntru.",
+    "email": {
+      "label": "Adresa ta de e-mail",
+      "placeholder": "nume@exemplu.ro",
+      "hint": "Nu o arătăm nimănui."
+    },
+    "password": {
+      "label": "Parola",
+      "hint": "Cel puțin {min} caractere.",
+      "show": "Arată parola",
+      "hide": "Ascunde parola"
+    },
+    "submit": {
+      "signIn": "Intră",
+      "signUp": "Creează contul"
+    },
+    "switch": {
+      "toSignUp": "Prima dată aici? <link>Fă-ți cont</link>",
+      "toSignIn": "Ai deja cont? <link>Intră</link>"
+    },
+    "rules": "Prin înscriere accepți <link>regulile comunității</link>.",
+    "errors": {
+      "emailEmpty": "Scrie adresa ta de e-mail.",
+      "emailInvalid": "Adresa nu pare corectă. Verific-o o dată.",
+      "passwordEmpty": "Scrie parola.",
+      "passwordShort": "Parola are nevoie de cel puțin {min} caractere.",
+      "passwordLong": "Cel mult {max} de caractere.",
+      "wrong": "E-mailul sau parola nu se potrivesc.",
+      "exists": "Există deja un cont cu adresa asta. Intră cu parola ta.",
+      "tooMany": "Prea multe încercări. Mai încearcă peste un minut.",
+      "other": "Nu a mers. Mai încearcă o dată."
+    },
+    "next": {
+      "title": "Ce urmează",
+      "profile": {
+        "title": "Îți faci profilul",
+        "text": "Un minut. Doar numele tău."
+      },
+      "build": {
+        "title": "Construiești până pe {date}",
+        "text": "Cu ce unelte vrei, în ritmul tău."
+      },
+      "launch": {
+        "title": "Lansezi și primești păreri",
+        "text": "Proiectul rămâne pe profilul tău."
+      },
+      "people": "{count, plural, one {# om construiește} few {# oameni construiesc} other {# de oameni construiesc}} deja.",
+      "peopleBuilding": "{count, plural, one {# om construiește} few {# oameni construiesc} other {# de oameni construiesc}} deja {what}."
+    }
+  },
+  "onboarding": {
+    "metaTitle": "Profilul tău",
+    "step": "Pasul 2 din 2",
+    "title": "Cum te cheamă?",
+    "lead": "Așa apari pe panoul de lansări și pe profilul tău. Poți schimba oricând.",
+    "optional": "(opțional)",
+    "name": {
+      "label": "Numele tău"
+    },
+    "city": {
+      "label": "Orașul"
+    },
+    "tools": {
+      "label": "Cu ce vrei să construiești?",
+      "hint": "Alege oricâte. Nu te leagă de nimic.",
+      "unsure": "Încă nu știu"
+    },
+    "reminders": "Vreau două e-mailuri de reamintire: cu o săptămână și cu o zi înainte de termen.",
+    "submit": "{context, select, challenge {Gata, intru în provocare} other {Gata, intru în comunitate}}",
+    "errors": {
+      "nameEmpty": "Scrie-ți numele.",
+      "tooLong": "Cel mult {max} de caractere.",
+      "other": "Nu a mers. Mai încearcă o dată."
+    }
+  },
+  "launch": {
+    "metaTitle": "Lansează un proiect",
+    "editMetaTitle": "Editează {name}",
+    "title": "Lansează un proiect",
+    "editTitle": "Editează proiectul",
+    "lead": "Cinci minute. Apoi e public și oamenii pot vota.",
+    "editLead": "Ce schimbi apare pe pagina proiectului imediat ce salvezi.",
+    "optional": "(opțional)",
+    "challenge": {
+      "label": "Pentru ce provocare?",
+      "option": "Provocarea #{number} · {title}",
+      "own": "Fără provocare · proiect propriu",
+      "locked": "Un proiect lansat rămâne în provocarea lui."
+    },
+    "name": {
+      "label": "Numele proiectului"
+    },
+    "pitch": {
+      "label": "Pe scurt, într-o frază",
+      "hint": "{count} din {max} de caractere. Spune ce face, nu cu ce e făcut."
+    },
+    "liveUrl": {
+      "label": "Linkul live",
+      "hint": "Trebuie să se deschidă fără cont, pentru oricine.",
+      "checking": "Verific linkul…"
+    },
+    "screenshots": {
+      "label": "Capturi de ecran",
+      "hint": "Între 2 și 4 imagini. Prima apare pe panou.",
+      "add": "Adaugă",
+      "tile": "Captura {n} din {total}",
+      "tileFirst": "Captura {n} din {total}, apare pe panou",
+      "moveHint": "Mut-o cu săgețile sau trage-o.",
+      "remove": "Șterge captura {n}",
+      "uploading": "Se încarcă…",
+      "moved": "Captura e acum pe locul {n} din {total}.",
+      "removed": "Am șters captura.",
+      "added": "Am adăugat captura."
+    },
+    "description": {
+      "label": "Descriere",
+      "hint": "Ce face, pentru cine și ce ai învățat construindu-l."
+    },
+    "tools": {
+      "label": "Unelte folosite",
+      "other": "+ Alta",
+      "otherLabel": "Altă unealtă",
+      "otherAdd": "Adaugă",
+      "otherCancel": "Renunță"
+    },
+    "build": {
+      "title": "Cum l-ai construit",
+      "lead": "Asta citesc ceilalți cel mai atent. Scurt și sincer.",
+      "duration": {
+        "label": "Cât a durat?",
+        "choose": "Alege",
+        "under_10h": "Sub 10 ore",
+        "10_30h": "Între 10 și 30 de ore",
+        "over_30h": "Peste 30 de ore"
+      },
+      "hardestPart": {
+        "label": "Ce a fost cel mai greu?"
+      },
+      "prompt": {
+        "label": "Un prompt care a mers bine"
+      }
+    },
+    "stage": {
+      "label": "În ce stadiu e?",
+      "in_progress": "În lucru",
+      "launched": "Lansat, intră la vot",
+      "hint": "Poți începe cu „În lucru” și să-l marchezi ca lansat mai târziu, la aceeași adresă."
+    },
+    "update": {
+      "label": "Ce s-a schimbat?",
+      "hint": "Un rând, cel mult {max} de caractere. Apare ca v{version} pe pagina proiectului."
+    },
+    "submit": "{stage, select, launched {Lansează proiectul} other {Salvează}}",
+    "draft": {
+      "save": "Salvează ciorna",
+      "saved": "Am salvat ciorna pe acest dispozitiv. N-o vede nimeni până nu salvezi proiectul.",
+      "restored": "Am pus înapoi ciorna salvată pe acest dispozitiv.",
+      "discard": "Începe de la zero"
+    },
+    "preview": {
+      "title": "Așa va apărea pe panou",
+      "name": "Numele proiectului"
+    },
+    "checklist": {
+      "title": "Înainte să lansezi",
+      "link": "Linkul se deschide fără cont.",
+      "phone": "Arată bine pe telefon.",
+      "note": "Poți edita proiectul și după lansare."
+    },
+    "errors": {
+      "tooLong": "Cel mult {max} de caractere.",
+      "nameEmpty": "Scrie numele proiectului.",
+      "pitchEmpty": "Spune într-o frază ce face.",
+      "linkEmpty": "Pune linkul la care se deschide proiectul.",
+      "linkInvalid": "Pune un link public care începe cu https://.",
+      "linkUnreachable": "Linkul nu se deschide. Încearcă-l într-o fereastră privată, apoi mai verifică o dată.",
+      "linkNeedsAccount": "Linkul cere cont sau parolă. Trebuie să se deschidă pentru oricine.",
+      "screenshotsLaunch": "Pentru lansare ai nevoie de cel puțin 2 capturi.",
+      "screenshotType": "Doar imagini png, jpg sau webp.",
+      "screenshotTooLarge": "O imagine poate avea cel mult 5 MB.",
+      "screenshotUnavailable": "Aici nu se pot încărca imagini încă.",
+      "screenshotFailed": "Imaginea nu s-a încărcat. Mai încearcă o dată.",
+      "screenshotUnknown": "O captură nu s-a încărcat cum trebuie. Șterge-o și adaug-o din nou.",
+      "descriptionLaunch": "Pentru lansare scrie câteva rânduri despre proiect.",
+      "durationLaunch": "Alege cât a durat.",
+      "hardestPartLaunch": "Spune ce a fost cel mai greu.",
+      "toolsTooMany": "Cel mult {max} unelte.",
+      "challengeNotRunning": "Provocarea nu mai primește proiecte noi. Alege „Fără provocare”.",
+      "challengeLocked": "Un proiect lansat rămâne în provocarea lui.",
+      "alreadyLaunched": "Proiectul e deja lansat și nu se mai poate întoarce la „În lucru”.",
+      "notOnboarded": "Termină-ți profilul înainte să lansezi.",
+      "other": "Nu s-a salvat. Mai încearcă o dată."
+    }
+  },
+  "launched": {
+    "metaTitle": "{name} e lansat",
+    "chip": "Lansat",
+    "title": "E lansat. Bravo, {name}!",
+    "titleNoName": "E lansat. Bravo!",
+    "lead": "{name} e pe panoul de lansări și pe profilul tău.",
+    "reviews": {
+      "title": "Mai ai un pas: dă două păreri",
+      "count": "{done} din {total}",
+      "text": "Fiecare proiect primește cel puțin două păreri de la oameni. Tu le dai pe ale tale acestor două proiecte, iar altcineva ți le dă ție. Un agent AI îți lasă prima părere în câteva minute, marcată clar.",
+      "waiting": "{n, plural, one {Al doilea proiect îți apare aici când mai lansează cineva în provocare.} other {Proiectele îți apar aici pe măsură ce lansează și alții în provocare.}}",
+      "done": "Ai scris părerea",
+      "writeFirst": "Scrie prima părere",
+      "writeSecond": "Scrie a doua părere"
+    },
+    "seeProject": "Vezi proiectul tău",
+    "share": {
+      "title": "Arată-l oamenilor",
+      "linkLabel": "Linkul proiectului",
+      "copy": "Copiază linkul",
+      "hint": "Când îl trimiți pe WhatsApp, Facebook sau LinkedIn, apare cu imaginea de mai sus."
+    },
+    "closing": "Îți scriem pe e-mail când primești o părere. Poți edita proiectul oricând."
+  },
+  "admin": {
+    "metadataTitle": "Admin · ITStart",
+    "nav": {
+      "label": "Admin",
+      "challenges": "Provocări",
+      "votes": "Voturi",
+      "site": "Înapoi pe site"
+    },
+    "votes": {
+      "metaTitle": "Voturi · Admin",
+      "title": "Voturi",
+      "lead": "Fiecare vot și fiecare vot retras, cu ora lui. Caută conturi noi și multe voturi în câteva minute.",
+      "signs": "„Cont nou”: contul avea sub {days} zile când a votat. „Rafală”: cel puțin {count} voturi sau retrageri în {minutes} minute.",
+      "back": "← Voturi",
+      "projects": {
+        "title": "Proiecte, în ultimele {days} zile",
+        "empty": "Niciun vot în ultimele {days} zile.",
+        "project": "Proiect",
+        "lastDay": "24 de ore",
+        "lastWeek": "{days} zile",
+        "voters": "Oameni",
+        "fromNewAccounts": "Din conturi noi",
+        "lastAt": "Ultimul"
+      },
+      "voters": {
+        "title": "Cine votează, în ultimele {days} zile",
+        "person": "Cine",
+        "joined": "Cont din",
+        "projects": "Proiecte"
+      },
+      "timeline": {
+        "projectTitle": "Voturile pentru {name}",
+        "projectLead": "Proiectul lui {owner}. <link>Vezi pagina proiectului</link>",
+        "userTitle": "Voturile lui {name}",
+        "userLead": "Cont din {date}. <link>Vezi profilul</link>",
+        "summary": {
+          "toggles": "{n, plural, one {o schimbare} few {# schimbări} other {# de schimbări}}",
+          "casts": "{n, plural, one {un vot} few {# voturi} other {# de voturi}}",
+          "retracts": "{n, plural, one {un vot retras} few {# voturi retrase} other {# de voturi retrase}}",
+          "voters": "{n, plural, one {un om} few {# oameni} other {# de oameni}}",
+          "projects": "{n, plural, one {un proiect} few {# proiecte} other {# de proiecte}}",
+          "fromNewAccounts": "{n, plural, one {una din conturi noi} other {# din conturi noi}}"
+        },
+        "limited": "Arătăm cele mai noi {limit}.",
+        "empty": "Niciun vot încă.",
+        "at": "Când",
+        "action": "Ce",
+        "voter": "Cine",
+        "project": "Proiect",
+        "signs": "Semne",
+        "cast": "Vot",
+        "retract": "Retras",
+        "newAccount": "Cont nou · {age}",
+        "burst": "Rafală",
+        "agent": "Agent AI"
+      },
+      "age": "{hours, plural, one {o oră} few {# ore} other {# de ore}}",
+      "ageDays": "{days, plural, one {o zi} few {# zile} other {# de zile}}"
+    },
+    "challenges": {
+      "title": "Provocări",
+      "lead": "O provocare pe lună. Începe pe 1, la 00:00, și se termină în ultima zi a lunii, la 23:59, ora României.",
+      "new": "Provocare nouă",
+      "recognitions": "Recunoașteri",
+      "empty": "Nicio provocare încă.",
+      "row": "#{number} · {month}",
+      "edit": "Editează",
+      "view": "Vezi pagina",
+      "which": " provocarea #{number}"
+    },
+    "form": {
+      "back": "← Provocări",
+      "newTitle": "Provocare nouă",
+      "editTitle": "Provocarea #{number}",
+      "editLead": "Ce schimbi apare pe pagina provocării imediat ce salvezi.",
+      "newLead": "Primește următorul număr. Până începe, o vede doar cine are linkul.",
+      "saved": "Am salvat provocarea.",
+      "view": "Vezi pagina provocării",
+      "recognitions": "Recunoașterile",
+      "optional": "(opțional)",
+      "sections": {
+        "basics": "De bază",
+        "phrases": "Pe pagina principală și la înscriere",
+        "brief": "Brief-ul",
+        "tips": "Construiește-l cu AI",
+        "jury": "Juriul"
+      },
+      "title": {
+        "label": "Titlul",
+        "hint": "De exemplu: Pagină de programări pentru o frizerie de cartier"
+      },
+      "shortTitle": {
+        "label": "Titlul scurt",
+        "hint": "Pe filtrele de la Lansări: „#4 Frizerie”. Gol, apare titlul întreg."
+      },
+      "slug": {
+        "label": "Adresa",
+        "hint": "itstart.ro/provocari/adresa: litere mici, cifre și „-”. Gol, se face din titlul scurt. Nu se mai schimbă după ce începe.",
+        "locked": "Provocarea a început, așa că adresa nu se mai schimbă."
+      },
+      "month": {
+        "label": "Luna",
+        "hint": "Termenul: ultima zi a lunii, la 23:59, ora României.",
+        "locked": "Provocarea a început, așa că luna nu se mai schimbă."
+      },
+      "summary": {
+        "label": "Rezumatul",
+        "hint": "Pe cardul provocării de pe pagina principală."
+      },
+      "builtFor": {
+        "label": "Pentru cine construim",
+        "hint": "Vine după „pentru”: „o frizerie”. Gol, pagina principală nu arată banda verde."
+      },
+      "buildingPhrase": {
+        "label": "Ce construiesc toți",
+        "hint": "Vine după „construiesc deja”: „pagina frizeriei”."
+      },
+      "intro": {
+        "label": "Introducerea",
+        "hint": "Sub titlu, pe pagina provocării."
+      },
+      "scenarioNote": {
+        "label": "Nota de deasupra scenariului",
+        "hint": "De exemplu: Un scenariu realist, scris de echipa ITStart. Nu e o comandă de la un client."
+      },
+      "scenario": {
+        "label": "Scenariul"
+      },
+      "baseLevel": {
+        "label": "Nivelul de bază",
+        "hint": "Câte un punct pe rând, cel mult 12."
+      },
+      "stretch": {
+        "label": "Dacă vrei mai mult",
+        "hint": "Câte un punct pe rând, cel mult 12."
+      },
+      "launchCriteria": {
+        "label": "Ce înseamnă „lansat”",
+        "hint": "Câte un punct pe rând, cel mult 12."
+      },
+      "launchNote": {
+        "label": "Nota de sub „lansat”"
+      },
+      "launchCheck": {
+        "label": "Testul de la cap la coadă",
+        "hint": "Ultimul rând din „Înainte să lansezi”: „Ai făcut o programare de test, de la cap la coadă.”"
+      },
+      "materialsUrl": {
+        "label": "Linkul la materiale",
+        "hint": "Pentru „Descarcă materialele”. Începe cu https://."
+      },
+      "materialsNote": {
+        "label": "Nota de lângă materiale"
+      },
+      "tips": {
+        "hint": "Cel mult 4 carduri, fiecare cu titlu și text.",
+        "card": "Cardul {n}",
+        "title": "Titlul",
+        "text": "Textul",
+        "add": "Adaugă un card",
+        "remove": "Șterge cardul",
+        "removeLabel": "Șterge cardul {n}"
+      },
+      "juryNote": {
+        "label": "Cine e în juriu și după ce alege",
+        "hint": "Apare cu rezultatele."
+      },
+      "submitNew": "Creează provocarea",
+      "submitEdit": "Salvează",
+      "errors": {
+        "titleEmpty": "Scrie titlul.",
+        "tooLong": "Cel mult {max} de caractere.",
+        "slugInvalid": "Doar litere mici fără diacritice, cifre și „-”, cel mult 40.",
+        "slugTaken": "Adresa e deja a altei provocări.",
+        "monthEmpty": "Alege luna.",
+        "monthTaken": "Luna are deja o provocare. Una pe lună, ca să nu ruleze două deodată.",
+        "monthOutOfOrder": "Provocările merg în ordinea lunilor: alege o lună între provocarea de dinainte și cea de după.",
+        "monthPast": "Luna asta s-a terminat.",
+        "listTooMany": "Cel mult {max} puncte.",
+        "listItemTooLong": "Un punct are cel mult {max} de caractere.",
+        "urlInvalid": "Pune un link care începe cu https://.",
+        "tipTitleEmpty": "Scrie titlul cardului.",
+        "tipTextEmpty": "Scrie textul cardului.",
+        "tips": "Fiecare card are nevoie de titlu și text.",
+        "notAdmin": "Nu mai ai drept de admin.",
+        "notFound": "Provocarea nu mai există.",
+        "other": "Nu s-a salvat. Mai încearcă o dată."
+      }
+    },
+    "recognitions": {
+      "title": "Recunoașterile provocării #{number}",
+      "lead": "Apar pe pagina provocării imediat ce salvezi. Doar proiectele oamenilor lansate până la termen pot primi o recunoaștere, iar un proiect primește cel mult una.",
+      "view": "Vezi pagina provocării",
+      "saved": "Am salvat recunoașterile.",
+      "notEnded": "Recunoașterile se aleg după termen, când voturile sunt finale.",
+      "noCandidates": "Niciun proiect al oamenilor n-a fost lansat până la termen, deci nu e nimic de recunoscut.",
+      "project": "Proiectul",
+      "none": "Niciunul încă",
+      "option": "{name} · {owner} · {votes, plural, one {# vot} few {# voturi} other {# de voturi}}",
+      "reason": {
+        "label": "De ce",
+        "hint": "Un rând sub card, pe pagina provocării."
+      },
+      "community": {
+        "title": "Alegerea comunității",
+        "hint": "Cele mai multe voturi.",
+        "suggestion": "După voturi: {name}, cu {votes, plural, one {# vot} few {# voturi} other {# de voturi}}.",
+        "reason": "Cele mai multe voturi: {votes}."
+      },
+      "jury": {
+        "title": "Alegerea juriului",
+        "hint": "Ce a ales juriul, după criteriile publice."
+      },
+      "firstProject": {
+        "title": "Cel mai bun prim proiect",
+        "hint": "Doar proiecte care sunt prima lansare a constructorului lor."
+      },
+      "submit": "Salvează recunoașterile",
+      "errors": {
+        "reasonEmpty": "Scrie de ce, într-un rând.",
+        "tooLong": "Cel mult {max} de caractere.",
+        "notEligible": "Proiectul nu mai poate primi o recunoaștere: e lansat după termen, e al unui agent sau nu e în provocare.",
+        "notFirstProject": "Constructorul a mai lansat ceva înainte.",
+        "duplicate": "Proiectul are deja o recunoaștere mai sus.",
+        "notEnded": "Provocarea nu s-a încheiat încă.",
+        "notAdmin": "Nu mai ai drept de admin.",
+        "notFound": "Provocarea nu mai există.",
+        "other": "Nu s-a salvat. Mai încearcă o dată."
+      }
     }
   }
 }

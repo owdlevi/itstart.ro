@@ -28,16 +28,45 @@ src/
     fonts.ts, fonts/ Bricolage Grotesque + Inter via next/font/local
     globals.css      design tokens; the only colours, radii and shadows Tailwind knows
     (site)/          full shell (header + footer): /, /provocari/[slug], /lansari, /proiecte/[slug],
-                     /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /lanseaza
+                     /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /u/[handle]/editeaza, /lanseaza
     (onboarding)/    bare header: /intra, /intra/confirma, /bun-venit
-    admin/           role = admin, functional styling (no reference design)
+    admin/           role = admin, functional styling (no reference design): /admin/provocari (the list),
+                     /admin/provocari/noua and /admin/provocari/[slug] (ChallengeForm), /admin/provocari/[slug]/recunoasteri
+                     (RecognitionsForm, ended challenges), /admin/voturi (rule 14:
+                     the week's activity), /admin/voturi/proiecte/[slug] and /admin/voturi/oameni/[handle]
+                     (TimelineView; voturi/table.tsx is a table that scrolls inside its own box); every page
+                     calls requireAdmin() first
+      (site)/lansari/board-params.ts   the board's URL parameters: parse, and build a query without the defaults
     dev/login-as/[handle]/   404 unless DESIGN_FIXTURES=1
-    api/             Better Auth handler (auth/[...all]), Blob upload-token route, unsubscribe endpoint
-    actions/         server actions, one file per area (votes.ts: toggleVote)
+    (site)/lanseaza/fixture-draft.ts   the reference's form values, prefilled for ioana-muresan in fixtures mode
+    dev/captura/[name]/      screenshots uploaded locally (the local storage adapter, off Vercel only), and the
+                             fixtures' screenshots (transparent SVGs) when DESIGN_FIXTURES=1; 404 otherwise
+    api/             Better Auth handler (auth/[...all]), capturi (one screenshot, local adapter; the Blob
+                     upload-token route comes with the Blob adapter), unsubscribe endpoint
+    actions/         server actions, one file per area (votes.ts: toggleVote, reviews.ts: postReview,
+                     sign-in.ts: finishSignIn, which sends someone on after Better Auth signs them in,
+                     onboarding.ts: completeOnboarding, participation.ts: joinChallenge and
+                     leaveChallenge; the last three join a challenge and redirect with ?inscris=1;
+                     projects.ts: saveProject, which returns where to go rather than redirecting, and
+                     checkLiveUrl, rule 9's check on blur; admin-challenges.ts: saveChallenge, which
+                     returns where to go like saveProject; profile.ts: saveProfile, the same, and refresh() so
+                     the header shows the new name and picture)
   components/        the spec components, one file each (button, avatar, vote-button, project-card,
-                     launch-row, countdown, …) and the shell (site-header, site-footer); shadcn files in components/ui/
+                     launch-row, countdown, filter-chip, field, checkbox, …), the shell (site-header with BareHeader,
+                     site-footer), sign-in-form (screen 06), onboarding-form (screen 07), join-button,
+                     leave-challenge and flash-banner (screen 08: a status shown once, which drops its query
+                     flag), link-tabs (URL tabs on Base UI), and screen 09's project-form (form and sidebar),
+                     screenshot-picker, tool-chips, launch-page and launch-row-frame (LaunchRow's layout,
+                     shared with the form's live preview), and screen 10's copy-link, the admin's challenge-form, and profile-form and avatar-picker ("Editează profilul"); shadcn files, rewritten onto our tokens, in
+                     components/ui/ (tabs, alert-dialog)
   i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
+  lib/schemas/       zod schemas shared by a form and its server action (review.ts, sign-in.ts, onboarding.ts,
+                     project.ts, which imports core's own launch rules from @repo/core/project-rules;
+                     challenge.ts, the admin's form, likewise from @repo/core/challenge-rules; profile.ts and
+                     onboarding.ts from @repo/core/profile-rules)
+  lib/sign-in-destination.ts   where a sign-in or onboarding goes next (/bun-venit, `next`, the challenge),
+                     safeNext(), and joinedHref() with the ?inscris / ?renuntat flags
   lib/auth-client.ts Better Auth's browser client (sign-in calls), magic-link plugin ready
   server/
     auth.ts          createAuth(deps): the Better Auth config. No server-only, so the CLI can load it
@@ -46,9 +75,19 @@ src/
                      `auth` and `now` from here
     session.ts       getSession(): the session in server components, cached per request
     challenge.ts     getRunningChallenge(): core.challenges.running(), cached per request
+    joinable.ts      getJoinableChallenge(slug): `?provocare=` if it isn't over, cached per request
+    admin.ts         requireAdmin(path): signed out → /intra?next=path, anyone but an admin → 404; the role
+                     from the database (core.admins), cached per request
+    storage.ts       screenshot storage: the local adapter (apps/web/.data/capturi, off Vercel) and sharp → webp
+                     (a profile picture, `shape=avatar` on /api/capturi: 400px square); null where nothing can be
+                     stored yet
+    link-checker.ts  rule 9's real check (https GET, 5 s, private addresses refused at connect time), and
+                     withExampleHosts() for design fixtures; blocked-addresses.ts holds the address list
   workflows/         Vercel Workflow: sleep, ask core.notifications, send
   emails/            React Email templates
-  flags.ts           milestone flags
+  lib/dates.ts       daysAgo() ("ieri", "acum 3 zile"), timeAgo() and afterLaunch() (review times), and
+                     weekOf()/weeksAgo()/weekDays() (Monday–Sunday weeks), in Bucharest
+  flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number; M1 screens must look right with them off
 messages/ro.json     all copy, keys grouped by screen or component; e-mail copy under "emails"
 scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:generate`
 ```
@@ -57,9 +96,9 @@ scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:gener
 - **shadcn components** (only Tabs and the leave-challenge confirm) are added with `pnpm dlx shadcn@latest add <name>` in `apps/web` and then rewritten onto our token names. shadcn's `muted`, `accent` and `border` mean different things from ours, so an unedited file compiles with the wrong colours. Everything else is hand-built from the specs in `docs/design/components/`.
 - **Copy** comes from `messages/ro.json` through next-intl (no locale in URLs, fixed `ro`). Put no Romanian strings in components.
 - **Forms** use react-hook-form + zod on the client. The server action re-parses with the same schema before calling core.
-- **Uploads** go from the browser straight to Blob through the token route (png/jpg/webp ≤ 5 MB, session checked). Server actions receive only blob paths. Vercel caps a request body at 4.5 MB.
-- **Admin checks** read `role` from the database on each request, in the `admin` layout and in every admin server action, never from Better Auth's cookie cache.
-- **Sign-in, for now,** is email and password (`authClient.signUp.email` / `authClient.signIn.email`); see DECISIONS "Email and password for now". Like every sign-in, it goes through Better Auth's HTTP endpoint, not `auth.api` in a server action, so the per-IP rate limit applies.
+- **Uploads** go from the browser straight to Blob through the token route (png/jpg/webp ≤ 5 MB, session checked). Server actions receive only blob paths. Vercel caps a request body at 4.5 MB. _Until the Blob store exists,_ the local adapter takes the file through `POST /api/capturi` (same checks), resizes it and keeps it on disk; the form's `ScreenshotPicker` is where the browser side switches adapters. Core accepts only screenshots `storage.owns()`.
+- **Admin checks** read `role` from the database on each request, never from Better Auth's cookie cache, in two places: every admin page calls `requireAdmin(path)` before anything else, and every admin method in core (`challenges.all/editable/create/edit`, `votes.activity/timeline`) takes the actor's id and refuses `not_admin`. The `admin` layout checks nothing: a layout doesn't stop its page rendering, or keep it out of the RSC payload (Next's authentication guide, "Layouts and auth checks"). Admin server actions pass the session's user id to core and let it decide.
+- **Sign-in, for now,** is email and password (`authClient.signUp.email` / `authClient.signIn.email`); see DECISIONS "Email and password for now". Like every sign-in, it goes through Better Auth's HTTP endpoint, not `auth.api` in a server action, so the per-IP rate limit applies. Once it succeeds, the `/intra` form calls `finishSignIn({ next, challengeSlug })`, which reads the new session and redirects (`signInDestination`): anyone not onboarded (`onboardedAt` null) to `/bun-venit`, carrying `provocare` and `next`. `/bun-venit`'s `completeOnboarding` redirects with the same rules. Both actions join a joinable `challengeSlug` (`core.challenges.join`): `finishSignIn` only for someone onboarded, since core refuses a participant without a name, and `completeOnboarding` always. A join sends them to the challenge with `?inscris=1`, which shows the banner once. `/intra` itself redirects a signed-in visitor the same way, without joining.
 - **Magic link** (configured, not in the UI yet) uses `authClient.signIn.magicLink`. `sendMagicLink` asks `core.signIn.requestLink(email)` first. A refusal comes back as HTTP 429 with `code` `TOO_SOON` or `TOO_MANY` and `retryAfter` in seconds, or 400 `UNDELIVERABLE` for `.invalid` addresses. The `/intra` form maps the code to copy. The e-mail links to `/intra/confirma` with the same query string as Better Auth's verify URL (`token`, `callbackURL`, …).
 - **Better Auth schema:** after changing anything in `createAuth` that affects tables (fields, plugins), run `pnpm --filter web auth:generate`, then `pnpm db:generate`. Never edit `packages/db/src/schema/auth.ts` by hand.
 
@@ -74,16 +113,18 @@ scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:gener
 
 ## `packages/core`
 
-M1 modules:
+M1 modules, and M2's as they come:
 
 | Module | Covers |
 |---|---|
 | `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
-| `challenges` | `running()` with its counts and `challengeStatus()` are done (rule 1). To come: join/leave (rules 2–3), admin create/edit |
-| `projects` | `mostVoted()` is done. To come: create/edit, stages, `launch()` (rules 4, 6–8), link check (rule 9), updates |
-| `votes` | done (rules 10–14) |
-| `reviews` | reviews, replies and counts; assignment picking (rules 15–17) |
-| `profiles` | onboarding, handle generation, consent flags (rule 22) |
+| `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `started()` (the board's chips), `participants()` (rule 2), `challengeStatus()`, `join()` and `leave()` (rule 2; not after the deadline, not before onboarding), `participation()` and `steps()` ("Pașii tăi") are done, and so are the admin's `all()`, `editable()`, `create()` and `edit()` (`challenges/admin.ts`: the month gives the dates, one challenge a month, numbers follow months, the month and slug fixed once it starts; the database-free rules in `challenges/rules.ts`, exported as `@repo/core/challenge-rules`) |
+| `admins` | `isAdmin(userId)`: the role, read from the database on every call |
+| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`), `bySlug()` (the project page) and `launchedBy()` (a profile's cards) are done, and so are `launch()` (screen 10: the owner's launch and their review assignments, with counts as of the launch for design fixtures), `create()`, `edit()` and `editable()` (screen 09: rules 4 and 6–9, updates, joining the running challenge; `projects/save.ts`, with the database-free rules in `projects/rules.ts`, exported as `@repo/core/project-rules`). To come: the link check over time (M2), hiding (moderation) |
+| `votes` | done (rules 10–14): `toggle()`, and the admin's `activity()` and `timeline()` (rule 14's timelines, `votes/timeline.ts`: new accounts and bursts marked, `TIMELINE` holds the placeholder numbers) |
+| `reviews` | `thread()` (automated first, replies, counts: rules 17–18) and `post()` (reviews, the owner's replies, 10 per hour, fulfils an assignment: rules 15–16) are done, and so is assignment picking on launch (rule 16: `reviews/assignments.ts`, `assignOnLaunch(tx, …)`, which `projects.create()` and `edit()` call inside their transaction, like `challenges.enter`). To come: hiding (admin) |
+| `recognitions` | M2, done: `results()` (screen 11: the recognitions, the best agent apart with how many people's projects beat it (rule 20), every other launch, the challenge's review count), `of()` (which recognition a project got), and the admin's `editor()` and `save()` (one per kind per challenge, a project at most once, after the deadline only, never a late launch or an agent's (rules 7 and 20), "first project" only for a builder's first launch ever; the database-free rules in `recognitions/rules.ts`, exported as `@repo/core/recognition-rules`). `projects.launchedIn()` gives it the launches, and `launchedBy()` names each card's recognition |
+| `profiles` | `byHandle()` (the public profile: stats, launched projects, the challenges launched in; never the e-mail, rule 23; it reads projects through `projects.launchedBy()`), `onboard()` (screen 07: name, city, tools, reminders as ticked (rule 22), a handle from the name, once), `editable()` and `edit()` ("Editează profilul": the handle stays, a picture only from storage; the database-free rules in `profiles/rules.ts`, exported as `@repo/core/profile-rules`) are done. To come: consent for "Deschis la colaborări" (M3) |
 | `notifications` | who gets which e-mail when (§11) |
 
 ### Shape of a core module
@@ -98,8 +139,10 @@ M1 modules:
   |---|---|---|
   | `clock` | system time | frozen (design fixtures, tests) |
   | `mailer` | Resend + React Email (not built yet: `core.ts` uses the in-memory one and logs each link) | in-memory (`createMemoryMailer()`) |
-  | `storage` | Vercel Blob + sharp | in-memory |
-  | `linkChecker` | `fetch` with a short timeout | canned answers |
+  | `storage` | `owns(url)`: apps/web's adapter (local files now, Vercel Blob later; both resize with sharp) | `createPrefixStorage(prefix)` |
+  | `linkChecker` | one https GET with a short timeout (`server/link-checker.ts`) | `createCannedLinkChecker(answers)` |
+
+  Both fail closed when `createCore` gets none: no link answers, no screenshot is ours.
 
   Pass `db` straight in. Drizzle is already the query interface, so there's no repository layer over it.
 - **Counts** (votes, reviews, participants, launches) are computed from rows with `withExtra()` (`src/counts.ts`), which adds the design fixtures' `fixture_count_extras`. That table is empty outside fixtures mode. Every new count shown in the UI goes through it, so the references' numbers hold (DECISIONS, "Fixture counts").
@@ -126,7 +169,7 @@ M1 modules:
 - Test each module through its interface, against real Postgres via `createTestDb()` (PGlite, in-memory, every migration applied, one instance per test). Leave Drizzle unmocked.
 - `src/test-data.ts` makes rows with every required column (`makeUser`, `makeChallenge`, `makeProject`, `join`, `vote`, `review`, `addExtra`); override only what the test is about.
 - One test per HANDOVER §5 rule, named with the rule number, e.g. `"refuses a vote on your own project (rule 11)"`.
-- `pnpm test` runs every package's `test` task through turbo.
+- `pnpm test` runs every package's `test` task through turbo. `apps/web` has vitest too, for pure helpers next to their file (`lib/sign-in-destination.test.ts`); rules and their tests stay in core.
 
 ## Gotchas
 
@@ -143,4 +186,23 @@ M1 modules:
 - Message keys are typed (`src/i18n/next-intl.d.ts`): a missing key fails `check-types`. Plurals use ICU with Romanian's `one`/`few`/`other` ("19 zile", "24 de minute").
 - Opening `pnpm dev` from another host (e.g. the LAN IP while port 3000 on localhost is taken): Next 16 blocks cross-origin dev resources, so the page renders but never hydrates (buttons do nothing). Use `localhost`, or test interaction on `next build && next start`.
 - In a production build, Link prefetches of routes that don't exist yet stay pending, so Playwright's `networkidle` (which `capture.mjs` waits for) never arrives. Until those screens exist, run `capture.mjs` against `pnpm dev`.
+- `capture.mjs` needs design-fixtures mode, and `apps/web/.env.local` doesn't turn it on. Start the server with `DESIGN_FIXTURES=1 pnpm dev`, or the countdown and relative dates follow the real clock.
+- Postgres can't `order by` a constant (`order by false` is a syntax error). Build an optional sort key conditionally, as `challenges.participants()` does.
+- `next/form` builds the URL from the form's fields only: unlike a native GET form, it drops the name and value of the button that submitted it. Put a chip's value in hidden inputs, one form per chip (`lansari/page.tsx`).
+- Base UI gives a tab panel its own tab stop. When the panel starts with focusable controls, pass `tabIndex={-1}` (`LinkTabs`).
+- `pkill -f "next start"` misses the production server, whose process is named `next-server`. A leftover one holds the port, and the next `next start` fails with `EADDRINUSE`.
+- next/font puts a metric-matched fallback face (local Arial, no `unicode-range`) right after each family. With latin and latin-ext as separate families, that fallback catches every diacritic before latin-ext is tried. `fonts.ts` turns it off on the latin faces (`adjustFontFallback: false`); keep it that way when adding a font.
+- Drizzle leaves column names unqualified in a select from one table, even inside a raw `sql` subquery. `${reviews.projectId} = ${projects.id}` then renders as `"project_id" = "id"`, and both resolve to the subquery's own table, so the count is silently wrong. Compare with a value (`= ${projectId}`), or select from a join, where names are qualified (`projects.select`).
+- Tailwind's preflight sets `line-height: 1.5` on `html`, a ratio, while the references use a fixed 24px. Text at 15px or 13px that inherits it gets 22.5px or 19.5px lines, so rows come out shorter than the reference. Set `leading-6` (or the reference's value) wherever smaller text sits in a row.
 - `next build` with `withWorkflow()` generates `src/app/.well-known/workflow/`. It's gitignored and skipped by ESLint.
+- Base UI's focus trap (dialogs) moves the focus back from its hidden guard elements asynchronously. A Playwright check that reads `document.activeElement` straight after a Tab sees the guard or `body`; wait a moment first.
+- A query flag shown once (`?inscris`, `?renuntat`) is dropped by `FlashBanner` with `history.replaceState`, which Next's router follows. A `router.refresh()` after that renders the page without the banner.
+- A `"use server"` file may export only async functions. A constant shared by an action and a page (`SAVED_PARAM`) goes in `lib/`.
+- `redirect()` inside a server action makes the client's `await` reject, so the caller can't tell a save from a failure. Where the form has something to do after a save (screen 09 drops its draft), the action returns `{ ok: true, href }` and the form calls `router.push`.
+- Node's `net.BlockList` matches a plain IPv4 address against an IPv4-mapped IPv6 rule (`::ffff:0:0/96`), so that rule blocks every IPv4 address. Unwrap `::ffff:a.b.c.d` before checking instead (`blocked-addresses.ts`, tested).
+- If port 3000 is held by another project's server, run `DESIGN_FIXTURES=1 BETTER_AUTH_URL=http://localhost:3001 pnpm next dev --port 3001` in `apps/web` and pass `--base http://localhost:3001` to `capture.mjs`.
+- `FlashBanner` drops its query flag on every render, not only on mount: a form that saves and navigates to its own page again (the admin's challenge form) brings the flag back while the banner stays mounted.
+- A form that stays mounted across its own save (an edit page that navigates to itself) can't use a "leaving" flag for its busy state; it never resets. Wrap `router.push` in `useTransition` and use `isPending` (`ChallengeForm`).
+- Better Auth's rate limiter is off unless `NODE_ENV` is `production` (`rateLimit.enabled` defaults to that), so `pnpm dev` never answers 429. To see it, use `next build && next start`, or intercept the request in Playwright.
+- Design fixtures freeze core's clock at 2026-11-11, but Better Auth stamps `users.created_at` with real time, so an account made in fixtures mode is younger than zero to core and can't vote (rule 14). Try a whole flow with new accounts on the real clock (no `DESIGN_FIXTURES`); the seeded screenshots (`/dev/captura/*.svg`) are broken images there, since that route serves them only in fixtures mode.
+- A client navigation (`router.push`) keeps the shared layout, so the header still shows what it rendered before. An action that changes something the header shows (the name, the picture) calls `refresh()` from `next/cache` before the form navigates (`saveProfile`).

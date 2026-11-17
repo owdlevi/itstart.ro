@@ -36,6 +36,10 @@ export function createAuth({ db, signIn, mailer, designFixtures }: AuthDeps) {
       additionalFields: {
         // Null until onboarding (/bun-venit): magic-link users arrive without a name.
         handle: productField({ type: "string", required: false, unique: true }),
+        // What we call them in a sentence ("Ioana, Andrei, Réka și încă 83").
+        // Null means the first word of `name`; set it for family-name-first
+        // names like "Kovács Réka".
+        givenName: productField({ type: "string", required: false }),
         avatarFill: productField({ type: "string", required: false }),
         city: productField({ type: "string", required: false }),
         bio: productField({ type: "string", required: false }),
