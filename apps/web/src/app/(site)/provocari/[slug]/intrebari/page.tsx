@@ -58,7 +58,11 @@ export default async function QuestionsPage({
           {t("list.title")}
         </h1>
         <p className="text-[17px] leading-[26px] text-muted">
-          {t("list.lead", { number: challenge.number, title: challenge.title })}
+          {t("list.lead", {
+            number: challenge.number,
+            title: challenge.title,
+            ended: String(challenge.status === "ended"),
+          }).trim()}
         </p>
       </div>
       <div className="flex flex-col gap-4 pb-10 md:pb-[72px]">
@@ -73,7 +77,9 @@ export default async function QuestionsPage({
             ))}
           </ul>
         ) : (
-          <p className="text-muted">{t("section.none")}</p>
+          <p className="text-muted">
+            {challenge.status === "ended" ? t("list.none") : t("section.none")}
+          </p>
         )}
         {challenge.status === "ended" ? (
           <p className="text-muted">{t("list.closed")}</p>

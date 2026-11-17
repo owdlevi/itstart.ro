@@ -12,10 +12,13 @@ export function SolutionButton({
   questionId,
   answerId,
   isSolution,
+  describedBy,
 }: {
   questionId: string;
   answerId: string;
   isSolution: boolean;
+  /** The answer's author: several buttons read alike. */
+  describedBy: string;
 }) {
   const t = useTranslations("questions");
   const [pending, start] = useTransition();
@@ -25,6 +28,7 @@ export function SolutionButton({
       <button
         type="button"
         disabled={pending}
+        aria-describedby={describedBy}
         onClick={() =>
           start(async () => {
             setFailed(false);

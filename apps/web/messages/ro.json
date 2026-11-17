@@ -245,9 +245,10 @@
     },
     "list": {
       "title": "Întrebări și ajutor",
-      "lead": "Provocarea #{number}: {title}. Întreabă dacă te-ai blocat, răspunde dacă știi.",
+      "lead": "Provocarea #{number}: {title}. {ended, select, true {} other {Întreabă dacă te-ai blocat, răspunde dacă știi.}}",
       "back": "Înapoi la provocare",
-      "closed": "Provocarea s-a încheiat. Întrebările rămân aici de citit."
+      "closed": "Provocarea s-a încheiat. Întrebările rămân aici de citit.",
+      "none": "Nicio întrebare în această provocare."
     },
     "ask": {
       "button": "Pune o întrebare",
@@ -257,7 +258,7 @@
       "optional": "(opțional)",
       "bodyHint": "Ce ai încercat și ce n-a mers.",
       "send": "Trimite întrebarea",
-      "cancel": "Renunță"
+      "cancel": "Anulează"
     },
     "page": {
       "eyebrow": "Provocarea #{number} · Întrebări",

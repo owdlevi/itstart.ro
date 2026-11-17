@@ -196,7 +196,9 @@ async function AnswerItem({
       <Avatar person={answer.author} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 leading-6">
-          <span className="text-[15px] font-bold">{answer.author.name}</span>
+          <span id={`raspuns-${answer.id}`} className="text-[15px] font-bold">
+            {answer.author.name}
+          </span>
           <span className="text-[13px] text-muted">
             <When date={answer.createdAt} template={(when) => when} />
           </span>
@@ -223,6 +225,7 @@ async function AnswerItem({
             questionId={questionId}
             answerId={answer.id}
             isSolution={isSolution}
+            describedBy={`raspuns-${answer.id}`}
           />
         )}
       </div>
