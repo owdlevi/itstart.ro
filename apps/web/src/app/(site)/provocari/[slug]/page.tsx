@@ -3,7 +3,6 @@ import { Check, Download } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { AgentBadge } from "@/components/agent-badge";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/button";
 import { Container } from "@/components/container";
@@ -20,6 +19,7 @@ import { JOINED_PARAM, LEFT_PARAM } from "@/lib/sign-in-destination";
 import { cn } from "@/lib/utils";
 import { core, designFixtures, now } from "@/server/core";
 import { getSession, type Session } from "@/server/session";
+import { EndedChallenge } from "./ended";
 
 const h2 =
   "text-2xl font-bold leading-[1.12] tracking-[-0.02em] md:text-[28px]";
@@ -40,6 +40,7 @@ const FIXTURES_JUST_JOINED = 10 * 60_000;
 /**
  * Screen 02 · Provocare (HANDOVER §6), and screen 08 for a participant: the
  * joined banner (once, after joining), the chip, "Pașii tăi" and leaving.
+ * After the deadline it's screen 11, the results.
  */
 export default async function ChallengePage({
   params,
@@ -53,6 +54,13 @@ export default async function ChallengePage({
   if (!challenge) notFound();
 
   const viewerId = session?.user.id ?? null;
+  if (challenge.status === "ended") {
+    return (
+      <Container>
+        <EndedChallenge challenge={challenge} viewerId={viewerId} />
+      </Container>
+    );
+  }
   const list = {
     challengeId: challenge.id,
     limit: LIST_LIMIT,
@@ -73,8 +81,7 @@ export default async function ChallengePage({
       viewerId ? core.challenges.participation(challenge.id, viewerId) : null,
     ]);
   const boardHref = `/lansari?provocare=${challenge.slug}`;
-  const ended = challenge.status === "ended";
-  const joined = !!participation && !ended;
+  const joined = !!participation;
   const justJoined =
     joined &&
     (query[JOINED_PARAM] === "1" ||
@@ -166,13 +173,7 @@ export default async function ChallengePage({
           Below that (768px tablets included) the flex row wraps to one column. */}
       <div className="flex flex-wrap items-start gap-6 pb-10 md:gap-10 md:pb-[72px]">
         <aside className="flex min-w-0 flex-[1_1_320px] flex-col gap-4 min-[984px]:order-last">
-          {!ended && (
-            <TimeLeft
-              challenge={challenge}
-              session={session}
-              joined={joined}
-            />
-          )}
+          <TimeLeft challenge={challenge} session={session} joined={joined} />
           <People
             challenge={challenge}
             participants={participants}
@@ -274,9 +275,6 @@ async function ChallengeStatusChip({ challenge }: { challenge: Challenge }) {
     getTranslations("challenge.status"),
     getFormatter(),
   ]);
-  if (challenge.status === "ended") {
-    return <AgentBadge>{t("ended")}</AgentBadge>;
-  }
   if (challenge.status === "upcoming") {
     return (
       <StatusChip tone="warning">
@@ -510,13 +508,10 @@ async function People({
       .map((p) => p.givenName),
   ];
   const rest = total - named.length;
-  const ended = challenge.status === "ended";
 
   return (
     <section className={cn(panel, "p-5")}>
-      <h2 className={sideH2}>
-        {t(ended ? "titleEnded" : "title", { n: total })}
-      </h2>
+      <h2 className={sideH2}>{t("title", { n: total })}</h2>
       {participants.length > 0 && (
         <>
           <div
@@ -530,7 +525,7 @@ async function People({
           </div>
           <p className={small}>
             {format.list(rest > 0 ? [...named, t("more", { n: rest })] : named)}
-            . {t(ended ? "launchersEnded" : "launchers", { n: launchers })}
+            . {t("launchers", { n: launchers })}
           </p>
         </>
       )}

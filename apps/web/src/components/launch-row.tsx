@@ -53,10 +53,10 @@ export async function LaunchRow({
           <span className="inline-flex items-center gap-1.5 text-[13px] leading-5 text-muted">
             <Avatar person={project.owner} size={22} />
             {project.owner.name}
-            {project.owner.isAgent && (
-              <AgentBadge>{t("agentBadge")}</AgentBadge>
-            )}
           </span>
+          {/* Its own item on the meta row, so on a phone it wraps whole
+              rather than being cut beside a long agent name. */}
+          {project.owner.isAgent && <AgentBadge>{t("agentBadge")}</AgentBadge>}
           {/* No reference shows "0 comentarii": screen 10's fresh launch has none. */}
           {project.reviews > 0 && (
             <span className="inline-flex items-center gap-1 text-[13px] leading-5 text-muted">
