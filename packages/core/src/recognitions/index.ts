@@ -44,6 +44,13 @@ export type ChallengeResults = {
   reviews: number;
 };
 
+/** "alegerea juriului: Meniu la Minut, de Ioana Mureșan" (screen 12). */
+export type JuryPick = {
+  reason: string;
+  project: { slug: string; name: string };
+  builder: { handle: string | null; name: string };
+};
+
 /** A project the admin can pick for a recognition. */
 export type RecognitionCandidate = {
   id: string;
@@ -92,6 +99,12 @@ export type Recognitions = {
   }): Promise<ChallengeResults>;
   /** The recognition each of these projects got, by project id. */
   of(projectIds: string[]): Promise<Map<string, RecognitionKind>>;
+  /**
+   * The jury's pick of each of these challenges, by challenge id: only once
+   * it has ended (rule 3), and never a late launch or an agent's (rules 7
+   * and 20), whatever the rows say.
+   */
+  juryPicks(challengeIds: string[]): Promise<Map<string, JuryPick>>;
   /** The admin's form: what's entered and what can be picked. Admins only. */
   editor(userId: string, slug: string): Promise<AdminResult<RecognitionEditor>>;
   /**
@@ -239,6 +252,42 @@ export function createRecognitions(deps: {
         .from(recognitions)
         .where(inArray(recognitions.projectId, projectIds));
       return new Map(rows.map((r) => [r.projectId, r.kind]));
+    },
+
+    juryPicks: async (challengeIds) => {
+      if (challengeIds.length === 0) return new Map();
+      const rows = await db
+        .select({
+          challengeId: recognitions.challengeId,
+          reason: recognitions.reason,
+          startsAt: challenges.startsAt,
+          endsAt: challenges.endsAt,
+          project: { slug: projects.slug, name: projects.name },
+          builder: { handle: users.handle, name: users.name },
+        })
+        .from(recognitions)
+        .innerJoin(challenges, eq(challenges.id, recognitions.challengeId))
+        .innerJoin(projects, eq(projects.id, recognitions.projectId))
+        .innerJoin(users, eq(users.id, projects.ownerId))
+        .where(
+          and(
+            inArray(recognitions.challengeId, challengeIds),
+            eq(recognitions.kind, "jury"),
+            eq(projects.challengeId, recognitions.challengeId),
+            eq(projects.stage, "launched"),
+            eq(projects.isLate, false),
+            eq(users.isAgent, false),
+          ),
+        );
+      const at = now();
+      return new Map(
+        rows
+          .filter((row) => challengeStatus(row, at) === "ended")
+          .map(({ challengeId, reason, project, builder }) => [
+            challengeId,
+            { reason, project, builder },
+          ]),
+      );
     },
 
     editor: async (userId, slug) => {

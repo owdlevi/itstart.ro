@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { recognitions as recognitionRows } from "@repo/db";
 import { createTestDb } from "@repo/db/testing";
 import { createProjects } from "../projects";
 import {
@@ -317,5 +318,77 @@ describe("recognitions.results", () => {
     const results = await recognitions.results({ challengeId: challenge.id });
 
     expect(results.reviews).toBe(3 + 4 + 100);
+  });
+});
+
+describe("recognitions.juryPicks", () => {
+  test("names the jury's pick of each ended challenge: project, builder and reason", async () => {
+    const { db, recognitions, admin, challenge, launch } = await setup();
+    const elena = await makeUser(db, {
+      name: "Elena Stan",
+      handle: "elena-stan",
+    });
+    const pick = await launch(
+      { name: "Instalatorul din Florești", slug: "instalatorul" },
+      elena,
+    );
+    const top = await launch({ name: "Top" });
+    await recognitions.save(admin.id, challenge.slug, {
+      community: { projectId: top.id, reason: "Cele mai multe voturi: 9." },
+      jury: { projectId: pick.id, reason: "Curat și clar." },
+      first_project: null,
+    });
+    const other = await makeChallenge(db);
+
+    const picks = await recognitions.juryPicks([challenge.id, other.id]);
+
+    expect(picks.get(challenge.id)).toEqual({
+      reason: "Curat și clar.",
+      project: { slug: "instalatorul", name: "Instalatorul din Florești" },
+      builder: { handle: "elena-stan", name: "Elena Stan" },
+    });
+    expect(picks.has(other.id)).toBe(false);
+  });
+
+  test("shows no pick while the challenge is running: the votes aren't final (rule 3)", async () => {
+    const { db, recognitions, challenge, launch } = await setup(BEFORE);
+    const project = await launch();
+    await db.insert(recognitionRows).values({
+      challengeId: challenge.id,
+      kind: "jury",
+      projectId: project.id,
+      reason: "Prea devreme.",
+    });
+
+    expect((await recognitions.juryPicks([challenge.id])).size).toBe(0);
+  });
+
+  test("never shows an agent's or a late launch as the pick, whatever the rows say (rules 7 and 20)", async () => {
+    const { db, recognitions, challenge, launch } = await setup();
+    const agent = await makeUser(db, { isAgent: true });
+    const byAgent = await launch({ name: "Agent" }, agent);
+    await db.insert(recognitionRows).values({
+      challengeId: challenge.id,
+      kind: "jury",
+      projectId: byAgent.id,
+      reason: "Scris direct în baza de date.",
+    });
+    const other = await makeChallenge(db, { slug: "alta" });
+    const late = await makeProject(db, {
+      ownerId: (await makeUser(db)).id,
+      challengeId: other.id,
+      launchedAt: LAUNCH,
+      isLate: true,
+    });
+    await db.insert(recognitionRows).values({
+      challengeId: other.id,
+      kind: "jury",
+      projectId: late.id,
+      reason: "După termen.",
+    });
+
+    expect((await recognitions.juryPicks([challenge.id, other.id])).size).toBe(
+      0,
+    );
   });
 });

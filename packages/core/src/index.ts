@@ -46,6 +46,7 @@ export function createCore(deps: CoreDeps) {
 export type Core = ReturnType<typeof createCore>;
 export {
   challengeStatus,
+  type ArchivedChallenge,
   type Challenge,
   type ChallengeCounts,
   type ChallengeOption,
@@ -123,6 +124,7 @@ export {
   RECOGNITION_KINDS,
   RECOGNITION_REASON_MAX,
   type ChallengeResults,
+  type JuryPick,
   type RecognitionCandidate,
   type RecognitionEditor,
   type RecognitionEntry,

@@ -69,6 +69,11 @@ export type Challenge = RunningChallenge & {
 };
 
 /** A challenge as the launch board's filter lists it. */
+/** A row of "Toate provocările" (screen 12): running or ended, with its counts. */
+export type ArchivedChallenge = RunningChallenge & {
+  status: Exclude<ChallengeStatus, "upcoming">;
+};
+
 export type ChallengeOption = {
   id: string;
   number: number;
@@ -114,6 +119,12 @@ export type Challenges = {
   bySlug(slug: string): Promise<Challenge | null>;
   /** Every challenge that has started (running or ended), newest first. */
   started(): Promise<ChallengeOption[]>;
+  /**
+   * The same challenges with their counts, for the archive (screen 12): the
+   * running one live (rule 1), the ended ones as they closed. Upcoming ones
+   * aren't listed until they start.
+   */
+  archive(): Promise<ArchivedChallenge[]>;
   /**
    * The first people in a challenge, for its participant list, earliest to
    * join first. The viewer is always among them if they're in it. People who
@@ -227,6 +238,9 @@ export function createChallenges(deps: {
     return row ? withCounts(row) : null;
   };
 
+  /** Started by `at`: running or ended (rule 1). */
+  const startedBy = (at: Date) => lte(challenges.startsAt, at);
+
   return {
     ...createChallengeAdmin({ db, now }),
 
@@ -276,12 +290,25 @@ export function createChallenges(deps: {
           endsAt: challenges.endsAt,
         })
         .from(challenges)
-        .where(lte(challenges.startsAt, at))
+        .where(startedBy(at))
         .orderBy(desc(challenges.startsAt));
       return rows.map(({ title, shortTitle, startsAt, endsAt, ...c }) => ({
         ...c,
         shortTitle: shortTitle ?? title,
         status: challengeStatus({ startsAt, endsAt }, at),
+      }));
+    },
+
+    archive: async () => {
+      const at = now();
+      const rows = await db
+        .select(summary)
+        .from(challenges)
+        .where(startedBy(at))
+        .orderBy(desc(challenges.startsAt));
+      return rows.map((row) => ({
+        ...withCounts(row),
+        status: challengeStatus(row, at) === "running" ? "running" : "ended",
       }));
     },
 
