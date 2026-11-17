@@ -69,7 +69,7 @@ export async function EndedChallenge({
             })}
           </p>
           {/* Holds the M2 link's 44px line while it's hidden, as on screen 02. */}
-          <span className="flex min-h-11 items-center">
+          <span className="flex min-h-11 max-w-full items-center">
             <AgentBadge>{tChallenge("status.ended")}</AgentBadge>
           </span>
           {flags.challengeArchive && (
