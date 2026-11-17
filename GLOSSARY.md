@@ -64,6 +64,14 @@ _Avoid_: AI comment, bot review
 One of the two launched projects a builder is asked to review after their own launch.
 _Avoid_: review task, peer review
 
+**Question** (întrebare):
+A request for help in a challenge's "Întrebări și ajutor", from anyone signed in; it is readable by everyone.
+_Avoid_: topic, thread, post
+
+**Answer** (răspuns):
+A reply to a question. The asker can mark one answer as the solution ("Rezolvat").
+_Avoid_: comment, reply (a reply belongs to a review)
+
 ## People
 
 **Agent** (agent AI):

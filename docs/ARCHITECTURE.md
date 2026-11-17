@@ -27,7 +27,8 @@ src/
     providers.tsx    next-themes (data-theme on <html>)
     fonts.ts, fonts/ Bricolage Grotesque + Inter via next/font/local
     globals.css      design tokens; the only colours, radii and shadows Tailwind knows
-    (site)/          full shell (header + footer): /, /provocari (the archive), /provocari/[slug], /lansari, /proiecte/[slug],
+    (site)/          full shell (header + footer): /, /provocari (the archive), /provocari/[slug],
+                     /provocari/[slug]/intrebari (every question) and /provocari/[slug]/intrebari/[question], /lansari, /proiecte/[slug],
                      /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /u/[handle]/editeaza, /lanseaza
     (onboarding)/    bare header: /intra, /intra/confirma, /bun-venit
     admin/           role = admin, functional styling (no reference design): /admin/provocari (the list),
@@ -51,14 +52,17 @@ src/
                      projects.ts: saveProject, which returns where to go rather than redirecting, and
                      checkLiveUrl, rule 9's check on blur; admin-challenges.ts: saveChallenge, which
                      returns where to go like saveProject; profile.ts: saveProfile, the same, and refresh() so
-                     the header shows the new name and picture)
+                     the header shows the new name and picture; questions.ts: askQuestion, which returns the new
+                     question's slug for the form to go to, postAnswer and markSolution)
   components/        the spec components, one file each (button, avatar, vote-button, project-card,
                      launch-row, countdown, filter-chip, field, checkbox, …), the shell (site-header with BareHeader,
                      site-footer), sign-in-form (screen 06), onboarding-form (screen 07), join-button,
                      leave-challenge and flash-banner (screen 08: a status shown once, which drops its query
                      flag), link-tabs (URL tabs on Base UI), and screen 09's project-form (form and sidebar),
                      screenshot-picker, tool-chips, launch-page and launch-row-frame (LaunchRow's layout,
-                     shared with the form's live preview), and screen 10's copy-link, the admin's challenge-form, and profile-form and avatar-picker ("Editează profilul"); shadcn files, rewritten onto our tokens, in
+                     shared with the form's live preview), and screen 10's copy-link, the admin's challenge-form, and profile-form and avatar-picker ("Editează profilul"), and the questions
+                     thread's question-row, ask-entry (who sees which "Pune o întrebare"), ask-question, answer-form and
+                     solution-button; shadcn files, rewritten onto our tokens, in
                      components/ui/ (tabs, alert-dialog)
   i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
@@ -67,7 +71,7 @@ src/
   lib/schemas/       zod schemas shared by a form and its server action (review.ts, sign-in.ts, onboarding.ts,
                      project.ts, which imports core's own launch rules from @repo/core/project-rules;
                      challenge.ts, the admin's form, likewise from @repo/core/challenge-rules; profile.ts and
-                     onboarding.ts from @repo/core/profile-rules)
+                     onboarding.ts from @repo/core/profile-rules; question.ts from @repo/core/question-rules)
   lib/sign-in-destination.ts   where a sign-in or onboarding goes next (/bun-venit, `next`, the challenge),
                      safeNext(), and joinedHref() with the ?inscris / ?renuntat flags
   lib/auth-client.ts Better Auth's browser client (sign-in calls), magic-link plugin ready
@@ -90,8 +94,8 @@ src/
   emails/            React Email templates
   lib/dates.ts       daysAgo() ("ieri", "acum 3 zile"), timeAgo() and afterLaunch() (review times), and
                      weekOf()/weeksAgo()/weekDays() (Monday–Sunday weeks), in Bucharest
-  flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number, except `challengeArchive`, on by itself
-                     (screen 12 is built); M1 screens must look right with the others off
+  flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number, except `challengeArchive` and
+                     `questions`, on by themselves (built ahead of the rest of M2); M1 screens must look right with the others off
 messages/ro.json     all copy, keys grouped by screen or component; e-mail copy under "emails"
 scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:generate`
 ```
@@ -131,6 +135,7 @@ M1 modules, and M2's as they come:
 | `votes` | done (rules 10–14): `toggle()`, and the admin's `activity()` and `timeline()` (rule 14's timelines, `votes/timeline.ts`: new accounts and bursts marked, `TIMELINE` holds the placeholder numbers) |
 | `reviews` | `thread()` (automated first, replies, counts: rules 17–18) and `post()` (reviews, the owner's replies, 10 per hour, fulfils an assignment: rules 15–16) are done, and so is assignment picking on launch (rule 16: `reviews/assignments.ts`, `assignOnLaunch(tx, …)`, which `projects.create()` and `edit()` call inside their transaction, like `challenges.enter`). To come: hiding (admin) |
 | `recognitions` | M2, done: `results()` (screen 11: the recognitions, the best agent apart with how many people's projects beat it (rule 20), every other launch, the challenge's review count), `of()` (which recognition a project got), `juryPicks()` (screen 12: each ended challenge's jury pick, never late or an agent's), and the admin's `editor()` and `save()` (one per kind per challenge, a project at most once, after the deadline only, never a late launch or an agent's (rules 7 and 20), "first project" only for a builder's first launch ever; the database-free rules in `recognitions/rules.ts`, exported as `@repo/core/recognition-rules`). `projects.launchedIn()` gives it the launches, and `launchedBy()` names each card's recognition |
+| `questions` | M2, done: `list()` (a challenge's questions, latest activity first, with the count), `bySlug()` (one question, the solution first, then the answers oldest first), `ask()` and `answer()` (signed in with a name, never an agent, until the deadline (rule 1), 10 questions and answers an hour together), and `markSolved()` (the asker only, also after the deadline). No editing. The limits in `questions/rules.ts`, exported as `@repo/core/question-rules` |
 | `profiles` | `byHandle()` (the public profile: stats, launched projects, the challenges launched in; never the e-mail, rule 23; it reads projects through `projects.launchedBy()`), `onboard()` (screen 07: name, city, tools, reminders as ticked (rule 22), a handle from the name, once), `editable()` and `edit()` ("Editează profilul": the handle stays, a picture only from storage; the database-free rules in `profiles/rules.ts`, exported as `@repo/core/profile-rules`) are done. To come: consent for "Deschis la colaborări" (M3) |
 | `notifications` | who gets which e-mail when (§11) |
 

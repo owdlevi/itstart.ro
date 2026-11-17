@@ -233,6 +233,8 @@ Judgment calls made while setting up the database, Better Auth and the compositi
   Diffing the aligned regions instead (each section against its shifted counterpart, the thumbnail column left out): desktop 0.36–0.60%, mobile 0.01–0.57%, all under the tool's 0.61% self-test baseline.
 
   _Since changed (2026-11-17, "Screen 12"): "Toate provocările" shows. Same status, percentages and height gaps (423/861px): the link takes the 44px line the chip held for it. The chip's own 44px holder is gone._
+
+  _Since changed (2026-11-17, "Questions and answers"): "Întrebări și ajutor" shows. Desktop light `check` 1.59%, dark `match` 1.39%, the reference's height; mobile `differs` 13.5% and 12.2%, 336px shorter (was 861: the section's 493px and its 32px gap). What's left is the "Și 4 agenți AI" panel (M3), thumbnails, the launched rows and 7 avatars._
 - **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, with and without the Hungarian sample appended to every text: no horizontal scroll and nothing clipped except the tag ellipsis above. Keyboard order follows the visual order (except the sidebar on desktop, above), and every stop shows the 3px outline. Ended (`cafenea`) and upcoming (dates moved in the local database) both render cleanly. Signed in as `andrei-popescu`: "Ai votat" on Tuns la Fix, "96 voturi · proiectul tău" on Scaunul 3 (rule 11).
 
 ## 2026-11-14 · Screen 03 data
@@ -492,6 +494,8 @@ Errors, replacing the field's hint (Field spec), or under the button for the las
   Comparing element positions in the reference HTML and the app with Playwright at 1280 and 390px, the banner, the eyebrow, the title, "Timp rămas", "Pașii tăi" and each step, the buttons and the people panel match to the pixel, apart from the shifts above.
 
   _Since changed (2026-11-17, "Screen 12"): "Toate provocările" shows. On phones the page is now 861px shorter, 02's gap (it was 897: the 36px line the hidden link left is gone), and mobile is 21.1% and 19.4%. Desktop is unchanged (423px, 16.7% and 15.9%). The header lines up with the reference to the pixel at 390px._ Aligned regions: desktop 0.15–0.30% (header, banner, the sidebar down to the steps, the main column), 0.84% around the done step, 0.15% for the people sentence; mobile 0.00–0.03%, and 1.23% around the done step. Avatar rows: 10.9% and 12.1% (the swap).
+
+  _Since changed (2026-11-17, "Questions and answers"): "Întrebări și ajutor" shows. Desktop light and dark `check` 2.43% and 2.15%, the reference's height (was 423px shorter); mobile `differs` 13.1% and 11.9%, 336px shorter (was 861). Signed in, "Pune o întrebare" is a button, as in the reference._
 - **Other screens after the seed change:** 01 mobile 0.47% → 0.57% ("87"), 02 unchanged in size and percentages (15–22%), 03–05 unchanged, 06 5.2% desktop, 07 still `match`.
 - **Manual pass (§9.5):** 390, 768, 1024 and 1280px in both themes, as Bianca, with the Hungarian sample on every text: no horizontal scroll after the chip fix, nothing clipped except the chip ellipsis. Keyboard: the dialog is `role="alertdialog"` with `aria-labelledby` and `aria-describedby`; Tab and Shift+Tab stay inside it (Base UI's focus guards move the focus back asynchronously); Escape returns the focus to "Renunță la provocare". Tried on `pnpm dev` (Playwright):
   - signed out (link to `/intra?provocare=frizerie`, note, 87);
@@ -801,6 +805,47 @@ The store is `itstart-ro-blob` (public, `fra1`, NEXT-ACTIONS). ARCHITECTURE, "Up
 - **The browser learns the adapter from the page** (`uploadVia`, passed from the three form pages to the forms and pickers), not by trying one route and falling back.
 - **Tried on PR #3's preview** with a new password account: two screenshots (one a 4.8 MB png, past the 4.5 MB body cap), saved in a project, shown on its page, then a profile picture (900×600 jpg → 400×400 webp) on the profile. Afterwards the store held the three webp files and nothing under `incoming/`. Locally, the same flow ran through the local adapter.
 - **Found: previews share production's database.** The test account ("Test Blob", `/u/test-blob`) and its project in progress ("Blob 64989") are on production now, along with their three pictures. The agent wasn't allowed to delete production rows; they're listed in NEXT-ACTIONS.
+
+## 2026-11-17 · Questions and answers
+
+HANDOVER §3 M2, §4 Question / Answer, §6 02 and 08 ("Întrebări și ajutor · 14"). The reference shows only the section; everything else here is the agent's call (owner: "if in doubt you can decide").
+
+**Data (`0009_questions`, additive: two tables and two enum values, safe on production's data while previews share it):**
+
+- `questions` (challenge, author, `slug` unique within the challenge, title, `body` (empty when there are no details), `solvedAnswerId`, `hidden`, created) and `answers` (question, author, body, `hidden`, created). `hidden` waits for moderation, like reviews'.
+- `fixture_count_extras` gains `questions` (per challenge) and `answers` (per question). Both counts go through `withExtra`.
+
+**Rules (core, `questions`; 20 tests):**
+
+- **Who asks and answers:** anyone signed in with a name (onboarded), participant or not: help shouldn't wait for joining. Agents are refused, as in reviews: the help thread is between people, and agents write only through their own paths (the review agent, M3's builders). Someone without a name yet goes to `/bun-venit` first, since rows show the name.
+- **When:** from when the challenge is announced until its deadline (rule 1's 23:59). After it, asking and answering close (`closed`); the questions stay readable. Screen 11 doesn't list them (its reference has no such section); `/provocari/<slug>/intrebari` still does.
+- **The solution:** only the asker marks it, changes it or clears it, also after the deadline (it labels what helped, it doesn't change the record). Any visible answer of that question, the asker's own included. A hidden answer stops solving the question. Admins don't mark: if moderation needs it, hiding does.
+- **No editing,** of questions or answers. An answer edited after being marked the solution would change what "Rezolvat" vouches for, and a typo is fixed by a new answer. Moderation (next in M2) is where something gets hidden. Revisit if people ask for it.
+- **Limits:** title 1–120 characters (one line in a row; the reference's longest is 44), details 0–2000, an answer 1–2000 (a review's limit). `QUESTION_LIMITS`, exported as `@repo/core/question-rules` for the forms.
+- **Rate limit:** questions and answers together, 10 per hour per person, counted from their own rows under a per-author advisory lock (like reviews; "Rate limits live in Postgres"). In `QuestionsConfig`.
+- **Order:** latest activity first (the newest answer, or the question before its first), so a thread that moves comes back up. With the seed's times this gives the reference's order. Answers on a question's page: the solution first, then oldest first, like a conversation.
+- **Slugs** come from the title (`slugBase`, now with an optional length: 60 for questions, 40 still for handles and projects), `-2`, `-3`… within the challenge, under a per-challenge lock.
+
+**Pages:**
+
+- **A page per question:** `/provocari/<slug>/intrebari/<question>`, so each has a link to share and reads without JavaScript; in place (expanding rows on 02) would make 02 longer than the reference and leave nothing to link to. Built from screen 04's reviews: eyebrow "Provocarea #4 · Întrebări", the title as H1, the asker and "Rezolvat", the details, "N răspunsuri", the answers, the answer form. The solution is framed with a 2px `primary` border and a "Soluția" chip; the asker sees "Asta a rezolvat-o" under each answer (described by its author, since they read alike) and "Nu mai e soluția" under the picked one.
+- **"Vezi toate"** goes to `/provocari/<slug>/intrebari`: every question in the same rows, 960px like screen 12, with "Pune o întrebare". After the deadline it says the questions stay to be read, with no invitation to ask.
+- **"Pune o întrebare"** (02 and 08): signed out, a link to `/intra?next=…#intrebari` (the reference's link); signed in, a button (08's reference) that opens the form in place, with the focus in the title; "Anulează" closes it and returns the focus. Not "Renunță", which sat beside "Renunță la provocare" on 08. After sending, the new question's page.
+- **The section** shows the latest three, with the count; with none, "Întrebări și ajutor" without a count and a line instead of rows. Each row's title link covers the row (an `after:` overlay), so the whole 77px row is the tap target while it looks like the reference.
+- **`flags.questions` is on by itself**, like `challengeArchive`: raising `MILESTONE` would turn on the share image, which isn't built.
+- **No e-mail when someone answers:** e-mails wait for Resend (NEXT-ACTIONS).
+
+**Seed:** the fixtures hold the three questions' titles, authors, answer counts and solved state. The seed adds what a question's page needs (`QUESTION_THREADS`): the details, the times, and all 12 answers with their authors, the solution included, so the counts are rows; only the challenge's 14 needs 11 extras. Bianca's question comes after her account's date (11 November).
+
+**Visual check (`capture.mjs --only 02,08`, against `pnpm dev`, port 3001):** the section lines up with the reference to the pixel at 1280 and 390px (position, height, each row and the button, measured in both with Playwright); inside it the diff is text antialiasing. Desktop now has the reference's height on both screens; phones are 336px shorter (the agents panel, M3). Each screen's "Visual check" above has a "Since changed" note.
+
+**Full `--milestone M1` capture:** 11/40 `match` (was 10: 02 desktop dark). Every other screen has the same status and height gaps as "M1 end-to-end pass" and "Screen 12" recorded (03: 268/409, 04: 192, 05: 56, 06: 66, 10: 621/489); only 02 and 08 changed.
+
+**Manual pass (§9.5):** the section (signed in, and with the form open), the list and a question page, at 390, 768, 1024 and 1280px in both themes, with the Hungarian sample appended after hydration and long text in the fields: no horizontal scroll, nothing clipped. Tried locally as fixture users: an empty question (error, focus in the title), cancel (focus back on the button), asking (to its page, "Niciun răspuns încă"), an empty answer, an answer from someone else (no mark buttons for them), marking and clearing the solution as the asker ("Rezolvat" on the page and on 02), signed out (links to sign in, back to the section or `#raspunsuri`), Bianca without a name (to `/bun-venit`), and an ended challenge's list. Reseeded after.
+
+**Keyboard pass:** 02's section goes "Vezi toate", each row, "Pune o întrebare". A question page goes skip link, header, "Toate întrebările", the asker's solution buttons, the answer field, "Trimite răspunsul", footer. Every stop shows the 3px outline.
+
+**New copy, for the owner to review:** "Nicio întrebare încă. Dacă te-ai blocat, întreabă aici.", the form ("Întrebarea ta", "O frază, cel mult 120 de caractere.", "Detalii (opțional)", "Ce ai încercat și ce n-a mers.", "Trimite întrebarea", "Anulează"), the list ("Provocarea #4: … Întreabă dacă te-ai blocat, răspunde dacă știi.", "Înapoi la provocare", "Provocarea s-a încheiat. Întrebările rămân aici de citit.", "Nicio întrebare în această provocare."), the page ("Provocarea #4 · Întrebări", "Toate întrebările", "Andrei Popescu a întrebat ieri", "Niciun răspuns încă" / "Un răspuns" / "N răspunsuri", "Soluția", "Asta a rezolvat-o", "Nu mai e soluția", the hint to mark one, "Răspunsul tău", "Trimite răspunsul", "Răspunsul tău e publicat.", "Intră ca să răspunzi", the closed line), and the errors. The seed's details and answers are placeholders, like the jury picks' reasons.
 
 ## Verify during M1 setup
 
