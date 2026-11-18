@@ -15,6 +15,8 @@ import { timeAgo } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { core, now } from "@/server/core";
 import { getSession } from "@/server/session";
+import { questionShare } from "@/server/share-image/cards";
+import { excerpt, shareMetadata } from "@/server/share-image/version";
 
 const getQuestion = cache(async (slug: string, questionSlug: string) => {
   const challenge = await core.challenges.bySlug(slug);
@@ -29,10 +31,15 @@ export async function generateMetadata({
   const { slug, question } = await params;
   const found = await getQuestion(slug, question);
   if (!found) return {};
-  return {
-    title: found.question.title,
-    description: found.question.body || undefined,
-  };
+  const { challenge, question: q } = found;
+  const share = await questionShare(challenge, q);
+  return shareMetadata({
+    title: q.title,
+    description: q.body ? excerpt(q.body) : share.card.byline,
+    path: `/provocari/${challenge.slug}/intrebari/${q.slug}`,
+    share,
+    type: "article",
+  });
 }
 
 /**

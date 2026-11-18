@@ -10,6 +10,8 @@ type ButtonProps = {
   href?: string;
   /** With `href`: a plain link to another site, not a client-side navigation. */
   external?: boolean;
+  /** With `href`: save the file under this name instead of opening it. */
+  download?: string;
   className?: string;
   children: React.ReactNode;
 } & Omit<React.ComponentProps<"button">, "className" | "children">;
@@ -29,6 +31,7 @@ export function Button({
   full,
   href,
   external,
+  download,
   className,
   children,
   ...props
@@ -42,11 +45,12 @@ export function Button({
   );
   // A link takes only what describes it (screen 12: "Vezi rezultatele" of which challenge).
   const describedBy = props["aria-describedby"];
-  if (href && external) {
+  if (href && (external || download)) {
     return (
       <a
         href={href}
-        rel="noopener"
+        rel={external ? "noopener" : undefined}
+        download={download}
         aria-describedby={describedBy}
         className={cls}
       >

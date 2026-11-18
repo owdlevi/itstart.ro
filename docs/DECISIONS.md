@@ -584,9 +584,9 @@ Errors, replacing the field's hint (Field spec), or under the button for the las
 - **Buttons:** primary "Scrie prima părere", or "Scrie a doua părere" once one is done (new copy), to the first open assignment's `#pareri`. When none is open, the button goes and "Vezi proiectul tău" becomes the primary, so the view keeps one. Full width on phones, as in the reference.
 - **Fewer than two assigned:** under the rows, "Al doilea proiect îți apare aici când mai lansează cineva în provocare." or, with none, "Proiectele îți apar aici pe măsură ce lansează și alții în provocare." (new copy).
 - **A project of its own:** no "Mai ai un pas" section; "Vezi proiectul tău" (primary) right under the row.
-- **"Arată-l oamenilor" in M1:** the heading and the copy-link field only. The field shows the address without `https://` (as the reference does), read-only, selected on focus; "Copiază linkul" copies the full link and says screen 04's "Am copiat linkul." in a status line. The address is the request's own host, so locally it reads `localhost:3001/…`. The share image, "Descarcă imaginea" and the hint under the field ("…apare cu imaginea de mai sus") wait for M2 (`flags.shareImage`); "Vrei să te poată contacta cineva?" waits for M3 (`flags.contactConsent`).
+- **"Arată-l oamenilor" in M1:** the heading and the copy-link field only. _Since changed: the image, its button and the hint are on (see "Share image and Open Graph tags")._ The field shows the address without `https://` (as the reference does), read-only, selected on focus; "Copiază linkul" copies the full link and says screen 04's "Am copiat linkul." in a status line. The address is the request's own host, so locally it reads `localhost:3001/…`. The share image, "Descarcă imaginea" and the hint under the field ("…apare cu imaginea de mai sus") wait for M2 (`flags.shareImage`); "Vrei să te poată contacta cineva?" waits for M3 (`flags.contactConsent`).
 - **The closing line stays** ("Îți scriem pe e-mail când primești o părere…"), word for word, though the new-review e-mail waits for Resend: it's an M1 feature (§11).
-- **Visual check (`capture.mjs --only 10`, against `pnpm dev`):** all four `differs` (40% desktop, 30% mobile), all expected:
+- **Visual check (`capture.mjs --only 10`, against `pnpm dev`):** all four `differs` (40% desktop, 30% mobile), all expected. _Since changed: the share image is built, and the gaps are 162/179px (see "Share image and Open Graph tags")._
   - the hidden share image, its button and hint (M2) and the contact section (M3): the page is 621px shorter on desktop and 489px on phones, so everything below the share heading is compared against other content;
   - the link field reads `localhost:3001/proiecte/tuns-la-fix` instead of `itstart.ro/…`;
   - the thumbnails (flat `tint`, §9.4).
@@ -846,6 +846,57 @@ HANDOVER §3 M2, §4 Question / Answer, §6 02 and 08 ("Întrebări și ajutor �
 **Keyboard pass:** 02's section goes "Vezi toate", each row, "Pune o întrebare". A question page goes skip link, header, "Toate întrebările", the asker's solution buttons, the answer field, "Trimite răspunsul", footer. Every stop shows the 3px outline.
 
 **New copy, for the owner to review:** "Nicio întrebare încă. Dacă te-ai blocat, întreabă aici.", the form ("Întrebarea ta", "O frază, cel mult 120 de caractere.", "Detalii (opțional)", "Ce ai încercat și ce n-a mers.", "Trimite întrebarea", "Anulează"), the list ("Provocarea #4: … Întreabă dacă te-ai blocat, răspunde dacă știi.", "Înapoi la provocare", "Provocarea s-a încheiat. Întrebările rămân aici de citit.", "Nicio întrebare în această provocare."), the page ("Provocarea #4 · Întrebări", "Toate întrebările", "Andrei Popescu a întrebat ieri", "Niciun răspuns încă" / "Un răspuns" / "N răspunsuri", "Soluția", "Asta a rezolvat-o", "Nu mai e soluția", the hint to mark one, "Răspunsul tău", "Trimite răspunsul", "Răspunsul tău e publicat.", "Intră ca să răspunzi", the closed line), and the errors. The seed's details and answers are placeholders, like the jury picks' reasons.
+
+## 2026-11-18 · Share image and Open Graph tags
+
+HANDOVER §3 M2 "share image + Open Graph tags", §3's hidden sections ("Arată-l oamenilor" on screen 10), §6 10. The reference shows screen 10's card; everything else here is the agent's call (owner: "if in doubt you can decide").
+
+**How it's drawn:**
+
+- **`next/og` (`ImageResponse`), in Node route handlers**, as Next 16.3's docs offer: Satori lays out flexbox JSX, Resvg makes the PNG. No new dependency. Turned down: a headless browser (a 5 GB function for one picture) and sharp with SVG text (no layout, no wrapping).
+- **Fonts:** `next/og` reads ttf, otf and woff, not woff2, and draws a variable font at its default instance. So `apps/web/scripts/share-fonts.py` (fonttools 4.60.1, run by hand; how is in the file) pins static instances from `src/app/fonts/`: Bricolage 500 and 800 at optical size 42 (the wordmark is drawn at ~42px) and 800 at 96 (the title at ~99px; a browser picks the optical size from the font size), Inter 400, 600 and 700, latin and latin-ext merged into one file each (~670 KB together, committed in `src/server/share-image/fonts/`). Each path is a literal, so the deploy's file tracing keeps them (checked in `.next`'s `.nft.json`).
+- **One card, two renderers:** `ShareCard` (`components/share-card.tsx`) is inline styles and flexbox only, so Satori draws the same element screen 10 shows. The PNG gets numbers (the desktop reference × 1200/680); the page gets CSS variables set per breakpoint to the reference's own sizes (phones aren't a straight scale of desktop). Screen 10 shows this HTML twin, not an `<img>` of the PNG: it lines up with the reference to the pixel and costs no second request, and both come from the same data, so they can't say different things.
+- **Colours:** the light theme's tokens (`band`, `on-band`, `ink`, `bg`, `on-accent`, and the avatar pastels), in both themes: the image is one picture for every viewer, and screen 10's dark reference keeps them too. `lib/share-image.ts` holds them; a test checks them against `tokens.json`.
+- **Diacritics:** ă â î ș ț (comma below) and ő ű render; checked on every card, a Hungarian name included.
+- **The builder's picture** is read from our storage (`readPicture`: the local file or our Blob URL, nothing else) and inlined as a PNG. Satori here fails on webp, which is what we store, so sharp converts it (128px). A picture it can't read falls back to the initials.
+
+**What it shows (1200×630, Open Graph's usual size and the reference's ratio):**
+
+- **A project:** the reference's card: wordmark, "Provocarea #4 · noiembrie 2026" ("Proiect propriu" without a challenge), the name, the pitch, the builder's avatar and "Construit și lansat de …". **In progress:** "Construit de … · în lucru" (it's public and shareable, but not launched). An agent: the square "AI" tile (rule 19). A late launch says nothing about it: lateness matters to recognitions, not to a link.
+- **No screenshot.** The reference has none, a builder's screenshot has any shape and size and would be unreadable at a preview's size behind text, and a text card looks the same for every project, before and after screenshots exist.
+- **Long text:** a title over 22 characters steps down to 75%, over 40 to 60% (a 60-character name fits two lines); titles clamp at 3 lines, the line under at 2, with an ellipsis.
+- **A challenge (02/11):** its label, title and summary; "Termen: 30 noiembrie" while it runs, "Începe pe …" before, "Încheiată. Vezi recunoașterile pe ITStart." after. No counts: they'd change the image every few minutes.
+- **A profile (05):** "Constructor pe ITStart" ("Agent AI pe ITStart"), the name, the bio, the avatar with the city and "N proiecte lansate".
+- **A question:** "Provocarea #4 · Întrebări", the title, the asker with "a întrebat · N răspunsuri" or "· Rezolvat". Its details stay out (they're long, and the description carries them).
+- **The site's default** (every other page: Home, Lansări, sign-in…): "Comunitate de constructori din România", "Construiește ceva real.", the site's description and the footer's line. `app/opengraph-image.tsx`, prerendered once.
+
+**Addresses and caching:**
+
+- `/proiecte/<slug>/imagine`, `/provocari/<slug>/imagine`, `/u/<handle>/imagine`, `/provocari/<slug>/intrebari/<question>/imagine`, rendered per request (404 for an unknown one).
+- **Versioned:** the page's `og:image` carries `?v=` with a hash of everything the card shows. With the current hash the response is `public, max-age=31536000, immutable`; without one, or with an old one, it's the current card with `s-maxage=300`. Link previews (WhatsApp, Facebook, LinkedIn) cache an image by its URL for days, so a renamed project gets a new URL instead of a stale picture. Turned down: rendering at build time (the data changes) and a fixed TTL (stale previews or a render on every crawl).
+- **"Descarcă imaginea"** links to the same URL with `&descarca`, which adds `Content-Disposition: attachment` (`<a download>` too), saved as `<slug>.png`. A link, not the reference's `<button>`: it fetches a file, and works without JavaScript.
+
+**Tags:**
+
+- Each shared page sets `og:title`, `og:description`, `og:url`, `og:type` (`article` for a project and a question, `profile`, `website`), `og:site_name` "ITStart", `og:locale` `ro_RO`, the image with its size, type and alt, and the same for Twitter (`summary_large_image`). The share title drops "ITStart ·" (the site name says it). Descriptions: the pitch, the challenge's summary, the bio (or the card's line), the question's details (200 characters) or its line.
+- **`metadataBase` comes from the request** (`server/origin.ts`, moved from screen 10, which uses it for the copy-link field), so the tags name the address the page was reached at: `itstart-ro.vercel.app` now, `itstart.ro` once the domain is added, a preview's own address on a preview. Every page is dynamic already, so this costs nothing.
+- **Next replaces `openGraph` whole,** so `shareMetadata()` repeats the site's fields; pages without their own inherit the layout's and the default image.
+- The challenge page had no metadata; it now has "Provocarea #4: <title>" (new copy).
+- **Checked** as a crawler sees them: each page fetched with Facebook's user agent, signed out, and its `<head>` read (the tags are in `<head>`, not streamed). Real link previews can't be tried while Vercel Authentication covers production (NEXT-ACTIONS).
+
+**`flags.shareImage` is on by itself,** like `questions` and `challengeArchive`.
+
+**No migration:** `projects.bySlug()` also returns its challenge's `startsAt` (the month on the card).
+
+**Visual check (`capture.mjs --only 10`, against `pnpm dev`):** all four still `differs` (9.4% and 9.1% desktop, 9.6% and 9.5% phones), all expected: the page is 162px shorter on desktop and 179px on phones, which is "Vrei să te poată contacta cineva?" (M3; "Îți scriem…" sits exactly that much higher), so everything below compares against other content; the link field reads `localhost:3000/…`; the thumbnails (§9.4). The gaps were 621/489px. Inside the section, every text box of the card (wordmark, label, title, pitch, initials, byline), the card, "Descarcă imaginea", the label and the hint are at the reference's position and size to the pixel at 1280 and 390px (Playwright, both documents). The card and button region alone differs by 0.09% (desktop) and 0.04% (phones), text antialiasing. The initials needed the reference's fixed 24px line (preflight's 1.5 put them 0.7px off).
+
+**Full `--milestone M1` capture:** 11/40 `match`, as "Questions and answers" recorded; every other screen has the same status and height gaps (02 and 08: 336px on phones, 03: 268/409, 04: 192, 05: 56, 06: 66). Only 10 changed.
+
+**Manual pass (§9.5):** screen 10 at 390, 768, 1024 and 1280px in both themes, for Tuns la Fix and for a long case (a 57-character name with ő and Ș, an 83-character pitch, a builder with a picture), with the Hungarian sample appended to the copy after hydration: no horizontal scroll, the card keeps 1200:630 (it clips like the PNG rather than growing) and nothing leaves it. The PNGs for that case, an agent's project, a project in progress, a profile with a picture, a question, both challenges and the default were looked at one by one. Reseeded after.
+
+**Keyboard pass** (1280 light, 390 dark): …the assigned rows, "Scrie prima părere", "Vezi proiectul tău", "Descarcă imaginea", the link field, "Copiază linkul", the footer, each with the 3px outline; Enter on "Descarcă imaginea" saves `tuns-la-fix.png`. The card is an image (`role="img"`, the reference's label), not a stop.
+
+**New copy, for the owner to review:** "Descarcă imaginea" (the reference's), "Proiect propriu", "Construit de … · în lucru", the alt texts ("Imagine de distribuit: …, de …, lansat / în lucru pe ITStart", "Provocarea #4 pe ITStart: …", "… pe ITStart", "Întrebare pe ITStart: …", "ITStart: Construiește ceva real."), "Termen: …", "Începe pe …", "Încheiată. Vezi recunoașterile pe ITStart.", "Constructor pe ITStart" / "Agent AI pe ITStart", "N proiecte lansate", "… a întrebat · N răspunsuri / Rezolvat", and the challenge page's title "Provocarea #4: …".
 
 ## Verify during M1 setup
 

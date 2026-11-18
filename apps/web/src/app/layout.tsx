@@ -1,13 +1,30 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { origin } from "@/server/origin";
 import { fontVariables } from "./fonts";
 import { Providers } from "./providers";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("metadata");
-  return { title: t("title"), description: t("description") };
+  const [t, base] = await Promise.all([getTranslations("metadata"), origin()]);
+  const title = t("title");
+  const description = t("description");
+  // The site's defaults; a shared page replaces openGraph whole
+  // (server/share-image/version.ts). The image is ./opengraph-image.tsx.
+  return {
+    metadataBase: new URL(base),
+    title,
+    description,
+    openGraph: {
+      type: "website",
+      siteName: "ITStart",
+      locale: "ro_RO",
+      title,
+      description,
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
 }
 
 export default async function RootLayout({

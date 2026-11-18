@@ -23,13 +23,15 @@ Everything lives under `src/`, imported with the `@/*` alias.
 ```
 src/
   app/
-    layout.tsx       html/body, font variables, Providers
+    layout.tsx       html/body, font variables, Providers; the site's metadata (metadataBase from the request)
+    opengraph-image.tsx   the site's default share image, for pages without their own
     providers.tsx    next-themes (data-theme on <html>)
     fonts.ts, fonts/ Bricolage Grotesque + Inter via next/font/local
     globals.css      design tokens; the only colours, radii and shadows Tailwind knows
     (site)/          full shell (header + footer): /, /provocari (the archive), /provocari/[slug],
                      /provocari/[slug]/intrebari (every question) and /provocari/[slug]/intrebari/[question], /lansari, /proiecte/[slug],
-                     /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /u/[handle]/editeaza, /lanseaza
+                     /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /u/[handle]/editeaza, /lanseaza;
+                     …/imagine next to a project, a challenge, a profile and a question: its share image (route.ts)
     (onboarding)/    bare header: /intra, /intra/confirma, /bun-venit
     admin/           role = admin, functional styling (no reference design): /admin/provocari (the list),
                      /admin/provocari/noua and /admin/provocari/[slug] (ChallengeForm), /admin/provocari/[slug]/recunoasteri
@@ -62,10 +64,11 @@ src/
                      screenshot-picker, tool-chips, launch-page and launch-row-frame (LaunchRow's layout,
                      shared with the form's live preview), and screen 10's copy-link, the admin's challenge-form, and profile-form and avatar-picker ("Editează profilul"), and the questions
                      thread's question-row, ask-entry (who sees which "Pune o întrebare"), ask-question, answer-form and
-                     solution-button; shadcn files, rewritten onto our tokens, in
+                     solution-button, and share-card (the share image's card: the PNG and screen 10's preview); shadcn files, rewritten onto our tokens, in
                      components/ui/ (tabs, alert-dialog)
   i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
+  lib/share-image.ts the share image's size and colours (the light theme's tokens, tested against tokens.json)
   lib/upload-image.ts   the pickers' upload: the bytes to /api/capturi (local), or the original to Blob and
                      its URL to /api/capturi (blob); pages pass `uploadVia` from storage.ts
   lib/schemas/       zod schemas shared by a form and its server action (review.ts, sign-in.ts, onboarding.ts,
@@ -88,16 +91,21 @@ src/
     storage.ts       screenshot storage and sharp → webp (a profile picture: 400px square): Vercel Blob on
                      Vercel, the local adapter (apps/web/.data/capturi) off it; null on Vercel without a token.
                      blob-paths.ts says which URLs are the store's (tested)
+    origin.ts        the site's address as the request reached it (metadataBase, screen 10's link)
+    share-image/     the share images (next/og): cards.ts builds each page's card from the data it loaded,
+                     version.ts hashes it into `?v=` and makes the Open Graph tags (shareMetadata), render.tsx
+                     draws the PNG with the static fonts in fonts/ (made by scripts/share-fonts.py)
     link-checker.ts  rule 9's real check (https GET, 5 s, private addresses refused at connect time), and
                      withExampleHosts() for design fixtures; blocked-addresses.ts holds the address list
   workflows/         Vercel Workflow: sleep, ask core.notifications, send
   emails/            React Email templates
   lib/dates.ts       daysAgo() ("ieri", "acum 3 zile"), timeAgo() and afterLaunch() (review times), and
                      weekOf()/weeksAgo()/weekDays() (Monday–Sunday weeks), in Bucharest
-  flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number, except `challengeArchive` and
-                     `questions`, on by themselves (built ahead of the rest of M2); M1 screens must look right with the others off
+  flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number, except `challengeArchive`,
+                     `questions` and `shareImage`, on by themselves (built ahead of the rest of M2); M1 screens must look right with the others off
 messages/ro.json     all copy, keys grouped by screen or component; e-mail copy under "emails"
 scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:generate`
+scripts/share-fonts.py     static ttf instances of the brand fonts for next/og (fonttools; run by hand, see the file)
 ```
 
 - **Styling** uses only our tokens (`bg-surface`, `text-muted`, `rounded-lg`, `shadow-card`…), which come from `docs/design/tokens.json` via `globals.css`. Tailwind's default palette, radii and shadows are switched off, so `bg-red-500` or `rounded-2xl` don't compile. Pixel values from the reference HTML go in as arbitrary values (`text-[15px]`) rather than rounded to the scale. Components need no `dark:` classes, because every colour is a variable.
@@ -218,3 +226,6 @@ M1 modules, and M2's as they come:
 - Better Auth's rate limiter is off unless `NODE_ENV` is `production` (`rateLimit.enabled` defaults to that), so `pnpm dev` never answers 429. To see it, use `next build && next start`, or intercept the request in Playwright.
 - Design fixtures freeze core's clock at 2026-11-11, but Better Auth stamps `users.created_at` with real time, so an account made in fixtures mode is younger than zero to core and can't vote (rule 14). Try a whole flow with new accounts on the real clock (no `DESIGN_FIXTURES`); the seeded screenshots (`/dev/captura/*.svg`) are broken images there, since that route serves them only in fixtures mode.
 - A client navigation (`router.push`) keeps the shared layout, so the header still shows what it rendered before. An action that changes something the header shows (the name, the picture) calls `refresh()` from `next/cache` before the form navigates (`saveProfile`).
+- `next/og` (Satori) reads no woff2, draws a variable font at its default instance, and fails on webp pictures ("u2 is not iterable", a 500 with no other message). Fonts come from `scripts/share-fonts.py`; pictures go in as PNG data URIs (`server/share-image/render.tsx`).
+- Satori clamps lines on a `display: block` element; a browser needs `display: -webkit-box` with `-webkit-box-orient: vertical`. `ShareCard` takes which one from its look.
+- Vitest in `apps/web` has no `@/` alias and can't parse JSX: a tested file imports relatively, and constants a test needs live in a `.ts` file (`lib/share-image.ts`, not `share-card.tsx`).
