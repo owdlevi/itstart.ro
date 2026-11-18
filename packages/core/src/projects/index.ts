@@ -22,6 +22,7 @@ import {
   votes,
   type Db,
 } from "@repo/db";
+import { isAdmin } from "../admins";
 import { withExtra } from "../counts";
 import { createCannedLinkChecker, type LinkChecker } from "../link-checker";
 import type { RecognitionKind } from "../recognitions/rules";
@@ -29,6 +30,7 @@ import { ASSIGNMENTS_PER_BUILDER } from "../reviews/assignments";
 import { createPrefixStorage, type Storage } from "../storage";
 import type { ProjectEdit, ProjectInput } from "./rules";
 import { shownCheck } from "../link-checks";
+import { humanReviews, visibleReview } from "../reviews/visible";
 import { createSaving, type EditableResult, type SaveResult } from "./save";
 
 export {
@@ -135,6 +137,8 @@ export type ProjectPage = Omit<ProjectSummary, "owner"> & {
   updates: ProjectUpdate[];
   /** The latest confirmed link check (HANDOVER §4 linkCheck); null before the first. */
   linkCheck: { checkedAt: Date; ok: boolean } | null;
+  /** Hidden by an admin: only its owner and admins get it at all. */
+  hidden: boolean;
 };
 
 /** A launched project on its builder's profile (screen 05). */
@@ -173,6 +177,8 @@ export type LaunchPage = {
   project: ProjectSummary & {
     launchedAt: Date;
     isLate: boolean;
+    /** Hidden by an admin: its share image is a 404. */
+    hidden: boolean;
     challenge: { slug: string; number: number; title: string } | null;
   };
   /** In the order they were given, then oldest launch first. */
@@ -208,7 +214,10 @@ export type Projects = {
    * (rule 5), filtered and sorted. No limit yet: a month brings tens of launches.
    */
   board(opts: BoardOpts): Promise<BoardProject[]>;
-  /** One project with everything its page shows, or null if there's none. */
+  /**
+   * One project with everything its page shows, or null if there's none. A
+   * hidden project is null to everyone but its owner and admins.
+   */
   bySlug(slug: string, viewerId?: string | null): Promise<ProjectPage | null>;
   /** Someone's launched projects, newest launch first. */
   launchedBy(
@@ -263,11 +272,7 @@ export function createProjects(deps: {
     projects.id,
     "votes",
   );
-  const reviewCount = withExtra(
-    sql`select count(*) from ${reviews} where ${reviews.projectId} = ${projects.id} and not ${reviews.isAutomated} and not ${reviews.hidden}`,
-    projects.id,
-    "reviews",
-  );
+  const reviewCount = humanReviews(projects.id);
   const latestUpdate = sql<{
     version: number;
     text: string;
@@ -287,12 +292,15 @@ export function createProjects(deps: {
     limit,
     viewerId,
     agents = true,
+    hidden = false,
   }: {
     where: (SQL | undefined)[];
     orderBy: SQL[];
     limit?: number;
     viewerId?: string | null;
     agents?: boolean;
+    /** Include projects an admin hid; only for their owner's and admins' eyes. */
+    hidden?: boolean;
   }) => {
     const voted = viewerId
       ? sql<boolean>`exists (select 1 from ${votes} where ${votes.projectId} = ${projects.id} and ${votes.userId} = ${viewerId})`
@@ -308,6 +316,7 @@ export function createProjects(deps: {
         screenshots: projects.screenshots,
         stage: projects.stage,
         isLate: projects.isLate,
+        hidden: projects.hidden,
         owner: {
           id: users.id,
           handle: users.handle,
@@ -332,7 +341,13 @@ export function createProjects(deps: {
       .from(projects)
       .innerJoin(users, eq(users.id, projects.ownerId))
       .leftJoin(challenges, eq(challenges.id, projects.challengeId))
-      .where(and(...where, agents ? undefined : eq(users.isAgent, false)))
+      .where(
+        and(
+          ...where,
+          agents ? undefined : eq(users.isAgent, false),
+          hidden ? undefined : eq(projects.hidden, false),
+        ),
+      )
       .orderBy(...orderBy);
     const rows = await (limit === undefined ? query : query.limit(limit));
 
@@ -401,8 +416,17 @@ export function createProjects(deps: {
         orderBy: [],
         limit: 1,
         viewerId,
+        hidden: true,
       });
       if (!row) return null;
+      // A hidden project is its owner's and the admins' to see, no one else's.
+      if (
+        row.hidden &&
+        row.owner.id !== viewerId &&
+        !(viewerId && (await isAdmin(db, viewerId)))
+      ) {
+        return null;
+      }
       const [[details], updates, [launched]] = await Promise.all([
         db
           .select({
@@ -445,6 +469,7 @@ export function createProjects(deps: {
             and(
               eq(projects.ownerId, row.owner.id),
               eq(projects.stage, "launched"),
+              eq(projects.hidden, false),
             ),
           ),
       ]);
@@ -489,6 +514,8 @@ export function createProjects(deps: {
         orderBy: [],
         limit: 1,
         viewerId,
+        // Its owner still sees it; the assignments below leave hidden ones out.
+        hidden: true,
       });
       if (!row) return { ok: false, reason: "not_found" };
       if (row.owner.id !== viewerId) return { ok: false, reason: "not_owner" };
@@ -501,7 +528,7 @@ export function createProjects(deps: {
           isLate: projects.isLate,
           challengeId: projects.challengeId,
           votes: sql<number>`(select count(*) from ${votes} where ${votes.projectId} = ${row.id} and ${votes.createdAt} <= ${projects.launchedAt})::int`,
-          reviews: sql<number>`(select count(*) from ${reviews} where ${reviews.projectId} = ${row.id} and not ${reviews.isAutomated} and not ${reviews.hidden} and ${reviews.createdAt} <= ${projects.launchedAt})::int`,
+          reviews: sql<number>`(select count(*) from reviews r where r.project_id = ${row.id} and not r.is_automated and ${visibleReview} and r.created_at <= ${projects.launchedAt})::int`,
         })
         .from(projects)
         .where(eq(projects.id, row.id));

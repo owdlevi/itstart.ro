@@ -62,6 +62,9 @@ export const projects = pgTable(
     linkOk: boolean(),
     // A first failure waiting for a second in a row before it shows.
     linkFailedAt: timestamp({ withTimezone: true }),
+    // Hidden by an admin (moderation): out of every list and count, its page
+    // a 404 to everyone but its owner and admins.
+    hidden: boolean().notNull().default(false),
     createdAt: createdAt(),
   },
   (t) => [index().on(t.challengeId)],

@@ -1,7 +1,7 @@
 import { and, asc, count, eq, ne, sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { projects, reviewAssignments, reviews, users, type Db } from "@repo/db";
-import { withExtra } from "../counts";
+import { humanReviews } from "./visible";
 
 /** How many projects each builder is asked to review in a challenge (rule 16). */
 export const ASSIGNMENTS_PER_BUILDER = 2;
@@ -40,6 +40,10 @@ export async function assignOnLaunch(
     .from(users)
     .where(eq(users.id, ownerId));
   if (!owner || owner.isAgent) return;
+  const [launched] = await tx
+    .select({ hidden: projects.hidden })
+    .from(projects)
+    .where(eq(projects.id, projectId));
 
   // Assignments a reviewer holds in this challenge, done or not.
   const held = (reviewerId: AnyPgColumn | string) =>
@@ -62,19 +66,14 @@ export async function assignOnLaunch(
           eq(projects.challengeId, challengeId),
           eq(projects.stage, "launched"),
           ne(projects.ownerId, ownerId),
+          eq(projects.hidden, false),
           eq(users.isAgent, false),
           sql`not ${reviewedBy(ownerId, projects.id)}`,
           sql`not exists (select 1 from ${reviewAssignments} where ${reviewAssignments.reviewerId} = ${ownerId} and ${reviewAssignments.projectId} = ${projects.id})`,
         ),
       )
       .orderBy(
-        asc(
-          withExtra(
-            sql`select count(*) from ${reviews} where ${reviews.projectId} = ${projects.id} and not ${reviews.isAutomated} and not ${reviews.hidden}`,
-            projects.id,
-            "reviews",
-          ),
-        ),
+        asc(humanReviews(projects.id)),
         asc(projects.launchedAt),
         asc(projects.id),
       )
@@ -93,7 +92,9 @@ export async function assignOnLaunch(
     }
   }
 
-  // Builders who launched here before there were two projects to give them.
+  // Builders who launched here before there were two projects to give them,
+  // unless this launch is hidden (an admin hid it while in progress).
+  if (launched?.hidden) return;
   const short = await tx
     .selectDistinct({ id: users.id })
     .from(projects)

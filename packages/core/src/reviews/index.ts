@@ -1,6 +1,6 @@
 import { and, asc, count, eq, gte, isNull, sql } from "drizzle-orm";
 import { projects, reviewAssignments, reviews, users, type Db } from "@repo/db";
-import { withExtra } from "../counts";
+import { humanReviews, visibleReview } from "./visible";
 
 export type ReviewAuthor = {
   id: string;
@@ -118,12 +118,8 @@ export function createReviews(deps: {
           .orderBy(reviews.createdAt, reviews.id),
         db
           .select({
-            human: withExtra(
-              sql`select count(*) from ${reviews} where ${reviews.projectId} = ${projectId} and not ${reviews.isAutomated} and not ${reviews.hidden}`,
-              projectId,
-              "reviews",
-            ),
-            automated: sql<number>`(select count(*) from ${reviews} where ${reviews.projectId} = ${projectId} and ${reviews.isAutomated} and not ${reviews.hidden})::int`,
+            human: humanReviews(projectId),
+            automated: sql<number>`(select count(*) from reviews r where r.project_id = ${projectId} and r.is_automated and ${visibleReview})::int`,
           })
           // Drizzle leaves columns unqualified in a one-table select, so the
           // subqueries compare with the id itself, not projects.id.
@@ -175,7 +171,7 @@ export function createReviews(deps: {
             challengeId: projects.challengeId,
           })
           .from(projects)
-          .where(eq(projects.id, projectId));
+          .where(and(eq(projects.id, projectId), eq(projects.hidden, false)));
         if (!project) return refuse("not_found");
         if (author.isAgent) return refuse("agent");
 
@@ -249,6 +245,7 @@ export function createReviews(deps: {
               eq(reviewAssignments.reviewerId, authorId),
               isNull(reviewAssignments.doneAt),
               eq(projects.challengeId, project.challengeId),
+              eq(projects.hidden, false),
             ),
           )
           .orderBy(

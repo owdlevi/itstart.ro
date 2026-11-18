@@ -88,7 +88,7 @@ export function createVotes(deps: {
           })
           .from(projects)
           .leftJoin(challenges, eq(projects.challengeId, challenges.id))
-          .where(eq(projects.id, projectId));
+          .where(and(eq(projects.id, projectId), eq(projects.hidden, false)));
         if (!project) return refuse("not_found");
 
         if (voter.isAgent) return refuse("agent");

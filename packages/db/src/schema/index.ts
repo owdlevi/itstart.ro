@@ -8,3 +8,4 @@ export * from "./reviews";
 export * from "./fixture-counts";
 export * from "./recognitions";
 export * from "./questions";
+export * from "./reports";
