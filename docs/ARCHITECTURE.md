@@ -46,7 +46,8 @@ src/
                              fixtures' screenshots (transparent SVGs) when DESIGN_FIXTURES=1; 404 otherwise
     api/             Better Auth handler (auth/[...all]), capturi (one picture: the local adapter's bytes, or
                      the Blob adapter's original by URL), capturi/token (Blob's client-upload token),
-                     unsubscribe endpoint
+                     unsubscribe endpoint, cron/verifica-linkuri (Vercel Cron, hourly: starts one
+                     link-check run; needs CRON_SECRET on Vercel, open off it)
     actions/         server actions, one file per area (votes.ts: toggleVote, reviews.ts: postReview,
                      sign-in.ts: finishSignIn, which sends someone on after Better Auth signs them in,
                      onboarding.ts: completeOnboarding, participation.ts: joinChallenge and
@@ -95,14 +96,16 @@ src/
     share-image/     the share images (next/og): cards.ts builds each page's card from the data it loaded,
                      version.ts hashes it into `?v=` and makes the Open Graph tags (shareMetadata), render.tsx
                      draws the PNG with the static fonts in fonts/ (made by scripts/share-fonts.py)
-    link-checker.ts  rule 9's real check (https GET, 5 s, private addresses refused at connect time), and
+    link-checker.ts  rule 9's real check (also the scheduled one) (https GET, 5 s, private addresses refused at connect time), and
                      withExampleHosts() for design fixtures; blocked-addresses.ts holds the address list
-  workflows/         Vercel Workflow: sleep, ask core.notifications, send
+  workflows/         Vercel Workflow: ask core, act, report back. link-checks.ts: checkLinks (core.linkChecks.due(),
+                     then check() ten at a time per step); started by the cron route. Later: sleep, ask
+                     core.notifications, send
   emails/            React Email templates
   lib/dates.ts       daysAgo() ("ieri", "acum 3 zile"), timeAgo() and afterLaunch() (review times), and
                      weekOf()/weeksAgo()/weekDays() (Monday–Sunday weeks), in Bucharest
   flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number, except `challengeArchive`,
-                     `questions` and `shareImage`, on by themselves (built ahead of the rest of M2); M1 screens must look right with the others off
+                     `questions`, `shareImage` and `linkCheck`, on by themselves (built ahead of the rest of M2); M1 screens must look right with the others off
 messages/ro.json     all copy, keys grouped by screen or component; e-mail copy under "emails"
 scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:generate`
 scripts/share-fonts.py     static ttf instances of the brand fonts for next/og (fonttools; run by hand, see the file)
@@ -127,7 +130,7 @@ scripts/share-fonts.py     static ttf instances of the brand fonts for next/og (
 - **A rate limit** goes in the core module that owns the action and counts that action's own rows (e.g. `vote_events`, `reviews`). There's no Redis and no generic counter table.
 - **A table, column or index** goes in `packages/db/src/schema/`. Then run `pnpm db:generate` and commit the generated migration. Leave applied migrations as they are: fix forward with a new one. After rebasing a PR, regenerate its migration, because an out-of-order merge silently skips the older one.
 - **A new endpoint or server action** goes in `apps/web`. Its body is: authenticate, parse, one `core` call, map the result.
-- **A scheduled or delayed job** goes in `apps/web/src/workflows/`. It sleeps, asks core what to do, and does it.
+- **A scheduled or delayed job** goes in `apps/web/src/workflows/`. It sleeps (or is started by a cron route, like `checkLinks`), asks core what to do, and does it. A recurring job is a Vercel Cron in `apps/web/vercel.json` that calls a route under `app/api/cron/`, which starts the workflow; the route checks `CRON_SECRET`.
 - **A new vendor** passes the EU-residency check first (ADR 0001).
 
 ## `packages/core`
@@ -139,7 +142,8 @@ M1 modules, and M2's as they come:
 | `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
 | `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `started()` (the board's chips), `archive()` (screen 12: the started challenges with their counts, newest first), `participants()` (rule 2), `challengeStatus()`, `join()` and `leave()` (rule 2; not after the deadline, not before onboarding), `participation()` and `steps()` ("Pașii tăi") are done, and so are the admin's `all()`, `editable()`, `create()` and `edit()` (`challenges/admin.ts`: the month gives the dates, one challenge a month, numbers follow months, the month and slug fixed once it starts; the database-free rules in `challenges/rules.ts`, exported as `@repo/core/challenge-rules`) |
 | `admins` | `isAdmin(userId)`: the role, read from the database on every call |
-| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`), `bySlug()` (the project page) and `launchedBy()` (a profile's cards) are done, and so are `launch()` (screen 10: the owner's launch and their review assignments, with counts as of the launch for design fixtures), `create()`, `edit()` and `editable()` (screen 09: rules 4 and 6–9, updates, joining the running challenge; `projects/save.ts`, with the database-free rules in `projects/rules.ts`, exported as `@repo/core/project-rules`). To come: the link check over time (M2), hiding (moderation) |
+| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`), `bySlug()` (the project page) and `launchedBy()` (a profile's cards) are done, and so are `launch()` (screen 10: the owner's launch and their review assignments, with counts as of the launch for design fixtures), `create()`, `edit()` and `editable()` (screen 09: rules 4 and 6–9, updates, joining the running challenge; `projects/save.ts`, with the database-free rules in `projects/rules.ts`, exported as `@repo/core/project-rules`). `bySlug()` also gives the latest confirmed link check (`linkCheck`), and every save that runs rule 9's check records it. To come: hiding (moderation) |
+| `linkChecks` | M2, done: `due()` (the links due now, longest waiting first, at most `LINK_CHECKS.batch`) and `check()` (one link through the `linkChecker` seam; a failure shows on the second in a row; an answer for a link changed since is dropped). The rules (how often, what a result means) in `link-checks/rules.ts`; the state is three nullable columns on `projects` |
 | `votes` | done (rules 10–14): `toggle()`, and the admin's `activity()` and `timeline()` (rule 14's timelines, `votes/timeline.ts`: new accounts and bursts marked, `TIMELINE` holds the placeholder numbers) |
 | `reviews` | `thread()` (automated first, replies, counts: rules 17–18) and `post()` (reviews, the owner's replies, 10 per hour, fulfils an assignment: rules 15–16) are done, and so is assignment picking on launch (rule 16: `reviews/assignments.ts`, `assignOnLaunch(tx, …)`, which `projects.create()` and `edit()` call inside their transaction, like `challenges.enter`). To come: hiding (admin) |
 | `recognitions` | M2, done: `results()` (screen 11: the recognitions, the best agent apart with how many people's projects beat it (rule 20), every other launch, the challenge's review count), `of()` (which recognition a project got), `juryPicks()` (screen 12: each ended challenge's jury pick, never late or an agent's), and the admin's `editor()` and `save()` (one per kind per challenge, a project at most once, after the deadline only, never a late launch or an agent's (rules 7 and 20), "first project" only for a builder's first launch ever; the database-free rules in `recognitions/rules.ts`, exported as `@repo/core/recognition-rules`). `projects.launchedIn()` gives it the launches, and `launchedBy()` names each card's recognition |
@@ -229,3 +233,6 @@ M1 modules, and M2's as they come:
 - `next/og` (Satori) reads no woff2, draws a variable font at its default instance, and fails on webp pictures ("u2 is not iterable", a 500 with no other message). Fonts come from `scripts/share-fonts.py`; pictures go in as PNG data URIs (`server/share-image/render.tsx`).
 - Satori clamps lines on a `display: block` element; a browser needs `display: -webkit-box` with `-webkit-box-orient: vertical`. `ShareCard` takes which one from its look.
 - Vitest in `apps/web` has no `@/` alias and can't parse JSX: a tested file imports relatively, and constants a test needs live in a `.ts` file (`lib/share-image.ts`, not `share-card.tsx`).
+- Vercel Cron runs only on production deployments, never on previews or locally. To try a cron route locally, call it yourself (`curl http://localhost:<port>/api/cron/verifica-linkuri`); without `CRON_SECRET` it's open off Vercel. Workflow's local world runs the run inside `next dev` or `next start`.
+- A scheduled link check fetches real sites. Locally, before calling the cron route on the real clock, mark the seeded projects as just checked (`update projects set link_checked_at = now(), link_ok = true`) and point one project at a dead `.invalid` address; never loop over real people's sites. In fixtures mode `.example` links answer without a request (`withExampleHosts`).
+- The workflow file imports `@/server/core` at the top: Workflow's build removes step bodies from the workflow bundle and drops what only they used, so `server-only`, `pg` and core stay in the step bundle (checked with `next build`).

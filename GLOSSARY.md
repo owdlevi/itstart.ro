@@ -42,6 +42,10 @@ _Avoid_: publish, submit, release
 A launch after the challenge deadline; allowed, but excluded from recognitions.
 _Avoid_: overdue
 
+**Link check** (verificarea linkului):
+A request to a project's live link to see that it opens for anyone, on save (rule 9) and every few hours after; a failure shows only on the second in a row.
+_Avoid_: uptime check, ping, health check
+
 **Project update** (actualizare):
 A one-line, versioned note on what changed in a project.
 _Avoid_: changelog entry, post
