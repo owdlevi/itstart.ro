@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Check } from "lucide-react";
-import { headers } from "next/headers";
+import { Check, Download } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache } from "react";
@@ -9,12 +8,16 @@ import { Container } from "@/components/container";
 import { CopyLink } from "@/components/copy-link";
 import { LaunchRow } from "@/components/launch-row";
 import { ProjectVote } from "@/components/project-vote";
+import { ShareCardPreview } from "@/components/share-card";
 import { StatusChip } from "@/components/status-chip";
 import { VoteCount } from "@/components/vote-button";
 import { flags } from "@/flags";
 import { cn } from "@/lib/utils";
 import { core, designFixtures } from "@/server/core";
+import { origin } from "@/server/origin";
 import { getSession } from "@/server/session";
+import { projectShare } from "@/server/share-image/cards";
+import { DOWNLOAD_PARAM, imagePath } from "@/server/share-image/version";
 
 const h2 =
   "text-[22px] font-bold leading-[1.12] tracking-[-0.02em] md:text-[26px]";
@@ -39,14 +42,6 @@ export async function generateMetadata({
   return { title: t("metaTitle", { name: result.page.project.name }) };
 }
 
-/** The site's own address, as this request reached it. */
-async function origin() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  return `${proto}://${host}`;
-}
-
 /**
  * Screen 10 · Lansat (HANDOVER §6): right after a launch, the project and the
  * two reviews its builder is asked for (rule 16). Owner only.
@@ -67,6 +62,9 @@ export default async function LaunchedRoute({
   // Someone else's project, or one still in progress: its page.
   if (!result.ok) redirect(`/proiecte/${slug}`);
   const { project, assignments, expected } = result.page;
+  // The same card as the PNG and the project page's og:image.
+  const page = flags.shareImage && (await core.projects.bySlug(slug, user.id));
+  const share = page ? await projectShare(page) : null;
 
   const name = user.givenName ?? user.name.trim().split(/\s+/)[0];
   const done = assignments.filter((a) => a.done).length;
@@ -169,7 +167,22 @@ export default async function LaunchedRoute({
 
         <section className={cn(section, divided)}>
           <h2 className={h2}>{t("share.title")}</h2>
-          {/* M2: the share image and "Descarcă imaginea" go here. */}
+          {share && (
+            <>
+              <ShareCardPreview card={share.card} alt={share.alt} />
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="secondary"
+                  href={`${imagePath(projectHref, share)}&${DOWNLOAD_PARAM}`}
+                  download={`${project.slug}.png`}
+                  className="w-full md:w-auto"
+                >
+                  <Download size={18} strokeWidth={2.2} aria-hidden />
+                  {t("share.download")}
+                </Button>
+              </div>
+            </>
+          )}
           <CopyLink
             url={`${base}${projectHref}`}
             hint={flags.shareImage ? t("share.hint") : undefined}
