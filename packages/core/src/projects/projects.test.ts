@@ -475,6 +475,29 @@ describe("projects.bySlug", () => {
     expect(page!.updates.map((u) => u.version)).toEqual([2, 1]);
   });
 
+  test("shows the latest confirmed link check, never a first failure on its own", async () => {
+    const { projects, make } = await setup();
+    const checkedAt = new Date("2026-11-11T02:35:00Z");
+    await make({ slug: "niciodata" });
+    await make({
+      slug: "merge",
+      linkCheckedAt: checkedAt,
+      linkOk: true,
+      linkFailedAt: new Date("2026-11-11T05:00:00Z"),
+    });
+    await make({ slug: "picat", linkCheckedAt: checkedAt, linkOk: false });
+
+    expect((await projects.bySlug("niciodata"))!.linkCheck).toBeNull();
+    expect((await projects.bySlug("merge"))!.linkCheck).toEqual({
+      checkedAt,
+      ok: true,
+    });
+    expect((await projects.bySlug("picat"))!.linkCheck).toEqual({
+      checkedAt,
+      ok: false,
+    });
+  });
+
   test("returns null for an unknown slug", async () => {
     const { projects } = await setup();
     expect(await projects.bySlug("nu-exista")).toBeNull();

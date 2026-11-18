@@ -28,6 +28,7 @@ import type { RecognitionKind } from "../recognitions/rules";
 import { ASSIGNMENTS_PER_BUILDER } from "../reviews/assignments";
 import { createPrefixStorage, type Storage } from "../storage";
 import type { ProjectEdit, ProjectInput } from "./rules";
+import { shownCheck } from "../link-checks";
 import { createSaving, type EditableResult, type SaveResult } from "./save";
 
 export {
@@ -132,6 +133,8 @@ export type ProjectPage = Omit<ProjectSummary, "owner"> & {
   };
   /** Newest first. */
   updates: ProjectUpdate[];
+  /** The latest confirmed link check (HANDOVER §4 linkCheck); null before the first. */
+  linkCheck: { checkedAt: Date; ok: boolean } | null;
 };
 
 /** A launched project on its builder's profile (screen 05). */
@@ -411,6 +414,9 @@ export function createProjects(deps: {
             buildHardestPart: projects.buildHardestPart,
             buildPrompt: projects.buildPrompt,
             launchedAt: projects.launchedAt,
+            linkCheckedAt: projects.linkCheckedAt,
+            linkOk: projects.linkOk,
+            linkFailedAt: projects.linkFailedAt,
             city: users.city,
             challenge: {
               slug: challenges.slug,
@@ -465,6 +471,11 @@ export function createProjects(deps: {
           prompt: d.buildPrompt,
         },
         launchedAt: d.launchedAt,
+        linkCheck: shownCheck({
+          checkedAt: d.linkCheckedAt,
+          ok: d.linkOk,
+          failedAt: d.linkFailedAt,
+        }),
         // A left join gives an object of nulls when there's no challenge.
         challenge: d.challenge?.slug ? d.challenge : null,
         owner: { ...row.owner, city: d.city, launched: launched?.n ?? 0 },

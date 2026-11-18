@@ -10,6 +10,7 @@ import {
 import { challengeStatus, enter } from "../challenges";
 import { withExtra } from "../counts";
 import type { LinkChecker } from "../link-checker";
+import { linkPassed } from "../link-checks";
 import { assignOnLaunch } from "../reviews/assignments";
 import { freeSlug, slugBase } from "../slugs";
 import type { Storage } from "../storage";
@@ -267,6 +268,8 @@ export function createSaving(deps: {
             stage: value.stage,
             // Only the running challenge takes new projects, so never late.
             launchedAt: launched ? at : null,
+            // Rule 9's check just answered: it's the first link check.
+            ...linkPassed(at),
             createdAt: at,
           })
           .returning({ id: projects.id });
@@ -341,7 +344,8 @@ export function createSaving(deps: {
         const missing = missingToLaunch(value);
         if (missing.length) return { ok: false, reason: "incomplete", missing };
       }
-      if (value.liveUrl !== current.liveUrl || launching) {
+      const checked = value.liveUrl !== current.liveUrl || launching;
+      if (checked) {
         const link = await checkLink(value.liveUrl);
         if (link) return link;
       }
@@ -356,6 +360,8 @@ export function createSaving(deps: {
             ...(value.build.duration !== current.buildDuration && {
               buildDurationText: null,
             }),
+            // Rule 9's check answered: it counts as the latest link check.
+            ...(checked && linkPassed(at)),
             ...(launching && {
               stage: "launched" as const,
               launchedAt: at,

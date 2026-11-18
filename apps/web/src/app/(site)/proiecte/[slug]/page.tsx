@@ -20,6 +20,7 @@ import { Tag } from "@/components/tag";
 import { afterLaunch, timeAgo } from "@/lib/dates";
 import { SAVED_PARAM } from "@/lib/schemas/project";
 import { cn } from "@/lib/utils";
+import { flags } from "@/flags";
 import { core, now } from "@/server/core";
 import { getSession } from "@/server/session";
 import { projectShare } from "@/server/share-image/cards";
@@ -122,7 +123,6 @@ export default async function ProjectPageRoute({
             ))}
           </div>
         </div>
-        {/* M2: "Link verificat acum 3 ore. Merge." goes under the buttons. */}
         <div className="flex w-full flex-col gap-1.5 md:w-auto md:items-end">
           <div className="flex flex-wrap gap-3">
             <Button
@@ -150,6 +150,9 @@ export default async function ProjectPageRoute({
               </Button>
             )}
           </div>
+          {flags.linkCheck && project.linkCheck && (
+            <LinkCheckLine check={project.linkCheck} own={own} />
+          )}
         </div>
       </div>
 
@@ -310,6 +313,47 @@ export default async function ProjectPageRoute({
         </aside>
       </div>
     </Container>
+  );
+}
+
+/** "Link verificat acum 3 ore. Merge." (M2): the latest confirmed link check. */
+async function LinkCheckLine({
+  check,
+  own,
+}: {
+  check: { checkedAt: Date; ok: boolean };
+  own: boolean;
+}) {
+  const [t, format] = await Promise.all([
+    getTranslations("projectPage"),
+    getFormatter(),
+  ]);
+  const ago = timeAgo(check.checkedAt, now());
+  const when = ago
+    ? t("reviews.ago", ago)
+    : t("linkCheck.on", {
+        date: format.dateTime(check.checkedAt, {
+          day: "numeric",
+          month: "long",
+        }),
+      });
+  return (
+    <>
+      <p
+        className={cn(
+          "text-[13px] leading-[18px]",
+          check.ok ? "text-muted" : "font-semibold text-warning-ink",
+        )}
+      >
+        {t(check.ok ? "linkCheck.ok" : "linkCheck.failing", { when })}
+      </p>
+      {/* The owner can do something about it; everyone else just knows. */}
+      {!check.ok && own && (
+        <p className="max-w-[420px] text-[13px] leading-[18px] text-muted md:text-right">
+          {t("linkCheck.ownerHint")}
+        </p>
+      )}
+    </>
   );
 }
 

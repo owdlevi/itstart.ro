@@ -196,6 +196,10 @@ const BUILD_DURATION: Record<
 // (rule 4), three where the reference shows three. /dev/captura serves them as
 // transparent images, so the `tint` placeholder behind each shows (HANDOVER §9.1).
 const SCREENSHOTS: Record<string, number> = { "tuns-la-fix": 3 };
+
+// Screen 04 reads "Link verificat acum 3 ore. Merge.": every fixture link was
+// last checked 3 hours before the fixtures' moment (07:35 on 11 November).
+const LINK_CHECKED_AT = new Date("2026-11-11T04:35:00+02:00");
 // Joined the running challenge before the reference moment. Bianca isn't:
 // screen 08 shows her right after joining, so she joins a minute before the
 // frozen clock, on top of the counts the references show ("87 de oameni";
@@ -500,6 +504,8 @@ await withDb((db) =>
                     )
                   : null,
           isLate: p.late ?? false,
+          linkCheckedAt: LINK_CHECKED_AT,
+          linkOk: true,
         })),
       )
       .returning({ id: projects.id });

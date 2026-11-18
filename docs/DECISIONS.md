@@ -898,6 +898,46 @@ HANDOVER §3 M2 "share image + Open Graph tags", §3's hidden sections ("Arată-
 
 **New copy, for the owner to review:** "Descarcă imaginea" (the reference's), "Proiect propriu", "Construit de … · în lucru", the alt texts ("Imagine de distribuit: …, de …, lansat / în lucru pe ITStart", "Provocarea #4 pe ITStart: …", "… pe ITStart", "Întrebare pe ITStart: …", "ITStart: Construiește ceva real."), "Termen: …", "Începe pe …", "Încheiată. Vezi recunoașterile pe ITStart.", "Constructor pe ITStart" / "Agent AI pe ITStart", "N proiecte lansate", "… a întrebat · N răspunsuri / Rezolvat", and the challenge page's title "Provocarea #4: …".
 
+## 2026-11-18 · Link checker
+
+HANDOVER §3 M2 "link checker", §4 Project `linkCheck {checkedAt, ok}`, §3's hidden sections ("Link verificat…" on 04) and §6 04. The reference shows only "Link verificat acum 3 ore. Merge."; everything else here is the agent's call (owner: "if in doubt you can decide").
+
+**The schedule:**
+
+- **A Vercel Cron starts one workflow run an hour** (`vercel.json`: `/api/cron/verifica-linkuri`, `0 * * * *`). The route starts `checkLinks` (`src/workflows/link-checks.ts`), which asks `core.linkChecks.due()` for the links that are due and checks them through `core.linkChecks.check()`, ten at a time per step. Turned down: a workflow that sleeps an hour and starts itself again (Workflow's own pattern for recurring jobs). It needs something to start the first run and something to stop two chains running side by side (a hook token handed from run to run), and a broken chain stops quietly. A cron needs neither, and core's "due" makes a start too many harmless: it hands out nothing that isn't due. No new vendor: Cron is Vercel's, and the run lives in `fra1` like the functions (ADR 0001/0002). Vercel calls Cron Jobs "legacy, to be migrated to Schedules"; the `crons` key still works, and moving means changing only the trigger.
+- **Crons run only on production.** Previews never check anything (they'd write to production's database anyway).
+- **The route** needs `Authorization: Bearer $CRON_SECRET`, which Vercel sends. On Vercel without the secret, it refuses everything (fails closed); off Vercel it's open, for local work. **Not set yet:** the agent wasn't allowed to add a production secret, so until the owner adds `CRON_SECRET` (NEXT-ACTIONS) production checks a link only when it's saved, and the line's time grows from there.
+- **How often:** a link that opens is checked again after 6 hours; after a day once its challenge has ended (those pages change less and are read less). After a failure, an hour. A confirmed failing link is tried hourly while its challenge runs or it's a project of its own, daily after the challenge ends. A project never checked is due at once.
+- **Which projects:** every project, launched and in progress (both are public with a live link to open), ended challenges' too (their pages stay up: profiles, screen 11). Once moderation exists, hidden projects should be left out (NEXT-ACTIONS).
+- **How many:** at most 60 checks a run (the longest waiting first), ten at a time inside one step. A check takes at most 20 s (5 s for each of up to 4 requests), so a step takes at most 20 s and a run about two minutes, well inside a function's 300 s. 60 an hour covers about 350 projects at one check every 6 hours; that's many months away, and `LINK_CHECKS.batch` raises it.
+
+**What a result means** (`core/link-checks/rules.ts`, tested):
+
+- **"Merge"** is rule 9's check, unchanged (`server/link-checker.ts`): one GET, 5 s, up to 3 https redirects, 2xx (or Cloudflare's bot check) opens. 401/403, any other status, no answer within 5 s, a redirect to http or a private address all count as "doesn't open". One meaning for the same words on save and over time.
+- **A failure shows only on the second in a row,** an hour apart, so a host's short outage or a cold start doesn't mark a project. Until then the page keeps the last confirmed result. One success shows at once.
+- **Stored** as three nullable columns on `projects` (migration `0010_link_checks`: additive, harmless to `main`'s code while previews share production's database): `link_checked_at` and `link_ok` (the result shown and when it was last confirmed) and `link_failed_at` (a first failure waiting for a second). Not a table of checks: nothing shows history, and a log would grow by a row per project every few hours.
+- **Rule 9's check on save is recorded too:** when it runs (create, a changed link, a launch) it has just answered, so it's the latest check (`linkPassed`). An edit that doesn't check the link leaves the result as it was.
+- **A changed link** drops an answer in flight: `check()` records only if the project's link is still the one that was checked (under a row lock, so two runs can't both count a first failure).
+
+**On screen 04** (`flags.linkCheck`, on by itself like `shareImage`):
+
+- **Opens:** "Link verificat acum 3 ore. Merge." under the buttons, the reference's 13/18 `muted`. The time is `timeAgo()` from `lib/dates.ts` with the reviews' words ("chiar acum", "acum 3 ore", "ieri", "acum 3 zile"), then "pe 3 noiembrie" after a week.
+- **Fails (confirmed): shown to everyone,** "Link verificat acum 2 ore. Nu se deschide.", in `warning-ink` and 600. A visitor about to press "Deschide proiectul" is better told; the two-in-a-row rule and the hourly retry keep it fair to the builder, and it clears by itself on the first check that answers. `warning-ink` on `bg` is 7.5:1 (light) and 11.7:1 (dark).
+- **The owner** also gets what to do: "Încearcă-l într-o fereastră privată: trebuie să se deschidă pentru oricine. Când merge din nou, aici se schimbă singur." (same size, `muted`, right-aligned under the line on desktop).
+- **Never checked** (production's projects from before this change, until their first check, within the hour): nothing, so the layout is the M1 one.
+- **Design fixtures:** the seed records every fixture link as checked at 04:35 on 11 November, three hours before the fixtures' moment, as the reference reads.
+
+**Visual check (`capture.mjs --only 04`, against `pnpm dev`):** desktop light `differs` 7.26% (was 7.7%), desktop dark `check` 3.02% (was 3.6%), phones `differs` 10.69% and 7.44% (were 15.8% and 14.4%). The line is at the reference's position and size to the pixel (Playwright, both documents: 202×18 at x 966, y 299 at 1280px; 358×18 at y 447 at 390px), and on desktop the buttons now sit where the reference has them. Every heading in the main column lines up at both widths. What's left is as "Screen 04 build" lists: the screenshots (§9.4), the M3 chip and "Scrie-i Ioanei" (the sidebar's lower panels sit 108px higher), "Raportează o problemă…" (M2, the next session's) and "Făcut pentru"'s title. The phone gap is 168px (was 192): 108 + 60.
+
+**Full `--milestone M1` capture:** 11/40 `match`, as "Share image and Open Graph tags" recorded; every other screen has the same status and height gaps. Only 04 changed.
+
+**Tried locally:**
+
+- **The schedule,** on the real clock (no `DESIGN_FIXTURES`): every seeded link marked as just checked, so nothing real was fetched, one project pointed at `https://itstart-link-mort.invalid` and one at `https://example.com`. The cron route was called four times, 15 s apart, with the dead project's times moved back an hour between calls. Run 1: `example.com` opened; the dead link failed once and still showed as opening. Run 2: confirmed failing. Runs 3–4: tried again each "hour". `example.com` wasn't checked again. The same on `next build && next start` (the workflow bundle takes `@/server/core`). The route with a `CRON_SECRET`: no header 401, a wrong one 401, the right one 200.
+- **Manual pass (§9.5):** 04 at 390, 768, 1024 and 1280px in both themes, as the owner (failing: both lines), a visitor signed in and one signed out, with the Hungarian sample appended to the lines after hydration: no horizontal scroll, the lines wrap inside the column. **Keyboard:** the line adds no stop; the order through the title block is unchanged (tags, "Deschide proiectul", the vote, "Distribuie", the strip), with the 3px outline. Reseeded after.
+
+**New copy, for the owner to review:** "Link verificat … Nu se deschide.", "pe {date}" (after a week), and the owner's hint above.
+
 ## Verify during M1 setup
 
 Facts the research couldn't confirm. Check each one once, and record the result here.
