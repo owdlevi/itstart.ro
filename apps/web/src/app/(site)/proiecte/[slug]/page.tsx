@@ -22,6 +22,8 @@ import { SAVED_PARAM } from "@/lib/schemas/project";
 import { cn } from "@/lib/utils";
 import { core, now } from "@/server/core";
 import { getSession } from "@/server/session";
+import { projectShare } from "@/server/share-image/cards";
+import { shareMetadata } from "@/server/share-image/version";
 
 const h2 =
   "text-[22px] font-bold leading-[1.12] tracking-[-0.02em] md:text-[26px]";
@@ -44,10 +46,14 @@ export async function generateMetadata({
   ]);
   const project = await getProject(slug, session?.user.id ?? null);
   if (!project) return {};
-  return {
+  return shareMetadata({
     title: t("metaTitle", { name: project.name }),
+    shareTitle: project.name,
     description: project.pitch,
-  };
+    path: `/proiecte/${project.slug}`,
+    share: await projectShare(project),
+    type: "article",
+  });
 }
 
 /** Screen 04 · Proiect (HANDOVER §6). */

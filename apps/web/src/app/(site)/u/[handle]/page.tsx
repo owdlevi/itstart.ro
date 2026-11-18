@@ -16,6 +16,8 @@ import { StatusChip } from "@/components/status-chip";
 import { PROFILE_SAVED_PARAM } from "@/lib/schemas/profile";
 import { core } from "@/server/core";
 import { getSession } from "@/server/session";
+import { profileShare } from "@/server/share-image/cards";
+import { shareMetadata } from "@/server/share-image/version";
 
 const getProfile = cache((handle: string, viewerId: string | null) =>
   core.profiles.byHandle(handle, viewerId),
@@ -38,10 +40,15 @@ export async function generateMetadata({
   ]);
   const profile = await getProfile(handle, session?.user.id ?? null);
   if (!profile) return {};
-  return {
+  const share = await profileShare(profile);
+  return shareMetadata({
     title: t("metaTitle", { name: profile.name }),
-    description: profile.bio ?? undefined,
-  };
+    shareTitle: profile.name,
+    description: profile.bio ?? share.card.byline,
+    path: `/u/${profile.handle}`,
+    share,
+    type: "profile",
+  });
 }
 
 /** Screen 05 · Profil (HANDOVER §6). */

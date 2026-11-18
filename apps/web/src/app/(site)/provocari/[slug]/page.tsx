@@ -1,8 +1,10 @@
 import type { Challenge, Participant } from "@repo/core";
 import { Check, Download } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
+import { cache } from "react";
 import { AskEntry } from "@/components/ask-entry";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/button";
@@ -21,6 +23,8 @@ import { JOINED_PARAM, LEFT_PARAM } from "@/lib/sign-in-destination";
 import { cn } from "@/lib/utils";
 import { core, designFixtures, now } from "@/server/core";
 import { getSession, type Session } from "@/server/session";
+import { challengeShare } from "@/server/share-image/cards";
+import { shareMetadata } from "@/server/share-image/version";
 import { EndedChallenge } from "./ended";
 
 const h2 =
@@ -40,6 +44,25 @@ const DAY = 86_400_000;
 // frozen there; Bianca's seeded join is a minute old (DECISIONS, "Screen 08 data").
 const FIXTURES_JUST_JOINED = 10 * 60_000;
 
+const getChallenge = cache((slug: string) => core.challenges.bySlug(slug));
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/provocari/[slug]">): Promise<Metadata> {
+  const { slug } = await params;
+  const [challenge, t] = await Promise.all([
+    getChallenge(slug),
+    getTranslations("challenge"),
+  ]);
+  if (!challenge) return {};
+  return shareMetadata({
+    title: t("metaTitle", { number: challenge.number, title: challenge.title }),
+    description: challenge.summary ?? challenge.intro ?? challenge.title,
+    path: `/provocari/${challenge.slug}`,
+    share: await challengeShare(challenge),
+  });
+}
+
 /**
  * Screen 02 · Provocare (HANDOVER §6), and screen 08 for a participant: the
  * joined banner (once, after joining), the chip, "Pașii tăi" and leaving.
@@ -51,7 +74,7 @@ export default async function ChallengePage({
 }: PageProps<"/provocari/[slug]">) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   const [challenge, session] = await Promise.all([
-    core.challenges.bySlug(slug),
+    getChallenge(slug),
     getSession(),
   ]);
   if (!challenge) notFound();
