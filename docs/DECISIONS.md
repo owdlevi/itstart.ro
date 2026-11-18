@@ -908,7 +908,7 @@ HANDOVER §3 M2 "link checker", §4 Project `linkCheck {checkedAt, ok}`, §3's h
 - **Crons run only on production.** Previews never check anything (they'd write to production's database anyway).
 - **The route** needs `Authorization: Bearer $CRON_SECRET`, which Vercel sends. On Vercel without the secret, it refuses everything (fails closed); off Vercel it's open, for local work. **Not set yet:** the agent wasn't allowed to add a production secret, so until the owner adds `CRON_SECRET` (NEXT-ACTIONS) production checks a link only when it's saved, and the line's time grows from there.
 - **How often:** a link that opens is checked again after 6 hours; after a day once its challenge has ended (those pages change less and are read less). After a failure, an hour. A confirmed failing link is tried hourly while its challenge runs or it's a project of its own, daily after the challenge ends. A project never checked is due at once.
-- **Which projects:** every project, launched and in progress (both are public with a live link to open), ended challenges' too (their pages stay up: profiles, screen 11). Once moderation exists, hidden projects should be left out (NEXT-ACTIONS).
+- **Which projects:** every project, launched and in progress (both are public with a live link to open), ended challenges' too (their pages stay up: profiles, screen 11). Once moderation exists, hidden projects should be left out (NEXT-ACTIONS). _Done: `due()` leaves them out ("Raportează and moderation")._
 - **How many:** at most 60 checks a run (the longest waiting first), ten at a time inside one step. A check takes at most 20 s (5 s for each of up to 4 requests), so a step takes at most 20 s and a run about two minutes, well inside a function's 300 s. 60 an hour covers about 350 projects at one check every 6 hours; that's many months away, and `LINK_CHECKS.batch` raises it.
 
 **What a result means** (`core/link-checks/rules.ts`, tested):
@@ -937,6 +937,63 @@ HANDOVER §3 M2 "link checker", §4 Project `linkCheck {checkedAt, ok}`, §3's h
 - **Manual pass (§9.5):** 04 at 390, 768, 1024 and 1280px in both themes, as the owner (failing: both lines), a visitor signed in and one signed out, with the Hungarian sample appended to the lines after hydration: no horizontal scroll, the lines wrap inside the column. **Keyboard:** the line adds no stop; the order through the title block is unchanged (tags, "Deschide proiectul", the vote, "Distribuie", the strip), with the 3px outline. Reseeded after.
 
 **New copy, for the owner to review:** "Link verificat … Nu se deschide.", "pe {date}" (after a week), and the owner's hint above.
+
+## 2026-11-18 · Raportează and moderation
+
+HANDOVER §3 M2 "„Raportează” + moderation queue", §4 Report and the `hidden` flags, §3's hidden sections ("Raportează o problemă" on 04), §6 04 and §12 ("A person (admin) can hide an automated review"). The reference shows only the link; everything else here is the agent's call (owner: "if in doubt you can decide").
+
+**Data (`0011_moderation`, additive, safe on production's data while previews share it):** a `reports` table (project, reporter, reason, details, created, `resolvedAt`, `resolvedBy`) and `projects.hidden` (`not null default false`: Postgres adds it without a rewrite, and `main`'s code never writes it). `reviews`, `questions` and `answers` had `hidden` already. The reporter and the resolving admin are `on delete set null`: a report outlives the account (GDPR deletion later), which is what §4's `reporterId?` allows. No log of who hid what: the reports carry who resolved them, and hiding is reversible from "Ascunse". Revisit if more than a couple of admins moderate.
+
+**Reporting (core `moderation.report()`, the rules in `moderation/rules.ts`, exported as `@repo/core/moderation-rules`):**
+
+- **Signed in only.** A visitor's report would need their IP for any rate limit (personal data we'd rather not keep) or none at all, and the team can't tell a report from spam without an account behind it. The link shows to everyone; signed out, it goes to `/intra?next=…` and back.
+- **Not the owner** (`own`: they edit their project instead; the link isn't shown to them) and **never an agent** (`agent`, as in reviews and questions). A hidden or unknown project is `not_found`. Being onboarded isn't needed: a name isn't shown to anyone but the team.
+- **Reasons** (`report_reason`): "Linkul nu se deschide sau duce altundeva", "Nu pare făcut de cine l-a publicat", "Are conținut jignitor sau ilegal", "E spam sau reclamă", "Arată datele personale ale cuiva", "Altceva". Details are optional, up to 1000 characters, and required for "Altceva" (`details_empty`). The link check covers dead links already, but a link that opens on something else needs a person.
+- **Limits, counted from `reports`** (DECISIONS, "Rate limits live in Postgres"): one open report per person per project (`already`; another once the team resolves it), and 5 an hour per person (`rate_limited`), under a per-reporter advisory lock.
+- **What the reporter sees:** the project page again, with "Mulțumim. Raportul a ajuns la echipa ITStart." once (`?raportat=1`, `FlashBanner`). Nothing after that: no status page, no e-mail.
+- **The owner isn't told about reports.** A report is a signal to the team, often wrong, and telling the builder invites arguments with whoever they guess reported them. The owner learns only if the team acts (below). The form says so: "Raportul ajunge doar la echipa ITStart, nu și la constructor."
+
+**The form (`/proiecte/<slug>/raporteaza`; no reference design):** a page of its own, not a dialog, so the reference's link stays a link and the form works without JavaScript's dialog plumbing; screen 07's 560px panel, like "Editează profilul". "← Înapoi la proiect", H1 "Raportează o problemă", a line naming the project and builder, the reasons as native radios (22px, like Checkbox; one tab stop, arrow keys move) in a `fieldset` with "Ce nu e în regulă?", "Detalii (opțional)", primary "Trimite raportul" and secondary "Renunță". Errors replace hints and take the focus (Field spec); refusals from core are announced under the buttons. Signed out → sign-in; the owner → the project; hidden or unknown → 404. `noindex`.
+
+**The link on 04:** as the reference: an `<a>` at the end of the sidebar, 14px/600 `muted`, a 24px line, 44px tall, the sidebar's width. Hidden from the project's owner and on a hidden project.
+
+**Moderation (admins only, `requireAdmin()` on every page, and every core method takes the actor's id and refuses `not_admin`):**
+
+- **`/admin/moderare`, "Rapoarte":** projects with open reports, the one waiting longest first, each with its reports (reason, details, reporter, time) and two actions: primary "Ascunde proiectul" and secondary "Rezolvat, rămâne pe site". **Hiding resolves the project's open reports** (the team acted on them), so it leaves the queue. Resolving alone changes nothing else.
+- **`/admin/moderare/recente`:** the newest 40 reviews, replies, questions and answers across the site, the automated review included, each with "Ascunde" (or "Arată din nou" when hidden, marked "Ascuns"). Reports cover projects only (§4's Report has `projectId`), so this is how the team finds a bad review, answer or question: a small community writes few enough that reading the newest works. Turned down: report links on every review and answer (four more forms for a rare case) and admin buttons on the public pages (they'd sit in the captured screens' layout for admins only, and mix two jobs on one page).
+- **`/admin/moderare/ascunse`:** everything hidden now (projects, reviews, questions, answers), with "Arată din nou".
+- "Moderare" joins the admin nav. Functional styling, like the other admin pages.
+
+**What hidden means** (core; one test per rule in `moderation/moderation.test.ts`, 17 tests):
+
+- **A hidden project** leaves every list and every count, as if it weren't there (§4: counts never drift from rows): the board, Home's most voted, a challenge's launches and in-progress list and its counts (people who launched included), screen 11's results and its review count, the profile's cards, stats and "Provocări terminate", the builder's "N proiecte lansate". `projects`' one `select` leaves hidden rows out unless asked.
+  - **Its page is a 404** to visitors and to other people signed in, and so is its share image (the route reads the page as a visitor). Not a "removed" notice: that would tell anyone with the link what happened, and keep a stale page at the address.
+  - **Its owner still sees it,** with a warning-coloured notice at the top: "Echipa ITStart a ascuns proiectul. Nu mai apare pe panou, în provocare sau pe profilul tău, și doar tu îl mai vezi aici. Dacă e o greșeală sau l-ai reparat, scrie-ne la echipa@itstart.ro." That's how the owner learns of it, since no e-mail is sent; they can still edit it. Their profile doesn't list it (it's the same list everyone sees). Screen 10 drops its share section for it.
+  - **Admins see it too,** with "Proiect ascuns. Îl văd doar constructorul și echipa. Îl poți arăta din nou din moderare." (a link to "Ascunse"). Both get `noindex`.
+  - **No votes and no reviews** on it (`not_found`); it can't be reported again.
+  - **Recognitions:** not a candidate, not shown on screen 11, not a jury pick on screen 12. A recognition entered before stays in the table and comes back if the project is shown again. An earlier hidden launch still counts against "Cel mai bun prim proiect": the builder did launch before.
+  - **Review assignments (rule 16):** never handed out, and a hidden launch isn't given to builders still short of two. An assignment given before it was hidden drops off screen 10's list (the counter keeps "din 2"); there's no reassignment.
+  - **The link checker:** `linkChecks.due()` leaves it out (NEXT-ACTIONS asked for this).
+  - The admin's vote timelines keep showing it: they're about the votes, not the page.
+- **A hidden review takes its replies with it** (replies belong to it), from the thread and from every count: `reviews/visible.ts` holds the one condition every count uses. Before this, a reply under a hidden review was shown nowhere but still counted. The automated review hides like any other (§12).
+- **A hidden question** leaves the list and its count, and its page and share image are 404s, to everyone (an asker's question isn't their work in the way a project is). **A hidden answer** leaves its question's count and stops being the solution (as decided in "Questions and answers").
+- **Showing something again** puts it back exactly as it was.
+
+**Flags:** `MILESTONE` is 2 now that every M2 section is built, and the M2 flags (`questions`, `challengeArchive`, `shareImage`, `linkCheck`, the new `report`) follow it again instead of being on by themselves. Nothing changes on screen.
+
+**Also:** `TEAM_EMAIL` (`lib/team.ts`) holds `echipa@itstart.ro` for "Propune un brief" and the owner's notice; the owner confirms the mailbox (NEXT-ACTIONS).
+
+**Visual check (`capture.mjs --only 04`, against `pnpm dev`, port 3217):** desktop light `differs` 7.29% (was 7.26%), desktop dark `check` 3.05% (was 3.02%), phones `differs` 9% and 5.72% (were 10.69% and 7.44%). The link is the reference's to the pixel (Playwright, both documents): 300×44 at x 868 on desktop and 358×44 at x 16 on phones, 14px/600, a 24px line, `muted`, underlined, 16px below "Făcut pentru". It sits 85px higher on desktop and 108px on phones, which is what "Screen 04 build" lists (the M3 chip and "Scrie-i Ioanei", 108px, less "Făcut pentru"'s third line on desktop, 23px). **The phone gap is 108px** (was 168): only the M3 section is left. What's left is the screenshots (§9.4), the M3 section and "Făcut pentru"'s title.
+
+**Full `--milestone M1` capture:** 11/40 `match`, as "Link checker" recorded; every other screen has the same status and height gaps (02 and 08: 336px on phones, 03: 268/409, 05: 56, 06: 66, 10: 162/179). Only 04 changed.
+
+**Tried locally** (fixtures mode, Playwright): signed out (→ sign-in), the owner (→ the project; no link), an empty submit (error, focus on the first reason), "Altceva" without details (error, focus in the field), a report (→ the thank-you line), the same again (`already`); the admin's queue, "Ascunde proiectul" (the queue empties), "Ascunse", both notices; as a visitor the page, the share image and the form are 404s (the form after sign-in); Andrei gets a 404; the board and Home leave it out; "Arată din nou" (200 again); hiding the automated review from "Recente" ("Păreri · 3"). Reseeded after.
+
+**Manual pass (§9.5):** the form, the queue (with a long report), "Recente" and "Ascunse" at 390, 768, 1024 and 1280px in both themes, with the Hungarian sample appended to every text after hydration: no horizontal scroll, nothing clipped. The radios are drawn light in both themes, like the checkbox.
+
+**Keyboard pass (1280px):** the form goes skip link, header, "Înapoi la proiect", the reasons (one stop, arrow keys move), "Detalii", "Trimite raportul", "Renunță", the footer. The queue goes skip link, the admin nav, the three sections (`aria-current` on the open one), the project's name, "Ascunde proiectul", "Rezolvat, rămâne pe site" (both described by the project's name, like every hide button by its item). Every stop shows the 3px outline.
+
+**New copy, for the owner to review:** the six reasons, the form ("Raportează o problemă", "Cu {proiect}, de {constructor}. Raportul ajunge doar la echipa ITStart, nu și la constructor.", "Ce nu e în regulă?", "Detalii", "Ce ai văzut și unde. Cel mult 1000 de caractere.", "Trimite raportul", "Renunță", the errors), "Mulțumim. Raportul a ajuns la echipa ITStart.", the two notices on a hidden project, and the admin's pages (`admin.moderation` in `ro.json`).
 
 ## Verify during M1 setup
 

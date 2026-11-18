@@ -191,8 +191,8 @@ export function createChallenges(deps: {
   const members = (agents: boolean) =>
     sql`select count(*) from ${participations} join ${users} on ${users.id} = ${participations.userId} where ${participations.challengeId} = ${challenges.id} and ${participations.leftAt} is null and ${users.isAgent} = ${agents}`;
   const projectsAt = (stage: "launched" | "in_progress") =>
-    sql`select count(*) from ${projects} where ${projects.challengeId} = ${challenges.id} and ${projects.stage} = ${stage}`;
-  const launchers = sql`select count(distinct ${projects.ownerId}) from ${projects} join ${users} on ${users.id} = ${projects.ownerId} where ${projects.challengeId} = ${challenges.id} and ${projects.stage} = 'launched' and not ${users.isAgent}`;
+    sql`select count(*) from ${projects} where ${projects.challengeId} = ${challenges.id} and ${projects.stage} = ${stage} and not ${projects.hidden}`;
+  const launchers = sql`select count(distinct ${projects.ownerId}) from ${projects} join ${users} on ${users.id} = ${projects.ownerId} where ${projects.challengeId} = ${challenges.id} and ${projects.stage} = 'launched' and not ${projects.hidden} and not ${users.isAgent}`;
 
   const summary = {
     id: challenges.id,

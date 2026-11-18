@@ -19,6 +19,8 @@ import { ShareButton } from "@/components/share-button";
 import { Tag } from "@/components/tag";
 import { afterLaunch, timeAgo } from "@/lib/dates";
 import { SAVED_PARAM } from "@/lib/schemas/project";
+import { REPORTED_PARAM } from "@/lib/schemas/report";
+import { TEAM_EMAIL } from "@/lib/team";
 import { cn } from "@/lib/utils";
 import { flags } from "@/flags";
 import { core, now } from "@/server/core";
@@ -47,6 +49,12 @@ export async function generateMetadata({
   ]);
   const project = await getProject(slug, session?.user.id ?? null);
   if (!project) return {};
+  // Only its owner and admins get here; nothing to index or share.
+  if (project.hidden)
+    return {
+      title: t("metaTitle", { name: project.name }),
+      robots: { index: false },
+    };
   return shareMetadata({
     title: t("metaTitle", { name: project.name }),
     shareTitle: project.name,
@@ -105,6 +113,11 @@ export default async function ProjectPageRoute({
         {own && query[SAVED_PARAM] && (
           <FlashBanner param={SAVED_PARAM}>{t("saved")}</FlashBanner>
         )}
+        {/* After "Raportează o problemă", once. */}
+        {!own && query[REPORTED_PARAM] && (
+          <FlashBanner param={REPORTED_PARAM}>{t("reported")}</FlashBanner>
+        )}
+        {project.hidden && <HiddenNotice own={own} />}
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5 pb-6 pt-2 md:pb-9 md:pt-3">
@@ -309,10 +322,46 @@ export default async function ProjectPageRoute({
               )}
             </section>
           )}
-          {/* M2: "Raportează o problemă cu acest proiect" goes here. */}
+          {/* Not for its owner, who edits it instead, nor once it's hidden. */}
+          {flags.report && !own && !project.hidden && (
+            <Link
+              href={`/proiecte/${project.slug}/raporteaza`}
+              className="inline-flex min-h-11 items-center text-[14px] font-semibold leading-6 text-muted"
+            >
+              {t("report")}
+            </Link>
+          )}
         </aside>
       </div>
     </Container>
+  );
+}
+
+/**
+ * A hidden project reaches only its owner and admins (moderation). The owner
+ * learns it here, since no e-mail is sent; an admin gets the way back.
+ */
+async function HiddenNotice({ own }: { own: boolean }) {
+  const t = await getTranslations("projectPage.hidden");
+  return (
+    <p className="mt-4 rounded-lg bg-warning-bg px-4 py-3.5 font-semibold text-warning-ink md:mt-6 md:px-5 md:py-4">
+      {own
+        ? t.rich("owner", {
+            email: TEAM_EMAIL,
+            mail: (chunks) => (
+              <a href={`mailto:${TEAM_EMAIL}`} className="text-warning-ink">
+                {chunks}
+              </a>
+            ),
+          })
+        : t.rich("admin", {
+            link: (chunks) => (
+              <Link href="/admin/moderare/ascunse" className="text-warning-ink">
+                {chunks}
+              </Link>
+            ),
+          })}
+    </p>
   );
 }
 

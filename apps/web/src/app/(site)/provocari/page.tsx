@@ -5,15 +5,11 @@ import { AgentBadge } from "@/components/agent-badge";
 import { Button } from "@/components/button";
 import { Container } from "@/components/container";
 import { StatusChip } from "@/components/status-chip";
+import { TEAM_EMAIL } from "@/lib/team";
 import { cn } from "@/lib/utils";
 import { core, now } from "@/server/core";
 
 const DAY = 86_400_000;
-/**
- * Where "Propune un brief" writes, until there's a form (DECISIONS, "Screen
- * 12"). The owner confirms the mailbox (NEXT-ACTIONS).
- */
-const BRIEF_ADDRESS = "echipa@itstart.ro";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("archive");
@@ -81,7 +77,7 @@ export default async function ArchivePage() {
         )}
         {t.rich("propose", {
           link: (chunks) => (
-            <a href={`mailto:${BRIEF_ADDRESS}?subject=${subject}`}>{chunks}</a>
+            <a href={`mailto:${TEAM_EMAIL}?subject=${subject}`}>{chunks}</a>
           ),
         })}
       </p>

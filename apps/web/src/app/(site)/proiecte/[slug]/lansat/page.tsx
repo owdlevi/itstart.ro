@@ -63,7 +63,10 @@ export default async function LaunchedRoute({
   if (!result.ok) redirect(`/proiecte/${slug}`);
   const { project, assignments, expected } = result.page;
   // The same card as the PNG and the project page's og:image.
-  const page = flags.shareImage && (await core.projects.bySlug(slug, user.id));
+  const page =
+    flags.shareImage &&
+    !project.hidden &&
+    (await core.projects.bySlug(slug, user.id));
   const share = page ? await projectShare(page) : null;
 
   const name = user.givenName ?? user.name.trim().split(/\s+/)[0];
@@ -165,29 +168,32 @@ export default async function LaunchedRoute({
           <div className="flex flex-wrap gap-3">{seeProject(true)}</div>
         )}
 
-        <section className={cn(section, divided)}>
-          <h2 className={h2}>{t("share.title")}</h2>
-          {share && (
-            <>
-              <ShareCardPreview card={share.card} alt={share.alt} />
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  variant="secondary"
-                  href={`${imagePath(projectHref, share)}&${DOWNLOAD_PARAM}`}
-                  download={`${project.slug}.png`}
-                  className="w-full md:w-auto"
-                >
-                  <Download size={18} strokeWidth={2.2} aria-hidden />
-                  {t("share.download")}
-                </Button>
-              </div>
-            </>
-          )}
-          <CopyLink
-            url={`${base}${projectHref}`}
-            hint={flags.shareImage ? t("share.hint") : undefined}
-          />
-        </section>
+        {/* A hidden project is a 404 to anyone it's shared with. */}
+        {!project.hidden && (
+          <section className={cn(section, divided)}>
+            <h2 className={h2}>{t("share.title")}</h2>
+            {share && (
+              <>
+                <ShareCardPreview card={share.card} alt={share.alt} />
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    variant="secondary"
+                    href={`${imagePath(projectHref, share)}&${DOWNLOAD_PARAM}`}
+                    download={`${project.slug}.png`}
+                    className="w-full md:w-auto"
+                  >
+                    <Download size={18} strokeWidth={2.2} aria-hidden />
+                    {t("share.download")}
+                  </Button>
+                </div>
+              </>
+            )}
+            <CopyLink
+              url={`${base}${projectHref}`}
+              hint={flags.shareImage ? t("share.hint") : undefined}
+            />
+          </section>
+        )}
 
         {/* M3: "Vrei să te poată contacta cineva?" (flags.contactConsent). */}
 

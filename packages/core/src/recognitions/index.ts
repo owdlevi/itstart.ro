@@ -13,6 +13,7 @@ import { isAdmin, type AdminResult } from "../admins";
 import { challengeStatus } from "../challenges/rules";
 import { withExtra } from "../counts";
 import type { Projects, ResultProject } from "../projects";
+import { humanReviews } from "../reviews/visible";
 import {
   RECOGNITION_KINDS,
   RECOGNITION_REASON_MAX,
@@ -153,6 +154,7 @@ export function createRecognitions(deps: {
           eq(projects.challengeId, challengeId),
           eq(projects.stage, "launched"),
           eq(projects.isLate, false),
+          eq(projects.hidden, false),
           eq(users.isAgent, false),
         ),
       )
@@ -203,11 +205,7 @@ export function createRecognitions(deps: {
           .select({
             // Each project's count as its page shows it, plus the challenge's extra.
             n: withExtra(
-              sql`select coalesce(sum(${withExtra(
-                sql`select count(*) from ${reviews} where ${reviews.projectId} = ${projects.id} and not ${reviews.isAutomated} and not ${reviews.hidden}`,
-                projects.id,
-                "reviews",
-              )}), 0) from ${projects} where ${projects.challengeId} = ${challengeId}`,
+              sql`select coalesce(sum(${humanReviews(projects.id)}), 0) from ${projects} where ${projects.challengeId} = ${challengeId} and not ${projects.hidden}`,
               challengeId,
               "reviews",
             ),
@@ -276,6 +274,7 @@ export function createRecognitions(deps: {
             eq(projects.challengeId, recognitions.challengeId),
             eq(projects.stage, "launched"),
             eq(projects.isLate, false),
+            eq(projects.hidden, false),
             eq(users.isAgent, false),
           ),
         );

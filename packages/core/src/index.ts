@@ -2,6 +2,7 @@ import type { Db } from "@repo/db";
 import { createAdmins } from "./admins";
 import { createChallenges } from "./challenges";
 import { createLinkChecks } from "./link-checks";
+import { createModeration } from "./moderation";
 import { createProfiles } from "./profiles";
 import { createProjects } from "./projects";
 import { createQuestions } from "./questions";
@@ -36,6 +37,7 @@ export function createCore(deps: CoreDeps) {
       now,
       linkChecker: deps.linkChecker,
     }),
+    moderation: createModeration({ db: deps.db, now }),
     profiles: createProfiles({
       db: deps.db,
       now,
@@ -179,6 +181,21 @@ export {
   type LinkCheckOutcome,
   type LinkChecks,
 } from "./link-checks";
+export {
+  MODERATION,
+  REPORT_LIMITS,
+  REPORT_REASONS,
+  type Moderation,
+  type ModerationItem,
+  type ModerationKind,
+  type ModerationPerson,
+  type ModerationPlace,
+  type ModerationTarget,
+  type ReportedProject,
+  type ReportReason,
+  type ReportRefusal,
+  type ReportResult,
+} from "./moderation";
 export { createMemoryMailer, type Email, type Mailer } from "./mailer";
 export {
   createCannedLinkChecker,

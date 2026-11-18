@@ -30,14 +30,17 @@ src/
     globals.css      design tokens; the only colours, radii and shadows Tailwind knows
     (site)/          full shell (header + footer): /, /provocari (the archive), /provocari/[slug],
                      /provocari/[slug]/intrebari (every question) and /provocari/[slug]/intrebari/[question], /lansari, /proiecte/[slug],
-                     /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /u/[handle], /u/[handle]/editeaza, /lanseaza;
+                     /proiecte/[slug]/editeaza, /proiecte/[slug]/lansat, /proiecte/[slug]/raporteaza (the report form),
+                     /u/[handle], /u/[handle]/editeaza, /lanseaza;
                      …/imagine next to a project, a challenge, a profile and a question: its share image (route.ts)
     (onboarding)/    bare header: /intra, /intra/confirma, /bun-venit
     admin/           role = admin, functional styling (no reference design): /admin/provocari (the list),
                      /admin/provocari/noua and /admin/provocari/[slug] (ChallengeForm), /admin/provocari/[slug]/recunoasteri
                      (RecognitionsForm, ended challenges), /admin/voturi (rule 14:
                      the week's activity), /admin/voturi/proiecte/[slug] and /admin/voturi/oameni/[handle]
-                     (TimelineView; voturi/table.tsx is a table that scrolls inside its own box); every page
+                     (TimelineView; voturi/table.tsx is a table that scrolls inside its own box), /admin/moderare
+                     (open reports by project), /admin/moderare/recente (the newest reviews, questions and answers)
+                     and /admin/moderare/ascunse (everything hidden; shell.tsx and items.tsx are shared); every page
                      calls requireAdmin() first
       (site)/lansari/board-params.ts   the board's URL parameters: parse, and build a query without the defaults
     dev/login-as/[handle]/   404 unless DESIGN_FIXTURES=1
@@ -56,7 +59,8 @@ src/
                      checkLiveUrl, rule 9's check on blur; admin-challenges.ts: saveChallenge, which
                      returns where to go like saveProject; profile.ts: saveProfile, the same, and refresh() so
                      the header shows the new name and picture; questions.ts: askQuestion, which returns the new
-                     question's slug for the form to go to, postAnswer and markSolution)
+                     question's slug for the form to go to, postAnswer and markSolution; moderation.ts: reportProject, and the
+                     admin's setHidden and resolveReports)
   components/        the spec components, one file each (button, avatar, vote-button, project-card,
                      launch-row, countdown, filter-chip, field, checkbox, …), the shell (site-header with BareHeader,
                      site-footer), sign-in-form (screen 06), onboarding-form (screen 07), join-button,
@@ -65,17 +69,20 @@ src/
                      screenshot-picker, tool-chips, launch-page and launch-row-frame (LaunchRow's layout,
                      shared with the form's live preview), and screen 10's copy-link, the admin's challenge-form, and profile-form and avatar-picker ("Editează profilul"), and the questions
                      thread's question-row, ask-entry (who sees which "Pune o întrebare"), ask-question, answer-form and
-                     solution-button, and share-card (the share image's card: the PNG and screen 10's preview); shadcn files, rewritten onto our tokens, in
+                     solution-button, and share-card (the share image's card: the PNG and screen 10's preview), report-form and the admin's
+                     moderation-button; shadcn files, rewritten onto our tokens, in
                      components/ui/ (tabs, alert-dialog)
   i18n/request.ts    next-intl config: fixed locale `ro`, Europe/Bucharest; next-intl.d.ts types the keys
   lib/utils.ts       cn
+  lib/team.ts        TEAM_EMAIL, the team's address ("Propune un brief", a hidden project's notice)
   lib/share-image.ts the share image's size and colours (the light theme's tokens, tested against tokens.json)
   lib/upload-image.ts   the pickers' upload: the bytes to /api/capturi (local), or the original to Blob and
                      its URL to /api/capturi (blob); pages pass `uploadVia` from storage.ts
   lib/schemas/       zod schemas shared by a form and its server action (review.ts, sign-in.ts, onboarding.ts,
                      project.ts, which imports core's own launch rules from @repo/core/project-rules;
                      challenge.ts, the admin's form, likewise from @repo/core/challenge-rules; profile.ts and
-                     onboarding.ts from @repo/core/profile-rules; question.ts from @repo/core/question-rules)
+                     onboarding.ts from @repo/core/profile-rules; question.ts from @repo/core/question-rules; report.ts from
+                     @repo/core/moderation-rules)
   lib/sign-in-destination.ts   where a sign-in or onboarding goes next (/bun-venit, `next`, the challenge),
                      safeNext(), and joinedHref() with the ?inscris / ?renuntat flags
   lib/auth-client.ts Better Auth's browser client (sign-in calls), magic-link plugin ready
@@ -104,8 +111,8 @@ src/
   emails/            React Email templates
   lib/dates.ts       daysAgo() ("ieri", "acum 3 zile"), timeAgo() and afterLaunch() (review times), and
                      weekOf()/weeksAgo()/weekDays() (Monday–Sunday weeks), in Bucharest
-  flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number, except `challengeArchive`,
-                     `questions`, `shareImage` and `linkCheck`, on by themselves (built ahead of the rest of M2); M1 screens must look right with the others off
+  flags.ts           milestone flags (HANDOVER §3), from one MILESTONE number (2: M2 is built); M1 screens
+                     must look right with the M3 ones off
 messages/ro.json     all copy, keys grouped by screen or component; e-mail copy under "emails"
 scripts/auth-generate.ts   builds createAuth() for `pnpm --filter web auth:generate`
 scripts/share-fonts.py     static ttf instances of the brand fonts for next/og (fonttools; run by hand, see the file)
@@ -119,7 +126,7 @@ scripts/share-fonts.py     static ttf instances of the brand fonts for next/og (
   - **On Vercel,** the browser uploads the original straight to Blob under `incoming/`, with a token from `POST /api/capturi/token` (signed in, png/jpg/webp, ≤ 5 MB, deleted after a day), past Vercel's 4.5 MB body cap. It then posts the blob's URL to `POST /api/capturi`, which fetches it, resizes it with sharp, puts the webp under `capturi/<uuid>.webp` and deletes the original.
   - **Off Vercel,** the local adapter takes the bytes through `POST /api/capturi` (same checks), resizes them and keeps them on disk. The store refuses a local machine's writes (it's connected for Production and Preview only), so `.env.local`'s token doesn't switch it.
   - Server actions receive only the finished URLs, and core accepts only pictures `storage.owns()`: `capturi/<uuid>.webp` in our store, or the local adapter's files.
-- **Admin checks** read `role` from the database on each request, never from Better Auth's cookie cache, in two places: every admin page calls `requireAdmin(path)` before anything else, and every admin method in core (`challenges.all/editable/create/edit`, `votes.activity/timeline`) takes the actor's id and refuses `not_admin`. The `admin` layout checks nothing: a layout doesn't stop its page rendering, or keep it out of the RSC payload (Next's authentication guide, "Layouts and auth checks"). Admin server actions pass the session's user id to core and let it decide.
+- **Admin checks** read `role` from the database on each request, never from Better Auth's cookie cache, in two places: every admin page calls `requireAdmin(path)` before anything else, and every admin method in core (`challenges.all/editable/create/edit`, `votes.activity/timeline`, `recognitions.editor/save`, `moderation.queue/recent/hiddenItems/setHidden/resolve`) takes the actor's id and refuses `not_admin`. The `admin` layout checks nothing: a layout doesn't stop its page rendering, or keep it out of the RSC payload (Next's authentication guide, "Layouts and auth checks"). Admin server actions pass the session's user id to core and let it decide.
 - **Sign-in, for now,** is email and password (`authClient.signUp.email` / `authClient.signIn.email`); see DECISIONS "Email and password for now". Like every sign-in, it goes through Better Auth's HTTP endpoint, not `auth.api` in a server action, so the per-IP rate limit applies. Once it succeeds, the `/intra` form calls `finishSignIn({ next, challengeSlug })`, which reads the new session and redirects (`signInDestination`): anyone not onboarded (`onboardedAt` null) to `/bun-venit`, carrying `provocare` and `next`. `/bun-venit`'s `completeOnboarding` redirects with the same rules. Both actions join a joinable `challengeSlug` (`core.challenges.join`): `finishSignIn` only for someone onboarded, since core refuses a participant without a name, and `completeOnboarding` always. A join sends them to the challenge with `?inscris=1`, which shows the banner once. `/intra` itself redirects a signed-in visitor the same way, without joining.
 - **Magic link** (configured, not in the UI yet) uses `authClient.signIn.magicLink`. `sendMagicLink` asks `core.signIn.requestLink(email)` first. A refusal comes back as HTTP 429 with `code` `TOO_SOON` or `TOO_MANY` and `retryAfter` in seconds, or 400 `UNDELIVERABLE` for `.invalid` addresses. The `/intra` form maps the code to copy. The e-mail links to `/intra/confirma` with the same query string as Better Auth's verify URL (`token`, `callbackURL`, …).
 - **Better Auth schema:** after changing anything in `createAuth` that affects tables (fields, plugins), run `pnpm --filter web auth:generate`, then `pnpm db:generate`. Never edit `packages/db/src/schema/auth.ts` by hand.
@@ -142,10 +149,11 @@ M1 modules, and M2's as they come:
 | `signIn` | done: per-address sign-in link limit, counted from `sign_in_link_sends` |
 | `challenges` | `running()`, `bySlug()` (brief, status, `votingOpen`: rules 1 and 3), `started()` (the board's chips), `archive()` (screen 12: the started challenges with their counts, newest first), `participants()` (rule 2), `challengeStatus()`, `join()` and `leave()` (rule 2; not after the deadline, not before onboarding), `participation()` and `steps()` ("Pașii tăi") are done, and so are the admin's `all()`, `editable()`, `create()` and `edit()` (`challenges/admin.ts`: the month gives the dates, one challenge a month, numbers follow months, the month and slug fixed once it starts; the database-free rules in `challenges/rules.ts`, exported as `@repo/core/challenge-rules`) |
 | `admins` | `isAdmin(userId)`: the role, read from the database on every call |
-| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`), `bySlug()` (the project page) and `launchedBy()` (a profile's cards) are done, and so are `launch()` (screen 10: the owner's launch and their review assignments, with counts as of the launch for design fixtures), `create()`, `edit()` and `editable()` (screen 09: rules 4 and 6–9, updates, joining the running challenge; `projects/save.ts`, with the database-free rules in `projects/rules.ts`, exported as `@repo/core/project-rules`). `bySlug()` also gives the latest confirmed link check (`linkCheck`), and every save that runs rule 9's check records it. To come: hiding (moderation) |
+| `projects` | `mostVoted()`, `inProgress()` (with `latestUpdate`; `agents: false` hides agent-built projects) and `board()` (scope, stage, tool, sort; each row's `at` and `votingOpen`), `bySlug()` (the project page) and `launchedBy()` (a profile's cards) are done, and so are `launch()` (screen 10: the owner's launch and their review assignments, with counts as of the launch for design fixtures), `create()`, `edit()` and `editable()` (screen 09: rules 4 and 6–9, updates, joining the running challenge; `projects/save.ts`, with the database-free rules in `projects/rules.ts`, exported as `@repo/core/project-rules`). `bySlug()` also gives the latest confirmed link check (`linkCheck`), and every save that runs rule 9's check records it. Hidden projects: the one `select` leaves them out unless asked; `bySlug()` returns one only to its owner and admins, with `hidden` |
 | `linkChecks` | M2, done: `due()` (the links due now, longest waiting first, at most `LINK_CHECKS.batch`) and `check()` (one link through the `linkChecker` seam; a failure shows on the second in a row; an answer for a link changed since is dropped). The rules (how often, what a result means) in `link-checks/rules.ts`; the state is three nullable columns on `projects` |
 | `votes` | done (rules 10–14): `toggle()`, and the admin's `activity()` and `timeline()` (rule 14's timelines, `votes/timeline.ts`: new accounts and bursts marked, `TIMELINE` holds the placeholder numbers) |
-| `reviews` | `thread()` (automated first, replies, counts: rules 17–18) and `post()` (reviews, the owner's replies, 10 per hour, fulfils an assignment: rules 15–16) are done, and so is assignment picking on launch (rule 16: `reviews/assignments.ts`, `assignOnLaunch(tx, …)`, which `projects.create()` and `edit()` call inside their transaction, like `challenges.enter`). To come: hiding (admin) |
+| `reviews` | `thread()` (automated first, replies, counts: rules 17–18) and `post()` (reviews, the owner's replies, 10 per hour, fulfils an assignment: rules 15–16) are done, and so is assignment picking on launch (rule 16: `reviews/assignments.ts`, `assignOnLaunch(tx, …)`, which `projects.create()` and `edit()` call inside their transaction, like `challenges.enter`). Every count of reviews goes through `reviews/visible.ts` (`humanReviews()`, `visibleReview`): a hidden review and the replies under it don't count |
+| `moderation` | M2, done: `report()` (signed in, not the owner or an agent, one open report per person and project, 5 an hour), and the admin's `queue()` (open reports by project), `recent()`, `hiddenItems()`, `setHidden()` (a project, review, question or answer; hiding a project resolves its reports) and `resolve()`. The reasons and limits in `moderation/rules.ts`, exported as `@repo/core/moderation-rules`. What hidden means is in DECISIONS, "Raportează and moderation" |
 | `recognitions` | M2, done: `results()` (screen 11: the recognitions, the best agent apart with how many people's projects beat it (rule 20), every other launch, the challenge's review count), `of()` (which recognition a project got), `juryPicks()` (screen 12: each ended challenge's jury pick, never late or an agent's), and the admin's `editor()` and `save()` (one per kind per challenge, a project at most once, after the deadline only, never a late launch or an agent's (rules 7 and 20), "first project" only for a builder's first launch ever; the database-free rules in `recognitions/rules.ts`, exported as `@repo/core/recognition-rules`). `projects.launchedIn()` gives it the launches, and `launchedBy()` names each card's recognition |
 | `questions` | M2, done: `list()` (a challenge's questions, latest activity first, with the count), `bySlug()` (one question, the solution first, then the answers oldest first), `ask()` and `answer()` (signed in with a name, never an agent, until the deadline (rule 1), 10 questions and answers an hour together), and `markSolved()` (the asker only, also after the deadline). No editing. The limits in `questions/rules.ts`, exported as `@repo/core/question-rules` |
 | `profiles` | `byHandle()` (the public profile: stats, launched projects, the challenges launched in; never the e-mail, rule 23; it reads projects through `projects.launchedBy()`), `onboard()` (screen 07: name, city, tools, reminders as ticked (rule 22), a handle from the name, once), `editable()` and `edit()` ("Editează profilul": the handle stays, a picture only from storage; the database-free rules in `profiles/rules.ts`, exported as `@repo/core/profile-rules`) are done. To come: consent for "Deschis la colaborări" (M3) |
@@ -216,6 +224,7 @@ M1 modules, and M2's as they come:
 - Base UI gives a tab panel its own tab stop. When the panel starts with focusable controls, pass `tabIndex={-1}` (`LinkTabs`).
 - `pkill -f "next start"` misses the production server, whose process is named `next-server`. A leftover one holds the port, and the next `next start` fails with `EADDRINUSE`.
 - next/font puts a metric-matched fallback face (local Arial, no `unicode-range`) right after each family. With latin and latin-ext as separate families, that fallback catches every diacritic before latin-ext is tried. `fonts.ts` turns it off on the latin faces (`adjustFontFallback: false`); keep it that way when adding a font.
+- **A hidden row** (`hidden` on projects, reviews, questions and answers) is left out of every list and count. A new query over one of those tables filters it (`eq(projects.hidden, false)`), and a new count of reviews uses `humanReviews()` / `visibleReview`, never its own condition.
 - Drizzle leaves column names unqualified in a select from one table, even inside a raw `sql` subquery. `${reviews.projectId} = ${projects.id}` then renders as `"project_id" = "id"`, and both resolve to the subquery's own table, so the count is silently wrong. Compare with a value (`= ${projectId}`), or select from a join, where names are qualified (`projects.select`).
 - Tailwind's preflight sets `line-height: 1.5` on `html`, a ratio, while the references use a fixed 24px. Text at 15px or 13px that inherits it gets 22.5px or 19.5px lines, so rows come out shorter than the reference. Set `leading-6` (or the reference's value) wherever smaller text sits in a row.
 - `next build` with `withWorkflow()` generates `src/app/.well-known/workflow/`. It's gitignored and skipped by ESLint.

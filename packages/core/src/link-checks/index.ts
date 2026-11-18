@@ -67,7 +67,7 @@ export function createLinkChecks(deps: {
 
   return {
     due: async () => {
-      // Every project, launched or in progress: both are public with a live
+      // Every visible project, launched or in progress: both are public with a live
       // link. A month brings tens, so the rule runs here rather than in SQL.
       const rows = await db
         .select({
@@ -79,7 +79,9 @@ export function createLinkChecks(deps: {
           endsAt: challenges.endsAt,
         })
         .from(projects)
-        .leftJoin(challenges, eq(challenges.id, projects.challengeId));
+        .leftJoin(challenges, eq(challenges.id, projects.challengeId))
+        // A hidden project's page is gone for visitors; nothing to show a check on.
+        .where(eq(projects.hidden, false));
       const at = now();
       return rows
         .map((row) => ({

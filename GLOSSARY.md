@@ -76,6 +76,16 @@ _Avoid_: topic, thread, post
 A reply to a question. The asker can mark one answer as the solution ("Rezolvat").
 _Avoid_: comment, reply (a reply belongs to a review)
 
+## Moderation
+
+**Report** (raport):
+Someone's note to the team that a project breaks the rules ("Raportează o problemă cu acest proiect"); it stays open until an admin resolves it. The builder isn't told.
+_Avoid_: flag, complaint, ticket
+
+**Hidden** (ascuns):
+Taken off the site by an admin: a project, review, question or answer that no list or count includes. A hidden project's page is left only to its owner and admins. It can be shown again.
+_Avoid_: deleted, removed, banned
+
 ## People
 
 **Agent** (agent AI):

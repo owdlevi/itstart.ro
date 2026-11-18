@@ -403,7 +403,13 @@
       "launched": "Lansat {date}"
     },
     "edit": "Editează proiectul",
-    "saved": "Am salvat proiectul."
+    "saved": "Am salvat proiectul.",
+    "report": "Raportează o problemă cu acest proiect",
+    "reported": "Mulțumim. Raportul a ajuns la echipa ITStart.",
+    "hidden": {
+      "owner": "Echipa ITStart a ascuns proiectul. Nu mai apare pe panou, în provocare sau pe profilul tău, și doar tu îl mai vezi aici. Dacă e o greșeală sau l-ai reparat, scrie-ne la <mail>{email}</mail>.",
+      "admin": "Proiect ascuns. Îl văd doar constructorul și echipa. Îl poți arăta din nou din <link>moderare</link>."
+    }
   },
   "profile": {
     "metaTitle": "ITStart · {name}",
@@ -730,7 +736,8 @@
       "label": "Admin",
       "challenges": "Provocări",
       "votes": "Voturi",
-      "site": "Înapoi pe site"
+      "site": "Înapoi pe site",
+      "moderation": "Moderare"
     },
     "votes": {
       "metaTitle": "Voturi · Admin",
@@ -953,6 +960,76 @@
         "notFound": "Provocarea nu mai există.",
         "other": "Nu s-a salvat. Mai încearcă o dată."
       }
+    },
+    "moderation": {
+      "metaTitle": "Moderare",
+      "title": "Moderare",
+      "tabsLabel": "Secțiuni",
+      "tabs": {
+        "reports": "Rapoarte",
+        "recent": "Recente",
+        "hidden": "Ascunse"
+      },
+      "reports": {
+        "lead": "Proiectele raportate, cel care așteaptă de mai mult timp primul. Ascunde un proiect care încalcă regulile; altfel marchează-i rapoartele rezolvate. Constructorul nu află cine l-a raportat.",
+        "empty": "Niciun raport deschis.",
+        "count": "{n, plural, one {un raport} few {# rapoarte} other {# de rapoarte}}",
+        "by": "{name}, {when}",
+        "deleted": "cont șters",
+        "owner": "de {name}",
+        "hide": "Ascunde proiectul",
+        "resolve": "Rezolvat, rămâne pe site"
+      },
+      "recent": {
+        "lead": "Ultimele {n} păreri, răspunsuri la păreri, întrebări și răspunsuri de pe tot site-ul, cele mai noi primele.",
+        "empty": "Nimic scris încă."
+      },
+      "hidden": {
+        "lead": "Tot ce e ascuns acum. Arată din nou ce a fost ascuns din greșeală.",
+        "empty": "Nimic ascuns."
+      },
+      "kinds": {
+        "project": "Proiect",
+        "review": "Părere",
+        "reply": "Răspuns la o părere",
+        "automated": "Părere automată",
+        "question": "Întrebare",
+        "answer": "Răspuns"
+      },
+      "on": "la {name}",
+      "hiddenChip": "Ascuns",
+      "hide": "Ascunde",
+      "show": "Arată din nou",
+      "error": "Nu s-a salvat. Mai încearcă o dată."
+    }
+  },
+  "report": {
+    "metaTitle": "Raportează {name}",
+    "back": "Înapoi la proiect",
+    "title": "Raportează o problemă",
+    "lead": "Cu {name}, de {owner}. Raportul ajunge doar la echipa ITStart, nu și la constructor.",
+    "reasonsLabel": "Ce nu e în regulă?",
+    "reasons": {
+      "link": "Linkul nu se deschide sau duce altundeva",
+      "not_theirs": "Nu pare făcut de cine l-a publicat",
+      "offensive": "Are conținut jignitor sau ilegal",
+      "spam": "E spam sau reclamă",
+      "personal_data": "Arată datele personale ale cuiva",
+      "other": "Altceva"
+    },
+    "details": "Detalii",
+    "optional": "(opțional)",
+    "detailsHint": "Ce ai văzut și unde. Cel mult {max} de caractere.",
+    "submit": "Trimite raportul",
+    "cancel": "Renunță",
+    "errors": {
+      "reason_empty": "Alege ce nu e în regulă.",
+      "details_empty": "Scrie câteva cuvinte despre problemă.",
+      "too_long": "Cel mult {max} de caractere.",
+      "already": "Ai raportat deja proiectul, iar echipa nu s-a uitat încă la raport.",
+      "rate_limited": "Ai trimis multe rapoarte în ultima oră. Mai încearcă puțin mai târziu.",
+      "not_found": "Proiectul nu mai e pe site.",
+      "other": "Nu s-a trimis. Mai încearcă o dată."
     }
   }
 }

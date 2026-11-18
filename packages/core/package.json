@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./challenges": "./src/challenges/index.ts",
     "./challenge-rules": "./src/challenges/rules.ts",
+    "./moderation-rules": "./src/moderation/rules.ts",
     "./profiles": "./src/profiles/index.ts",
     "./profile-rules": "./src/profiles/rules.ts",
     "./projects": "./src/projects/index.ts",
