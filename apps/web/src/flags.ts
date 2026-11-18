@@ -24,6 +24,11 @@ export const flags = {
    * and Open Graph tags").
    */
   shareImage: true,
+  /**
+   * "Link verificat acum 3 ore. Merge." under the buttons on screen 04 (M2).
+   * On by itself, like `shareImage` (DECISIONS, "Link checker").
+   */
+  linkCheck: true,
   /** "Vrei să te poată contacta cineva?" on screen 10 (M3). */
   contactConsent: MILESTONE >= 3,
 };

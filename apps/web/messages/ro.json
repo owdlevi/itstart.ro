@@ -340,6 +340,12 @@
     "open": "Deschide proiectul",
     "share": "Distribuie",
     "copied": "Am copiat linkul.",
+    "linkCheck": {
+      "ok": "Link verificat {when}. Merge.",
+      "failing": "Link verificat {when}. Nu se deschide.",
+      "on": "pe {date}",
+      "ownerHint": "Încearcă-l într-o fereastră privată: trebuie să se deschidă pentru oricine. Când merge din nou, aici se schimbă singur."
+    },
     "screenshots": {
       "label": "Capturi de ecran",
       "alt": "Captură de ecran din {name}",

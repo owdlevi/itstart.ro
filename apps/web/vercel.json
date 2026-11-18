@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "cd ../.. && pnpm --filter @repo/db db:migrate && pnpm turbo run build --filter=web",
-  "regions": ["fra1"]
+  "regions": ["fra1"],
+  "crons": [
+    {
+      "path": "/api/cron/verifica-linkuri",
+      "schedule": "0 * * * *"
+    }
+  ]
 }
