@@ -39,6 +39,7 @@ export default async function AdminLayout({
               links={[
                 { href: "/admin/provocari", label: t("nav.challenges") },
                 { href: "/admin/voturi", label: t("nav.votes") },
+                { href: "/admin/moderare", label: t("nav.moderation") },
               ]}
             />
           </div>
