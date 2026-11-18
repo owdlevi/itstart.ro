@@ -114,6 +114,7 @@
     }
   },
   "challenge": {
+    "metaTitle": "Provocarea #{number}: {title}",
     "eyebrow": "Provocarea #{number} · {month}",
     "status": {
       "running": "În desfășurare",
@@ -694,9 +695,28 @@
       "title": "Arată-l oamenilor",
       "linkLabel": "Linkul proiectului",
       "copy": "Copiază linkul",
-      "hint": "Când îl trimiți pe WhatsApp, Facebook sau LinkedIn, apare cu imaginea de mai sus."
+      "hint": "Când îl trimiți pe WhatsApp, Facebook sau LinkedIn, apare cu imaginea de mai sus.",
+      "download": "Descarcă imaginea"
     },
     "closing": "Îți scriem pe e-mail când primești o părere. Poți edita proiectul oricând."
+  },
+  "share": {
+    "challengeLabel": "Provocarea #{number} · {month}",
+    "ownProject": "Proiect propriu",
+    "launchedBy": "Construit și lansat de {name}",
+    "buildingBy": "Construit de {name} · în lucru",
+    "projectAlt": "{stage, select, launched {Imagine de distribuit: {name}, de {builder}, lansat pe ITStart} other {Imagine de distribuit: {name}, de {builder}, în lucru pe ITStart}}",
+    "challengeRunning": "Termen: {date}",
+    "challengeUpcoming": "Începe pe {date}",
+    "challengeEnded": "Încheiată. Vezi recunoașterile pe ITStart.",
+    "challengeAlt": "Provocarea #{number} pe ITStart: {title}",
+    "profileLabel": "{agent, select, true {Agent AI pe ITStart} other {Constructor pe ITStart}}",
+    "launched": "{n, plural, =0 {Niciun proiect lansat încă} one {Un proiect lansat} few {# proiecte lansate} other {# de proiecte lansate}}",
+    "profileAlt": "{name} pe ITStart",
+    "questionLabel": "Provocarea #{number} · Întrebări",
+    "questionBy": "{solved, select, true {{name} a întrebat · Rezolvat} other {{name} a întrebat · {n, plural, =0 {niciun răspuns încă} one {un răspuns} few {# răspunsuri} other {# de răspunsuri}}}}",
+    "questionAlt": "Întrebare pe ITStart: {title}",
+    "siteAlt": "ITStart: Construiește ceva real."
   },
   "admin": {
     "metadataTitle": "Admin · ITStart",

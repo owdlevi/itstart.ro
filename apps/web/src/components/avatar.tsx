@@ -10,13 +10,13 @@ export type AvatarPerson = {
   isAgent: boolean;
 };
 
-const fillFor = (id: string) => {
+export const fillFor = (id: string) => {
   let hash = 0;
   for (const ch of id) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
   return FILLS[Math.abs(hash) % FILLS.length]!;
 };
 
-const initials = (name: string) =>
+export const initials = (name: string) =>
   name
     .split(/\s+/)
     .map((part) => part[0])

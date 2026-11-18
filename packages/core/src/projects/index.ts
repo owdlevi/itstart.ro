@@ -118,7 +118,13 @@ export type ProjectPage = Omit<ProjectSummary, "owner"> & {
   launchedAt: Date | null;
   /** False once its challenge's deadline has passed (rule 3); always true outside a challenge. */
   votingOpen: boolean;
-  challenge: { slug: string; number: number; title: string } | null;
+  /** `startsAt` names its month (the share image). */
+  challenge: {
+    slug: string;
+    number: number;
+    title: string;
+    startsAt: Date;
+  } | null;
   owner: ProjectSummary["owner"] & {
     city: string | null;
     /** Their launched projects, this one included. */
@@ -410,6 +416,7 @@ export function createProjects(deps: {
               slug: challenges.slug,
               number: challenges.number,
               title: challenges.title,
+              startsAt: challenges.startsAt,
             },
           })
           .from(projects)

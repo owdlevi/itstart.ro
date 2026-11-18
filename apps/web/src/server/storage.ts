@@ -139,6 +139,19 @@ export async function readLocalScreenshot(name: string) {
   return readFile(path.join(LOCAL_DIR, name)).catch(() => null);
 }
 
+/**
+ * A stored picture's bytes by its URL (the share image draws the builder's):
+ * the local adapter's file, or our store's. Null for anything else.
+ */
+export async function readPicture(url: string): Promise<Buffer | null> {
+  if (url.startsWith(LOCAL_URL))
+    return readLocalScreenshot(url.slice(LOCAL_URL.length));
+  if (screenshotStorage?.kind !== "blob" || !screenshotStorage.owns(url))
+    return null;
+  const response = await fetch(url).catch(() => null);
+  return response?.ok ? Buffer.from(await response.arrayBuffer()) : null;
+}
+
 // Local files off Vercel, whatever .env.local holds: the store is connected
 // for Production and Preview only, and refuses a local machine's writes.
 // On Vercel, a deploy's disk isn't kept, so it's Blob or nothing.
