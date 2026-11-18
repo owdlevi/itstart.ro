@@ -1,6 +1,7 @@
 import type { Db } from "@repo/db";
 import { createAdmins } from "./admins";
 import { createChallenges } from "./challenges";
+import { createLinkChecks } from "./link-checks";
 import { createProfiles } from "./profiles";
 import { createProjects } from "./projects";
 import { createQuestions } from "./questions";
@@ -30,6 +31,11 @@ export function createCore(deps: CoreDeps) {
   return {
     admins: createAdmins({ db: deps.db }),
     challenges: createChallenges({ db: deps.db, now }),
+    linkChecks: createLinkChecks({
+      db: deps.db,
+      now,
+      linkChecker: deps.linkChecker,
+    }),
     profiles: createProfiles({
       db: deps.db,
       now,
@@ -167,6 +173,12 @@ export type {
   VoteTimeline,
   VoterActivity,
 } from "./votes";
+export {
+  LINK_CHECKS,
+  type DueLink,
+  type LinkCheckOutcome,
+  type LinkChecks,
+} from "./link-checks";
 export { createMemoryMailer, type Email, type Mailer } from "./mailer";
 export {
   createCannedLinkChecker,

@@ -422,6 +422,39 @@ describe("projects.edit", () => {
     expect(linkChecker.checked).toEqual(["https://nu-merge.example", LIVE]);
   });
 
+  test("records rule 9's check as the latest link check, only when it ran", async () => {
+    const { db, projects, owner, setNow } = await inProgress();
+    const created = await row(db, "tuns-la-fix");
+    expect(created).toMatchObject({
+      linkCheckedAt: NOW,
+      linkOk: true,
+      linkFailedAt: null,
+    });
+
+    // The scheduled check had found the old link down once.
+    await db
+      .update(projectRows)
+      .set({ linkOk: false, linkFailedAt: null })
+      .where(eq(projectRows.slug, "tuns-la-fix"));
+    const later = new Date(NOW.getTime() + 3_600_000);
+    setNow(later);
+    await projects.edit(owner.id, "tuns-la-fix", {
+      ...minimal({ pitch: "Altă frază." }),
+      update: null,
+    });
+    expect((await row(db, "tuns-la-fix")).linkOk).toBe(false);
+
+    await projects.edit(owner.id, "tuns-la-fix", {
+      ...minimal({ liveUrl: "https://alt.example" }),
+      update: null,
+    });
+    expect(await row(db, "tuns-la-fix")).toMatchObject({
+      linkCheckedAt: later,
+      linkOk: true,
+      linkFailedAt: null,
+    });
+  });
+
   test("moves a project in progress between the running challenge and none, but not a launched one", async () => {
     const { db, projects, owner } = await inProgress();
 

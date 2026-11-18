@@ -56,6 +56,12 @@ export const projects = pgTable(
     // Launched after its challenge's deadline: "După termen", out of the
     // recognitions (rule 7). Fixed at the launch, like launchedAt.
     isLate: boolean().notNull().default(false),
+    // The link check (HANDOVER §4 linkCheck): the shown result and when it was
+    // last confirmed. Null until the first check that counts.
+    linkCheckedAt: timestamp({ withTimezone: true }),
+    linkOk: boolean(),
+    // A first failure waiting for a second in a row before it shows.
+    linkFailedAt: timestamp({ withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [index().on(t.challengeId)],
